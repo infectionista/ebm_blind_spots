@@ -414,7 +414,7 @@ qT:['Answer from the paper','Ответьте цитатами из статьи
 typeModeH:['Four questions. For each one find the passage in the paper that answers it and paste it in \u2014 keep the authors\u2019 wording. If the paper never answers one of them, write what is missing instead. That is an answer too, and often the most useful one.','Четыре вопроса. На каждый найдите в статье кусок, который на него отвечает, и вставьте его сюда \u2014 словами авторов. Если статья на какой-то вопрос не отвечает вовсе, напишите, чего не хватает. Это тоже ответ, и часто самый полезный.'],
 secPh:['Paste the passage here','Вставьте сюда кусок из статьи'],
 loadOpt:['Optional: give the trainer the text of the paper','Необязательно: дать тренажёру текст статьи'],
-loadWhy:['Needed only if you want the trainer to check that every quote you use later really is in the paper. Without it the trainer still keeps the order and the logic, but takes your quotes on trust. You can also load one of the prepared papers: it gives you the text to work from, and you still find and tag each passage yourself.','Нужно только если хотите, чтобы тренажёр проверял, что каждая ваша цитата действительно есть в статье. Без этого он всё равно держит порядок и логику, но цитаты принимает на веру. Здесь же можно загрузить одну из готовых статей: она даёт текст, с которым вы работаете, а найти и разметить каждый кусок всё равно предстоит вам.'],
+loadWhy:['Needed only if you want the trainer to check that every quote you use later really is in the paper. Without it the trainer still keeps the order and the logic, but takes your quotes on trust. You can also load one of the prepared papers, where the passages are already found for you \u2014 use that to see how the pass works, not to skip the finding.','Нужно только если хотите, чтобы тренажёр проверял, что каждая ваша цитата действительно есть в статье. Без этого он всё равно держит порядок и логику, но цитаты принимает на веру. Здесь же можно загрузить одну из готовых статей, где куски уже найдены за вас \u2014 это чтобы посмотреть, как устроен проход, а не чтобы пропустить поиск.'],
 noSrc:['The trainer has no copy of the paper, so it cannot check this quote. Make sure it is word for word.','Текста статьи у тренажёра нет, поэтому проверить цитату он не может. Проследите сами, чтобы она была слово в слово.'],
 back:['Back','Назад'],
 
@@ -700,6 +700,26 @@ function renderPane(){
 }
 function renderSlots(){
   const el=$('#slots');if(!el)return;
+  const CQ=S.caseQuotes&&Object.keys(S.caseQuotes).length?S.caseQuotes:null;
+  if(CQ){
+    const pane=$('#paperPane');if(pane)pane.style.display='none';
+    const bar=$('#tagbar');if(bar)bar.style.display='none';
+    const th=$('[data-t="tagH"]');if(th)th.textContent=tx(T.caseModeH);
+    el.innerHTML=(S.caseFid?`<details class="gloss" open><summary>${tx(T.fidT)}</summary><div class="gb"><p>${esc(S.caseFid[L]||S.caseFid.en)}</p></div></details>`:'')+
+     (S.caseProv?`<div class="flag"><b>${tx(T.provT)}</b> ${esc(S.caseProv)}</div>`:'')+
+     SECTIONS.map(s=>{const qs=CQ[s.k]||[];
+      return `<div class="slot ${qs.length?'':'empty'}">
+        <div class="sh">${tx(s.q)}</div>
+        ${qs.length?qs.map(q=>{
+          const absent=/^(NO |NOTHING)/.test(q.t);
+          return `<div style="margin:0 0 11px;padding-left:11px;border-left:3px solid ${absent?'var(--verm)':'var(--petrol)'}">
+            <div style="font-size:13.5px">${absent?'<b style="color:var(--verm)">'+esc(q.t)+'</b>':'&laquo;'+esc(q.t)+'&raquo;'}</div>
+            <div class="sub" style="font-size:11.5px;margin-top:3px">${esc(q.where)}${q.verified&&q.verified!=='primary'?' · <i>'+esc(q.verified)+'</i>':''}</div>
+          </div>`;}).join('')
+         :`<div class="sv"><i style="color:var(--grey)">${tx(T.notInPack)}</i></div>`}
+      </div>`;}).join('');
+    return;
+  }
   if(!norm(S.paper)){
     /* No paper text loaded: the student finds the passages in the paper they
        were given and pastes them in. This is the default way through step 0. */
@@ -1265,13 +1285,11 @@ function loadCase(id){
   const c=CASEDATA.packs[id];if(!c)return;
   S.mePaper=c.citation;$('#mePaper').value=c.citation;
   S.claim=c.claim||'';S.caseProv=c.provenance||'';S.caseFid=c.fidelity||null;S.caseId=id;
-  /* The pack supplies the text, never the answers: the student still has
-     to find each passage and tag it. Pre-filling the four sections would
-     hand over exactly the work this step exists to teach. */
-  let all=[];
+  S.caseQuotes={};S.secFromPack=true;let all=[];
   SECTIONS.forEach(s=>{const v=(c.sections||{})[s.k];
-    if(Array.isArray(v)&&v.length)all=all.concat(v.map(q=>q.t));
-    else if(typeof v==='string'&&v)all.push(v);});
+    if(Array.isArray(v)&&v.length){S.caseQuotes[s.k]=v;
+      S.sec[s.k]=v.map(q=>q.t).join('\n\n');all=all.concat(v.map(q=>q.t));}
+    else if(typeof v==='string'&&v){S.sec[s.k]=v;all.push(v);}});
   if(all.length){S.paper=all.join('\n\n');S.ranges={};}
   $('#pdfStatus').innerHTML=`<b>${esc(c.title)}</b><br>${esc(c.citation)}<br>
     <a href="${esc(c.url)}" target="_blank" rel="noopener">${L==='en'?'open the paper':'открыть статью'}</a>
@@ -1519,9 +1537,12 @@ function bind(){
 }
 
 try{const saved=localStorage.getItem('ebm-trainer-2');if(saved)Object.assign(S,JSON.parse(saved));}catch(e){}
-/* Older saves carry pack quotes pre-filled into the four sections. Clear
-   them, or the student opens the trainer with the work already done. */
-if(S.caseQuotes){delete S.caseQuotes;delete S.caseFid;delete S.caseProv;SECTIONS.forEach(s=>S.sec[s.k]='');}
+/* Ready-made passages are something the student asks for, never what they
+   walk into. A pack chosen earlier is not restored on the way in: step 0
+   opens empty again, and picking the paper again brings the quotes back.
+   Sections the student typed themselves are untouched. */
+if(S.secFromPack){delete S.secFromPack;delete S.caseQuotes;delete S.caseFid;delete S.caseProv;
+  SECTIONS.forEach(s=>S.sec[s.k]='');S.paper='';S.ranges={};}
 L=S.lang||'en';
 bind();applyLang();refreshCases();go(S.step||0);
 </script>
