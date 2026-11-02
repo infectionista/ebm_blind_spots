@@ -1,0 +1,91 @@
+{
+ "schema": 1,
+ "id": "carhart-harris-2016",
+ "title": "Psilocybin with psychological support for treatment-resistant depression: an open-label feasibility study",
+ "citation": "Carhart-Harris RL, et al. Lancet Psychiatry 2016;3(7):619-627",
+ "pmid": "27210031",
+ "doi": "10.1016/S2215-0366(16)30065-7",
+ "url": "https://doi.org/10.1016/S2215-0366(16)30065-7",
+ "topic": "psychoactive",
+ "tier": "weak",
+ "difficulty": "moderate",
+ "status": "no retraction, correction or expression of concern",
+ "claim": "Psilocybin with psychological support reduces depression in treatment-resistant patients.",
+ "designOneLine": "Open-label single-arm feasibility study; every patient received both doses and was compared against their own baseline.",
+ "n": "12 (six men, six women)",
+ "theOneThing": "Twelve self-selected volunteers who wanted a psilocybin trial, no comparison group at all, and a headline effect of Hedges' g = 3.1. An effect three standard deviations wide in twelve uncontrolled patients cannot be separated from expectancy, regression to the mean, and the intensive psychological support every patient also received.",
+ "sections": {
+  "concl": [
+   {
+    "t": "This study provides preliminary support for the safety and efficacy of psilocybin for treatment-resistant depression and motivates further trials, with more rigorous designs, to better examine the therapeutic potential of this approach.",
+    "where": "Abstract — Interpretation",
+    "verified": "primary"
+   },
+   {
+    "t": "In conclusion, we sought to assess the safety and tolerability of psilocybin plus psychological support in patients with unipolar treatment-resistant depression. Our findings support the feasibility of this approach and the magnitude and duration of the post-treatment reductions in symptom severity motivate further controlled research.",
+    "where": "Discussion — closing paragraph",
+    "verified": "primary"
+   }
+  ],
+  "design": [
+   {
+    "t": "In this open-label feasibility trial, 12 patients (six men, six women) with moderate-to-severe, unipolar, treatment-resistant major depression received two oral doses of psilocybin (10 mg and 25 mg, 7 days apart) in a supportive setting.",
+    "where": "Abstract — Methods",
+    "verified": "primary"
+   },
+   {
+    "t": "There was no control group.",
+    "where": "Abstract — Methods. One sentence, standing alone.",
+    "verified": "primary"
+   },
+   {
+    "t": "This was an open-label feasibility study in patients with treatment-resistant depression; there was no control group. Patients, investigators, raters, and statisticians were not masked to treatment assignment, and all participants received the study intervention (psilocybin administered in two dosing sessions; an initial safety [low] dose and a subsequent treatment [high] dose).",
+    "where": "Methods — Study design and participants",
+    "verified": "primary"
+   },
+   {
+    "t": "Enrolment started on May 1, 2015, and finished on Aug 25, 2015.",
+    "where": "Results",
+    "verified": "primary"
+   }
+  ],
+  "numbers": [
+   {
+    "t": "Relative to baseline, depressive symptoms were markedly reduced 1 week (mean QIDS difference -11.8, 95% CI -9.15 to -14.35, p=0.002, Hedges' g=3.1) and 3 months (-9.2, 95% CI -5.69 to -12.71, p=0.003, Hedges' g=2) after high-dose treatment.",
+    "where": "Abstract — Findings. Lancet house style prints decimals with a middle dot; rendered here with ordinary full stops.",
+    "verified": "primary"
+   }
+  ],
+  "limits": [
+   {
+    "t": "Because this was a small-scale feasibility study with an open-label design, strong inferences cannot be made about the treatment's therapeutic efficacy.",
+    "where": "Discussion",
+    "verified": "primary"
+   },
+   {
+    "t": "One should be cautious of the potential for inflated effect sizes in early trials, particularly when the sample size is small. That all patients showed some improvement in their depressive symptoms for up to 3 weeks after treatment could be suggestive of an expectancy bias.",
+    "where": "Discussion",
+    "verified": "primary"
+   },
+   {
+    "t": "enduring improvements beyond 3 weeks were not observed universally, and five of the 12 patients showed a degree of relapse at 3 months",
+    "where": "Discussion",
+    "verified": "primary"
+   }
+  ]
+ },
+ "whereToLook": {
+  "abstract": "Free on the journal page. The load-bearing sentence is in Methods.",
+  "design": "Methods - note what is absent, not only what is present.",
+  "numbers": "Results: QIDS scores at 1 week and 3 months, with Hedges' g.",
+  "limits": "Discussion. Presence of a labelled Limitations heading not confirmed."
+ },
+ "companion": "The contrast: Carhart-Harris R, et al. Trial of Psilocybin versus Escitalopram for Depression. N Engl J Med 2021;384(15):1402-1411. PMID 33852780. Double-blind RCT, n=59, PRIMARY OUTCOME NULL (difference 2.0 points, 95% CI -5.0 to 0.9, P=0.17) with 16 uncorrected secondary outcomes. Paywalled, but the free abstract carries the whole lesson.",
+ "note": "",
+ "sectionsFilled": true,
+ "provenance": "The journal site blocks automated access, but the paper is CC BY and the Version of Record was retrieved from the King's College London repository, so these are full-text quotes, not abstract-only.",
+ "fidelity": {
+  "en": "These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.",
+  "ru": "Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."
+ }
+}

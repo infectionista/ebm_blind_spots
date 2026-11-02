@@ -1,0 +1,90 @@
+{
+ "schema": 1,
+ "id": "bendavid-2021",
+ "title": "COVID-19 antibody seroprevalence in Santa Clara County, California",
+ "citation": "Bendavid E, Mulaney B, Sood N, et al. Int J Epidemiol 2021;50(2):410-419",
+ "pmid": "33615345",
+ "doi": "10.1093/ije/dyab010",
+ "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7928865/",
+ "topic": "infection",
+ "tier": "strong",
+ "difficulty": "moderate",
+ "status": "no retraction, correction or expression of concern",
+ "claim": "A large share of the county's population had already been infected with SARS-CoV-2.",
+ "designOneLine": "Cross-sectional serosurvey using a rapid lateral-flow assay; participants recruited by targeted Facebook advertisements; post-stratification weighting by zip, age, sex, race and ethnicity.",
+ "n": "3328 tested",
+ "theOneThing": "Raw positives were 1.5% and the assay's specificity was 99.5% - meaning about 0.5% of truly uninfected people test positive anyway. When the thing you are hunting is about as common as your instrument's error rate, a large share of your 'cases' can be false. Then watch an analysis choice move the estimate from 1.2% unweighted to 2.8% weighted. And the recruitment: Facebook ads reaching people who suspected they had already had it, who then drove to a test site. Neither the instrument nor the sampling can be corrected away by arithmetic.",
+ "sections": {
+  "concl": [
+   {
+    "t": "The estimated prevalence of SARS-CoV-2 antibodies in Santa Clara County implies that COVID-19 was likely more widespread than indicated by the number of cases in late March, 2020. At the time, low-burden contexts such as Santa Clara County were far from herd-immunity thresholds.",
+    "where": "Abstract — Conclusion",
+    "verified": "primary"
+   }
+  ],
+  "design": [
+   {
+    "t": "We recruited participants by placing targeted advertisements on Facebook aimed at residents of Santa Clara County.",
+    "where": "Methods — Study participants and sample recruitment",
+    "verified": "primary"
+   },
+   {
+    "t": "Over 24 hours, we registered 3285 adults, and each adult was allowed to bring one child from the same household with them (889 children registered).",
+    "where": "Methods — Study participants and sample recruitment",
+    "verified": "primary"
+   },
+   {
+    "t": "On 3 and 4 April 2020, we tested 3328 county residents for immunoglobulin G (IgG) and immunoglobulin M (IgM) antibodies to SARS-CoV-2 using a rapid lateral-flow assay (Premier Biotech).",
+    "where": "Abstract — Methods",
+    "verified": "primary"
+   }
+  ],
+  "numbers": [
+   {
+    "t": "The total number of positive cases by either IgG or IgM in our unadjusted sample was 50-a crude prevalence rate of 1.50% (exact binomial 95% CI 1.11-1.98%).",
+    "where": "Results",
+    "verified": "primary"
+   },
+   {
+    "t": "Accounting for test sensitivity and specificity and sampling error, our point estimate of the unweighted population prevalence was 1.22% (bootstrap 95% CI 0.66-1.79%). After adjusting for test performance and weighting our sample to approximate Santa Clara County demographics by zip, race, age and sex, the prevalence was 2.76% (95% CI 1.32 - 4.22%).",
+    "where": "Results",
+    "verified": "primary"
+   },
+   {
+    "t": "The estimated specificity using data from all the samples was 99.53% [95% confidence interval (CI) 99.24-99.73%] and sensitivity was 85.56% (95% CI 79.69-90.26%).",
+    "where": "Results. NOTE: the Abstract gives a DIFFERENT sensitivity - 82.8% (95% CI 76.0-88.4%) - with the same specificity. That is an internal inconsistency in the published paper. Decide deliberately which you quote.",
+    "verified": "primary"
+   }
+  ],
+  "limits": [
+   {
+    "t": "This study has several limitations. The primary limitation concerns sample selection biases.",
+    "where": "Discussion",
+    "verified": "primary"
+   },
+   {
+    "t": "The overall direction and magnitude of these selection effects are hard to fully bound, and our estimates reflect the prevalence in our sample, weighted to match county demographics.",
+    "where": "Discussion",
+    "verified": "primary"
+   },
+   {
+    "t": "Lower test specificity or greater uncertainty in the test performance could, in principle, meaningfully change the study's conclusions.",
+    "where": "Discussion",
+    "verified": "primary"
+   }
+  ]
+ },
+ "whereToLook": {
+  "abstract": "Top of the PMC page.",
+  "design": "Methods - recruitment first, then the assay validation, then the weighting.",
+  "numbers": "Results: raw positives, unweighted and weighted prevalence, and the specificity figure from the validation data.",
+  "limits": "Discussion, paragraphs beginning 'This study has several limitations'. No separate heading."
+ },
+ "companion": "Side by side with the April 2020 medRxiv preprint (doi 10.1101/2020.04.14.20062463), which reported different numbers - an unusually clean demonstration of what peer review actually changed.",
+ "note": "",
+ "sectionsFilled": true,
+ "fidelity": {
+  "en": "These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.",
+  "ru": "Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."
+ }
+}

@@ -1,0 +1,80 @@
+{
+ "schema": 1,
+ "id": "mitchell-2021",
+ "title": "MDMA-assisted therapy for severe PTSD: a randomized, double-blind, placebo-controlled phase 3 study",
+ "citation": "Mitchell JM, et al. Nat Med 2021;27(6):1025-1033",
+ "pmid": "33972795",
+ "doi": "10.1038/s41591-021-01336-3",
+ "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8205851/",
+ "topic": "psychoactive",
+ "tier": "strong",
+ "difficulty": "moderate",
+ "status": "no retraction, correction or expression of concern",
+ "claim": "MDMA-assisted therapy reduces PTSD symptoms.",
+ "designOneLine": "Multi-site randomised double-blind placebo-controlled phase 3 trial with an inactive placebo.",
+ "n": "345 screened, 131 enrolled, 91 randomised, 90 analysed (46 MDMA, 44 placebo)",
+ "theOneThing": "A trial labelled double-blind used an inactive placebo against a drug with unmistakable subjective effects, never formally assessed whether the blind held, and then reported only the share who guessed WRONG - about 10%. Which means roughly 90% guessed right. Restate the number out loud as 'nine in ten knew which arm they were in' and ask what is left of the blinding.",
+ "sections": {
+  "concl": [
+   {
+    "t": "These data indicate that, compared with manualized therapy with inactive placebo, MDMA-assisted therapy is highly efficacious in individuals with severe PTSD, and treatment is safe and well-tolerated, even in those with comorbidities. We conclude that MDMA-assisted therapy represents a potential breakthrough treatment that merits expedited clinical evaluation.",
+    "where": "Abstract",
+    "verified": "primary"
+   }
+  ],
+  "design": [
+   {
+    "t": "Participants were recruited from 7 November 2018 to 26 May 2020, with the last participant visit conducted on 21 August 2020.",
+    "where": "Results — Demographics",
+    "verified": "primary"
+   },
+   {
+    "t": "A total of 345 participants were assessed for eligibility, 131 were enrolled, 91 were confirmed for randomization (United States, n = 77; Canada, n = 9; Israel, n = 5), and 46 were randomized to MDMA and 44 to placebo.",
+    "where": "Results — Demographics",
+    "verified": "primary"
+   },
+   {
+    "t": "Participants were randomized in a blinded fashion and were allocated 1:1 to either the MDMA-assisted therapy group or the placebo with therapy group.",
+    "where": "Methods — Randomization, masking and bias minimization",
+    "verified": "primary"
+   }
+  ],
+  "numbers": [
+   {
+    "t": "Mixed model repeated measure (MMRM) analysis of the de jure estimand (that is, the effects of the drug if taken as directed) showed a significant difference in treatment arms (n = 89 (MDMA n = 46), P < 0.0001, between-group difference = 11.9, 95% confidence interval (CI) = 6.3-17.4, d.f. = 71).",
+    "where": "Results — Efficacy",
+    "verified": "primary"
+   },
+   {
+    "t": "The effect size of the MDMA-assisted therapy treatment compared with placebo with therapy was d = 0.91 (95% CI = 0.44-1.37, pooled s.d. = 11.55) in the de jure estimand.",
+    "where": "Results — Efficacy",
+    "verified": "primary"
+   }
+  ],
+  "limits": [
+   {
+    "t": "There are several limitations to the current trial. First, ...",
+    "where": "Discussion — the opening of the enumerated limitations paragraph; the blinding item below is the fifth, 'Last,'",
+    "verified": "primary"
+   },
+   {
+    "t": "Last, given the subjective effects of MDMA, the blinding of participants was also challenging and possibly led to expectation effects. However, although blinding was not formally assessed during the study, when participants were contacted to be informed of their treatment assignment at the time of study unblinding it became apparent that at least 10% had inaccurately guessed their treatment arm. Although anecdotal, at least 7 of 44 participants in the placebo group (15.9%) inaccurately believed that they had received MDMA, and at least 2 of 46 participants in the MDMA group (4.3%) inaccurately believed that they had received placebo.",
+    "where": "Discussion",
+    "verified": "primary"
+   }
+  ]
+ },
+ "whereToLook": {
+  "abstract": "Top of the PMC page, CC BY.",
+  "design": "Methods - and note what the placebo was.",
+  "numbers": "Results - CAPS-5 change, with Cohen's d.",
+  "limits": "Discussion, an enumerated paragraph beginning 'There are several limitations to the current trial. First... Second... Third... Fourth... Last...'. No separate heading."
+ },
+ "companion": "",
+ "note": "",
+ "sectionsFilled": true,
+ "fidelity": {
+  "en": "These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.",
+  "ru": "Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."
+ }
+}

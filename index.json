@@ -1,0 +1,105 @@
+{
+ "schema": 2,
+ "cases": [
+  {
+   "id": "bendavid-2021",
+   "title": "COVID-19 antibody seroprevalence in Santa Clara County, California",
+   "citation": "Bendavid E, Mulaney B, Sood N, et al. Int J Epidemiol 2021;50(2):410-419",
+   "tier": "strong",
+   "topic": "infection",
+   "difficulty": "moderate",
+   "sectionsFilled": true,
+   "file": "cases/bendavid-2021.json"
+  },
+  {
+   "id": "borba-2020",
+   "title": "Effect of high vs low doses of chloroquine diphosphate in severe SARS-CoV-2 infection (CloroCovid-19)",
+   "citation": "Borba MGS, Val FFA, Sampaio VS, et al. JAMA Netw Open 2020;3(4):e208857",
+   "tier": "weak",
+   "topic": "infection",
+   "difficulty": "easy-moderate",
+   "sectionsFilled": true,
+   "file": "cases/borba-2020.json"
+  },
+  {
+   "id": "carhart-harris-2016",
+   "title": "Psilocybin with psychological support for treatment-resistant depression: an open-label feasibility study",
+   "citation": "Carhart-Harris RL, et al. Lancet Psychiatry 2016;3(7):619-627",
+   "tier": "weak",
+   "topic": "psychoactive",
+   "difficulty": "moderate",
+   "sectionsFilled": true,
+   "file": "cases/carhart-harris-2016.json"
+  },
+  {
+   "id": "danmask-2021",
+   "title": "Effectiveness of adding a mask recommendation to other public health measures (DANMASK-19)",
+   "citation": "Bundgaard H, Bundgaard JS, Raaschou-Pedersen DET, et al. Ann Intern Med 2021;174(3):335-343",
+   "tier": "strong",
+   "topic": "infection",
+   "difficulty": "easy-moderate",
+   "sectionsFilled": true,
+   "file": "cases/danmask-2021.json"
+  },
+  {
+   "id": "gautret-2020",
+   "title": "Hydroxychloroquine and azithromycin as a treatment of COVID-19",
+   "citation": "Gautret P, Lagier JC, Parola P, et al. Int J Antimicrob Agents 2020;56(1):105949",
+   "tier": "weak",
+   "topic": "infection",
+   "difficulty": "easy",
+   "sectionsFilled": true,
+   "file": "cases/gautret-2020.json"
+  },
+  {
+   "id": "hadland-2019",
+   "title": "Association of Pharmaceutical Industry Marketing of Opioid Products With Mortality From Opioid-Related Overdoses",
+   "citation": "Hadland SE, Rivera-Aguirre A, Marshall BDL, Cerda M. JAMA Netw Open 2019;2(1):e186007",
+   "tier": "strong",
+   "topic": "addiction",
+   "difficulty": "moderate",
+   "sectionsFilled": true,
+   "file": "cases/hadland-2019.json"
+  },
+  {
+   "id": "johnson-2014",
+   "title": "Pilot study of the 5-HT2AR agonist psilocybin in the treatment of tobacco addiction",
+   "citation": "Johnson MW, Garcia-Romeu A, Cosimano MP, Griffiths RR. J Psychopharmacol 2014;28(11):983-992",
+   "tier": "weak",
+   "topic": "addiction",
+   "difficulty": "easy-moderate",
+   "sectionsFilled": true,
+   "file": "cases/johnson-2014.json"
+  },
+  {
+   "id": "mitchell-2021",
+   "title": "MDMA-assisted therapy for severe PTSD: a randomized, double-blind, placebo-controlled phase 3 study",
+   "citation": "Mitchell JM, et al. Nat Med 2021;27(6):1025-1033",
+   "tier": "strong",
+   "topic": "psychoactive",
+   "difficulty": "moderate",
+   "sectionsFilled": true,
+   "file": "cases/mitchell-2021.json"
+  },
+  {
+   "id": "porter-jick-1980",
+   "title": "Addiction rare in patients treated with narcotics",
+   "citation": "Porter J, Jick H. N Engl J Med 1980;302(2):123",
+   "tier": "weak",
+   "topic": "addiction",
+   "difficulty": "easy",
+   "sectionsFilled": true,
+   "file": "cases/porter-jick-1980.json"
+  },
+  {
+   "id": "robins-1974",
+   "title": "How Permanent Was Vietnam Drug Addiction?",
+   "citation": "Robins LN, Davis DH, Nurco DN. Am J Public Health 1974;64(12 Suppl):38-43",
+   "tier": "strong",
+   "topic": "addiction",
+   "difficulty": "easy",
+   "sectionsFilled": true,
+   "file": "cases/robins-1974.json"
+  }
+ ]
+}

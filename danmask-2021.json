@@ -1,0 +1,85 @@
+{
+ "schema": 1,
+ "id": "danmask-2021",
+ "title": "Effectiveness of adding a mask recommendation to other public health measures (DANMASK-19)",
+ "citation": "Bundgaard H, Bundgaard JS, Raaschou-Pedersen DET, et al. Ann Intern Med 2021;174(3):335-343",
+ "pmid": "33205991",
+ "doi": "10.7326/M20-6817",
+ "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7707213/",
+ "topic": "infection",
+ "tier": "strong",
+ "difficulty": "easy-moderate",
+ "status": "no retraction, correction or expression of concern",
+ "claim": "Recommending a mask reduces the wearer's own risk of SARS-CoV-2 infection.",
+ "designOneLine": "Open-label individually randomised controlled trial: a mask recommendation plus 50 surgical masks versus no recommendation, both on top of distancing advice, over one month.",
+ "n": "6024 randomised (3030 mask, 2994 control); 4862 completed",
+ "theOneThing": "1.8% versus 2.1%; odds ratio 0.82 (95% CI 0.54 to 1.23). The authors wrote the lesson themselves: the interval is compatible with a large benefit AND a modest harm. The trial was powered to detect a 50% reduction, so a real 20-30% benefit was never detectable. 'Not statistically significant' here means we could not tell, not that masks do not work. Second point: the outcome was infection IN THE WEARER, so the trial says nothing about protecting other people - and the authors list that as a limitation.",
+ "sections": {
+  "concl": [
+   {
+    "t": "The recommendation to wear surgical masks to supplement other public health measures did not reduce the SARS-CoV-2 infection rate among wearers by more than 50% in a community with modest infection rates, some degree of social distancing, and uncommon general mask use. The data were compatible with lesser degrees of self-protection.",
+    "where": "Abstract — Conclusion",
+    "verified": "primary"
+   }
+  ],
+  "design": [
+   {
+    "t": "Eligible persons were community-dwelling adults aged 18 years or older without current or prior symptoms or diagnosis of COVID-19 who reported being outside the home among others for at least 3 hours per day and who did not wear masks during their daily work.",
+    "where": "Methods — Participants and Study Period",
+    "verified": "primary"
+   },
+   {
+    "t": "Recruitment occurred from 3 through 24 April 2020. Half of participants were randomly assigned to a group on 12 April and half on 24 April.",
+    "where": "Methods — Participants and Study Period",
+    "verified": "primary"
+   },
+   {
+    "t": "Eligible participants were randomly assigned 1:1 to the mask or control group using a computer algorithm and were stratified by the 5 regions of Denmark.",
+    "where": "Methods — Intervention",
+    "verified": "primary"
+   }
+  ],
+  "numbers": [
+   {
+    "t": "The primary outcome occurred in 42 participants (1.8%) in the mask group and 53 (2.1%) in the control group. In an intention-to-treat analysis, the between-group difference was -0.3 percentage point (CI, -1.2 to 0.4 percentage point; P = 0.38) (odds ratio [OR], 0.82 [CI, 0.54 to 1.23]; P = 0.33) in favor of the mask group.",
+    "where": "Results — Primary Outcome",
+    "verified": "primary"
+   },
+   {
+    "t": "Although the difference observed was not statistically significant, the 95% CIs are compatible with a 46% reduction to a 23% increase in infection.",
+    "where": "Abstract — Results. The paper says this THREE times in three wordings; the Discussion version uses 'decrease' and calls it 'the most important limitation'.",
+    "verified": "primary"
+   }
+  ],
+  "limits": [
+   {
+    "t": "Inconclusive results, missing data, variable adherence, patient-reported findings on home tests, no blinding, and no assessment of whether masks could decrease disease transmission from mask wearers to others.",
+    "where": "Abstract — Limitation. The ONLY paper of the ten with a dedicated abstract field for this.",
+    "verified": "primary"
+   },
+   {
+    "t": "The most important limitation is that the findings are inconclusive, with CIs compatible with a 46% decrease to a 23% increase in infection.",
+    "where": "Discussion",
+    "verified": "primary"
+   },
+   {
+    "t": "It is important to emphasize that this trial did not address the effects of masks as source control or as protection in settings where social distancing and other public health measures are not in effect.",
+    "where": "Discussion",
+    "verified": "primary"
+   }
+  ]
+ },
+ "whereToLook": {
+  "abstract": "The structured abstract has a dedicated 'Limitation:' field. This is the only paper in the set that does.",
+  "design": "Methods.",
+  "numbers": "Results - and read the confidence interval, not the p-value.",
+  "limits": "The abstract's Limitation field, then the Discussion."
+ },
+ "companion": "Six published letters in Ann Intern Med 2021;174(8) and BMJ 2020;371:m4919 - a ready-made dossier on how one paper was misread in both directions at once.",
+ "note": "",
+ "sectionsFilled": true,
+ "fidelity": {
+  "en": "These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.",
+  "ru": "Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."
+ }
+}

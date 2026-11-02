@@ -1,0 +1,76 @@
+{
+ "schema": 1,
+ "id": "porter-jick-1980",
+ "title": "Addiction rare in patients treated with narcotics",
+ "citation": "Porter J, Jick H. N Engl J Med 1980;302(2):123",
+ "pmid": "7350425",
+ "doi": "10.1056/NEJM198001103020221",
+ "url": "https://www.nejm.org/doi/10.1056/NEJM198001103020221",
+ "topic": "addiction",
+ "tier": "weak",
+ "difficulty": "easy",
+ "status": "no retraction, correction or expression of concern",
+ "claim": "Addiction is rare in patients treated with narcotics.",
+ "designOneLine": "A five-sentence letter reporting a retrospective count from a hospital drug-surveillance database.",
+ "n": "nearly 12,000 patients who received at least one narcotic; 4 documented addiction cases",
+ "theOneThing": "The patients were hospitalised inpatients given short supervised courses, and nobody followed them after discharge - yet the letter was cited for decades as evidence about outpatients on long-term opioids. The population studied is not the population the claim is about.",
+ "sections": {
+  "concl": [
+   {
+    "t": "We conclude that despite widespread use of narcotic drugs in hospitals, the development of addiction is rare in medical patients with no history of addiction.",
+    "where": "sentence 5 of 5",
+    "verified": "reproduction-verified: quoted verbatim in four peer-reviewed articles"
+   }
+  ],
+  "design": [
+   {
+    "t": "Recently, we examined our current files to determine the incidence of narcotic addiction in 39,946 hospitalized medical patients who were monitored consecutively.",
+    "where": "sentence 1 of 5",
+    "verified": "reproduction-verified: three independent full reproductions agree; least independently corroborated of the five"
+   },
+   {
+    "t": "NO DATES, NO FOLLOW-UP, NO DEFINITION OF ADDICTION. The letter says nothing about when the records covered, what happened to anyone after discharge, or how addiction was defined.",
+    "where": "— the whole letter is 5 sentences, 101 words",
+    "verified": "absence verified"
+   }
+  ],
+  "numbers": [
+   {
+    "t": "Although there were 11,882 patients who received at least one narcotic preparation, there were only four cases of reasonably well documented addiction in patients who had no history of addiction.",
+    "where": "sentence 2 of 5",
+    "verified": "reproduction-verified; second clause also quoted verbatim in a peer-reviewed article"
+   },
+   {
+    "t": "The addiction was considered major in only one instance. The drugs implicated were meperidine in two patients, Percodan in one, and hydromorphone in one.",
+    "where": "sentences 3 and 4 of 5",
+    "verified": "reproduction-verified"
+   },
+   {
+    "t": "NO INTERVAL, NO STATISTICAL TEST, NO DENOMINATOR FOR THE FOUR CASES.",
+    "where": "— checked across the whole letter",
+    "verified": "absence verified"
+   }
+  ],
+  "limits": [
+   {
+    "t": "NOTHING. The letter contains no limitations statement of any kind. That absence is the sharpest teaching object in this case: it was cited 608 times, 439 of those as substantive evidence.",
+    "where": "— the whole letter",
+    "verified": "absence verified"
+   }
+  ]
+ },
+ "whereToLook": {
+  "abstract": "There is no abstract. The letter IS the abstract - all five sentences.",
+  "design": "There is no methods section. That absence is the finding: say so in your own words.",
+  "numbers": "Both numbers are in the letter itself.",
+  "limits": "None stated anywhere. Record that as 'none stated' - an absent limitations paragraph is a finding about the paper."
+ },
+ "companion": "Leung PTM, Macdonald EM, Stanbrook MB, Dhalla IA, Juurlink DN. A 1980 Letter on the Risk of Opioid Addiction. N Engl J Med 2017;376(22):2194-2195. PMID 28564561. Counted 608 citations, 439 of them (72.2%) treating it as substantive evidence.",
+ "note": "The figure 11,882 circulates widely but could not be confirmed against a readable source. Use 'nearly 12,000'.",
+ "sectionsFilled": true,
+ "provenance": "The primary source is unreachable (NEJM blocks automated access; the letter is not in PMC). Every sentence below is REPRODUCTION-VERIFIED: three independent full reproductions agree character for character (671 characters, 101 words, 5 sentences), and four of the five sentences are also quoted verbatim in peer-reviewed articles. Tell students this - the provenance is part of the lesson.",
+ "fidelity": {
+  "en": "These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.",
+  "ru": "Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."
+ }
+}

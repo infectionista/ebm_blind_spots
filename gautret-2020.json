@@ -1,0 +1,80 @@
+{
+ "schema": 1,
+ "id": "gautret-2020",
+ "title": "Hydroxychloroquine and azithromycin as a treatment of COVID-19",
+ "citation": "Gautret P, Lagier JC, Parola P, et al. Int J Antimicrob Agents 2020;56(1):105949",
+ "pmid": "32205204",
+ "doi": "10.1016/j.ijantimicag.2020.105949",
+ "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7102549/",
+ "topic": "infection",
+ "tier": "weak",
+ "difficulty": "easy",
+ "status": "RETRACTED 9 January 2025. Notice: Int J Antimicrob Agents 2025;65(1):107416, PMID 39730229. No expression of concern was ever issued - it went from ISAC statements straight to retraction.",
+ "claim": "Hydroxychloroquine, with azithromycin, clears SARS-CoV-2 from the nasopharynx.",
+ "designOneLine": "Non-randomised open-label study; the drug was offered at one centre, and controls were patients who refused it, met exclusion criteria, or were treated elsewhere.",
+ "n": "42 enrolled, 36 analysed (20 treated vs 16 control). The paper's own counts do not reconcile: Results give 26 treated + 16 control = 42, while the text says 36 of 42.",
+ "theOneThing": "Six of the 26 hydroxychloroquine patients were dropped from the analysis: three transferred to intensive care, one died on day 3, one left hospital, one stopped the drug for nausea. No control patient was lost. The sickest treated patients were removed from the denominator, so '70% cleared the virus' counts only those who stayed well enough to be counted. A dead patient was recorded as neither a success nor a failure.",
+ "sections": {
+  "concl": [
+   {
+    "t": "Despite its small sample size, our survey shows that hydroxychloroquine treatment is significantly associated with viral load reduction/disappearance in COVID-19 patients and its effect is reinforced by azithromycin.",
+    "where": "Abstract — Conclusion",
+    "verified": "primary"
+   },
+   {
+    "t": "We therefore recommend that COVID-19 patients be treated with hydroxychloroquine and azithromycin to cure their infection and to limit the transmission of the virus to other people in order to curb the spread of COVID-19 in the world.",
+    "where": "Discussion",
+    "verified": "primary"
+   }
+  ],
+  "design": [
+   {
+    "t": "All patients in the Marseille center were proposed oral hydroxychloroquine sulfate 200 mg, three times per day for ten days. Patients who refused the treatment or had an exclusion criteria, served as controls in the Marseille centre. Patients in other centers did not receive hydroxychloroquine and served as controls.",
+    "where": "Methods 2.4 Procedure",
+    "verified": "primary"
+   },
+   {
+    "t": "A total of 26 patients received hydroxychloroquine and 16 were control patients.",
+    "where": "Results 3.1",
+    "verified": "primary"
+   },
+   {
+    "t": "Six hydroxychloroquine-treated patients were lost during the follow-up of the survey because of early cessation of treatment. Reasons are as follows: three patients were transferred to intensive care unit, including one transferred on day2 post-inclusion who was PCR-positive on day1, one transferred on day3 post-inclusion who was PCR-positive on days1-2 and one transferred on day4 post-inclusion who was PCR-positive on day1 and day3; one patient died on day3 post inclusion and was PCR-negative on day2; one patient decided to leave the hospital on day3 post-inclusion and was PCR-negative on days1-2; finally, one patient stopped the treatment on day3 post-inclusion because of nausea and was PCR-positive on days1-2-3. The results presented here are therefore those of 36 patients (20 hydroxychloroquine-treated patients and 16 control patients). None of the control patients were lost during follow-up.",
+    "where": "Results 3.1",
+    "verified": "primary"
+   }
+  ],
+  "numbers": [
+   {
+    "t": "At day6 post-inclusion, 70% of hydroxychloroquine-treated patients were virologically cured compared to 12.5% in the control group (p= 0.001).",
+    "where": "Results 3.3",
+    "verified": "primary"
+   },
+   {
+    "t": "NO CONFIDENCE INTERVAL EXISTS ANYWHERE IN THIS PAPER. No effect size, no risk ratio, no odds ratio. Results are proportions with p-values only.",
+    "where": "— checked across the full text",
+    "verified": "absence verified"
+   }
+  ],
+  "limits": [
+   {
+    "t": "Our study has some limitations including a small sample size, limited long-term outcome follow-up, and dropout of six patients from the study, however in the current context, we believe that our results should be shared with the scientific community.",
+    "where": "Discussion — final sentence",
+    "verified": "primary"
+   }
+  ]
+ },
+ "whereToLook": {
+  "abstract": "Top of the PMC page, under the retraction banner.",
+  "design": "Methods - read the paragraph on how patients were allocated, and the one on exclusions.",
+  "numbers": "Results: virological clearance at day 6, 70% vs 12.5%. Also find the six lost patients in the text or Figure.",
+  "limits": "One sentence at the end of the Discussion. There is no Limitations heading."
+ },
+ "companion": "Rosendaal FR. Review of 'Hydroxychloroquine and azithromycin...'. Int J Antimicrob Agents 2020;56(1):106063. PMID 32674928 - the journal's commissioned independent methodological review, two pages, free. Often better assigned reading than the paper.",
+ "note": "",
+ "sectionsFilled": true,
+ "fidelity": {
+  "en": "These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.",
+  "ru": "Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."
+ }
+}

@@ -1,0 +1,85 @@
+{
+ "schema": 1,
+ "id": "johnson-2014",
+ "title": "Pilot study of the 5-HT2AR agonist psilocybin in the treatment of tobacco addiction",
+ "citation": "Johnson MW, Garcia-Romeu A, Cosimano MP, Griffiths RR. J Psychopharmacol 2014;28(11):983-992",
+ "pmid": "25213996",
+ "doi": "10.1177/0269881114548296",
+ "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4286320/",
+ "topic": "addiction",
+ "tier": "weak",
+ "difficulty": "easy-moderate",
+ "status": "no retraction, correction or expression of concern",
+ "claim": "Psilocybin helps people stop smoking.",
+ "designOneLine": "Open-label pilot with no control condition; psychiatrically screened volunteers who sought out a psychedelic trial.",
+ "n": "15 nicotine-dependent smokers; 12 of 15 (80%) abstinent at 6 months",
+ "theOneThing": "The authors name the flaw and then commit it in consecutive sentences. After saying no conclusions can be drawn about the causal role of psilocybin, they compare their 80% to bupropion (24.9-26.3%) and varenicline (33.5-35.2%). Find the two sentences and put them next to each other. Also: three people's outcomes move the headline by 20 points, and the 15 had a mean of six previous quit attempts.",
+ "sections": {
+  "concl": [
+   {
+    "t": "Although the open-label design does not allow for definitive conclusions regarding the efficacy of psilocybin, these findings suggest psilocybin may be a potentially efficacious adjunct to current smoking cessation treatment models.",
+    "where": "Abstract",
+    "verified": "primary"
+   }
+  ],
+  "design": [
+   {
+    "t": "Participants were 15 psychiatrically healthy nicotine-dependent smokers (10 males; mean age of 51 years), with a mean of 6 previous lifetime quit attempts, and smoking a mean of 19 cigarettes per day for a mean of 31 years at intake.",
+    "where": "Abstract",
+    "verified": "primary"
+   },
+   {
+    "t": "Participants were recruited through advertisements offering a novel treatment for smoking cessation involving psilocybin. Three hundred twenty-three individuals were telephone screened, and 27 of these underwent in-person medical and psychological screening.",
+    "where": "Methods — Participants",
+    "verified": "primary"
+   },
+   {
+    "t": "NO STUDY DATES ANYWHERE IN THIS PAPER. No enrolment period, no follow-up window, no trial registration number. A reader cannot date this cohort from the paper.",
+    "where": "— checked across the full text",
+    "verified": "absence verified"
+   }
+  ],
+  "numbers": [
+   {
+    "t": "Based on the Timeline Follow-back and verified by CO and cotinine measures, 12 of 15 (80%) participants showed seven-day point prevalence abstinence at 6-month follow-up.",
+    "where": "Results — Smoking cessation outcomes",
+    "verified": "primary"
+   },
+   {
+    "t": "NO CONFIDENCE INTERVAL ANYWHERE IN THIS PAPER. The 80% is a bare proportion. For n=15 that is itself worth noticing.",
+    "where": "— checked across the full text",
+    "verified": "absence verified"
+   }
+  ],
+  "limits": [
+   {
+    "t": "Therefore, this pilot study was conducted without a control condition as a first step to evaluate both the safety of the approach, and whether efficacy rates would be promising enough to warrant the investment of resources necessary for a randomized trial.",
+    "where": "Introduction — final sentence",
+    "verified": "primary"
+   },
+   {
+    "t": "Results should be interpreted with caution given the small N and open-label design. Therefore, no definitive conclusions can be drawn about the causal role of psilocybin per se.",
+    "where": "Discussion",
+    "verified": "primary"
+   },
+   {
+    "t": "However, abstinence rates were substantially higher than typical. For example, when paired with 12 brief weekly counseling meetings, pharmacotherapies have shown seven-day point prevalence abstinence rates of 24.9% to 26.3% (bupropion) and 33.5% to 35.2% (varenicline) at approximately 6 months post-TQD.",
+    "where": "Discussion — the two sentences IMMEDIATELY AFTER the caveat above",
+    "verified": "primary"
+   }
+  ]
+ },
+ "whereToLook": {
+  "abstract": "Top of the PMC page.",
+  "design": "Methods - the phrase about the control condition is in the first part.",
+  "numbers": "Results - abstinence at 6 months. The comparison figures are in the Discussion, not the Results.",
+  "limits": "Discussion. No separate heading; sections are Introduction / Methods / Results / Discussion."
+ },
+ "companion": "",
+ "note": "",
+ "sectionsFilled": true,
+ "fidelity": {
+  "en": "These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.",
+  "ru": "Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."
+ }
+}

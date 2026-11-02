@@ -1,0 +1,86 @@
+{
+ "schema": 1,
+ "id": "robins-1974",
+ "title": "How Permanent Was Vietnam Drug Addiction?",
+ "citation": "Robins LN, Davis DH, Nurco DN. Am J Public Health 1974;64(12 Suppl):38-43",
+ "pmid": "4429174",
+ "doi": "10.2105/ajph.64.12_suppl.38",
+ "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1775687/",
+ "topic": "addiction",
+ "tier": "strong",
+ "difficulty": "easy",
+ "status": "no retraction, correction or expression of concern",
+ "claim": "Heroin dependence acquired in Vietnam persisted after the men returned home.",
+ "designOneLine": "Follow-up of a random sample of US Army enlisted men who left Vietnam in September 1971, re-interviewed with urine screening 8-12 months after return.",
+ "n": "943 sought, 900 interviewed, 876 urine specimens; two strata - a general sample and a sample positive for opiates on the departure urine test",
+ "theOneThing": "The exposed group is defined by the MANDATORY DEPARTURE URINE TEST - a record that existed before anyone planned a study. No self-selection, no treatment-seeking sample, and the denominator is everyone who left in one month. Then the finding: around 20% were dependent in Vietnam and under 1% after return. A design nobody could have built on purpose answered a question that clinical samples cannot.",
+ "sections": {
+  "concl": [
+   {
+    "t": "Of course, those who feel they need treatment should have access to the best that we have to offer them, but at least for Vietnam veterans there seems no reason to proceed as though anyone found using heroin is in immediate and serious danger of lifelong addiction unless put into treatment.",
+    "where": "Discussion, p. 43",
+    "verified": "primary — read off the page scan"
+   },
+   {
+    "t": "We can no longer justify applying policies to every narcotics user that are based only on information about the careers of those addicts whose appearance in treatment facilities as volunteers or in lieu of prison sentences shows an inability to terminate their addiction on their own.",
+    "where": "Discussion, final sentence, p. 43",
+    "verified": "primary — read off the page scan"
+   }
+  ],
+  "design": [
+   {
+    "t": "Approximately 13,760 Army enlisted men returned to the United States from Vietnam in September 1971. From this population of returnees, a simple random sample of 470 was selected as the General Sample. Within the population of 13,760, approximately 1,400 had been found to have urines positive for narcotics at time of departure. From this subpopulation who had shown positive urines at departure from Vietnam, a simple random sample of 495 was selected, the Drug Positive sample.",
+    "where": "The Study, p. 38",
+    "verified": "primary — read off the page scan"
+   },
+   {
+    "t": "Between May and September 1972 (8 to 12 months after return), these men were sought for interview and a urine sample.",
+    "where": "The Study, p. 39",
+    "verified": "primary — read off the page scan"
+   }
+  ],
+  "numbers": [
+   {
+    "t": "There have been no studies of addict populations in this country that show anything like the 95 percent remission rate after ten months, which is what a drop from 20 percent addicted while in Vietnam to 1 percent after Vietnam suggests.",
+    "where": "Results, p. 39",
+    "verified": "primary — read off the page scan"
+   },
+   {
+    "t": "Among returnees in the general sample, 43 percent reported having used narcotics in Vietnam. Not quite one-half (46 percent) of the men who said they used narcotics in Vietnam reported becoming addicted to them while there and 23 percent of the users had a positive urine at departure.",
+    "where": "Results, p. 39",
+    "verified": "primary — read off the page scan"
+   },
+   {
+    "t": "NO CONFIDENCE INTERVALS ANYWHERE IN THIS PAPER. Percentages only, no interval estimates, no significance tests.",
+    "where": "— checked across the scan",
+    "verified": "absence verified"
+   }
+  ],
+  "limits": [
+   {
+    "t": "Before suggesting that that policy might be revised in the light of our Vietnam findings, we need to answer two questions: (1) Was ten months back in the United States long enough to see a resumption of addiction?; (2) Had these men really been addicted in Vietnam?",
+    "where": "p. 42. There is no Limitations heading: the authors pose their own two threats to validity as questions, then spend two pages answering them.",
+    "verified": "primary — read off the page scan"
+   },
+   {
+    "t": "At this point, we do not know whether their high remission rate at 8 to 12 months after return will be long-lasting. To learn this, we are planning to reinterview these veterans after they have been home three years. It would also be important to know whether this high remission rate-whether or not it continues-is characteristic only of military personnel or only of those military personnel whose addiction began in a setting as different from the United States as Vietnam.",
+    "where": "Discussion, p. 43",
+    "verified": "primary — read off the page scan"
+   }
+  ]
+ },
+ "whereToLook": {
+  "abstract": "Scanned PDF, six pages. Read it whole - it is shorter than most abstracts' worth of modern methods.",
+  "design": "The sampling and the urine test are described early.",
+  "numbers": "Use and dependence in Vietnam versus after return, by stratum.",
+  "limits": "Presence of a labelled section not confirmed. Look for where the authors say what they cannot know - that framing, not the word."
+ },
+ "companion": "Fuller cohort description: Robins LN, Davis DH, Goodwin DW. Am J Epidemiol 1974;99(4):235-249, PMID 4818714 (paywalled). Also Robins LN, Helzer JE, Davis DH. Arch Gen Psychiatry 1975;32(8):955-961, PMID 1156114 (paywalled).",
+ "note": "A widely repeated citation 'Robins, Davis & Goodwin, Arch Gen Psychiatry 1975' for the heroin finding does not exist as described - that 1975 paper is Robins/Helzer/Davis, and the Davis+Goodwin 1975 paper in that journal is about alcohol.",
+ "sectionsFilled": true,
+ "provenance": "PMC holds only a page-image scan. An OCR layer exists but is error-ridden, so every quote here was read off the rendered page images rather than taken from the OCR.",
+ "fidelity": {
+  "en": "These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.",
+  "ru": "Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."
+ }
+}

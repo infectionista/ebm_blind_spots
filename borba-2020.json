@@ -1,0 +1,90 @@
+{
+ "schema": 1,
+ "id": "borba-2020",
+ "title": "Effect of high vs low doses of chloroquine diphosphate in severe SARS-CoV-2 infection (CloroCovid-19)",
+ "citation": "Borba MGS, Val FFA, Sampaio VS, et al. JAMA Netw Open 2020;3(4):e208857",
+ "pmid": "32330277",
+ "doi": "10.1001/jamanetworkopen.2020.8857",
+ "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12124691/",
+ "topic": "infection",
+ "tier": "weak",
+ "difficulty": "easy-moderate",
+ "status": "no retraction, correction or expression of concern",
+ "claim": "The chloroquine dose affects survival in severe COVID-19.",
+ "designOneLine": "Parallel, double-masked, randomised phase IIb trial of two chloroquine doses, with no placebo arm; single centre, Manaus; enrolment halted.",
+ "n": "81 of a planned 440 (41 high-dose, 40 low-dose)",
+ "theOneThing": "Two beginner-visible failures at once. With no placebo arm, 39% deaths on high dose versus 15% on low dose compares two doses but says nothing about chloroquine against nothing at all. And randomisation did not balance the groups: the high-dose arm was older (54.7 vs 47.4 years) and contained all five patients with heart disease (5/28 vs 0) - in a trial of a drug that prolongs the QT interval. Randomisation is a procedure, not a promise. Always read Table 1.",
+ "sections": {
+  "concl": [
+   {
+    "t": "The preliminary findings of this study suggest that the higher CQ dosage should not be recommended for critically ill patients with COVID-19 because of its potential safety hazards, especially when taken concurrently with azithromycin and oseltamivir. These findings cannot be extrapolated to patients with nonsevere COVID-19.",
+    "where": "Abstract — Conclusions and Relevance",
+    "verified": "primary"
+   }
+  ],
+  "design": [
+   {
+    "t": "This parallel, double-masked, randomized, phase IIb clinical trial with 81 adult patients who were hospitalized with severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2) infection was conducted from March 23 to April 5, 2020, at a tertiary care facility in Manaus, Brazilian Amazon.",
+    "where": "Abstract — Design, Setting, and Participants",
+    "verified": "primary"
+   },
+   {
+    "t": "Patients were allocated to receive high-dosage CQ (ie, 600 mg CQ twice daily for 10 days) or low-dosage CQ (ie, 450 mg twice daily on day 1 and once daily for 4 days).",
+    "where": "Abstract — Interventions",
+    "verified": "primary"
+   },
+   {
+    "t": "In the absence of a placebo group, we were compelled to use historical data based on very similar patients not receiving CQ.",
+    "where": "Discussion",
+    "verified": "primary"
+   }
+  ],
+  "numbers": [
+   {
+    "t": "Lethality was 39.0% (16 of 41 patients) in the high-dosage group and 15.0% (6 of 40) in the low-dosage group.",
+    "where": "Results — Lethality Outcomes",
+    "verified": "primary"
+   },
+   {
+    "t": "The high-dosage group was associated with lethality (odds ratio, 3.6; 95% CI, 1.2-10.6). Despite the small sample size, in an exploratory multivariate analysis, the high-dosage CQ was no longer associated with death when controlled by age (odds ratio, 2.8; 95% CI, 0.9-8.5).",
+    "where": "Results — Lethality Outcomes",
+    "verified": "primary"
+   },
+   {
+    "t": "Older age (mean [SD] age, 54.7 [13.7] years vs 47.4 [13.3] years) and more heart disease (5 of 28 [17.9%] vs 0) were seen in the high-dose group.",
+    "where": "Abstract — Results. This is the randomisation imbalance; the same figures are Table 1 rows 'Age, mean (SD), y' and 'Heart disease'.",
+    "verified": "primary"
+   }
+  ],
+  "limits": [
+   {
+    "t": "However, this study has limitations, including its small sample size; its single-center design; its lack of a placebo control group; and the absence of exclusion criteria based on the QTc interval at baseline.",
+    "where": "Discussion — Strengths and Limitations",
+    "verified": "primary"
+   },
+   {
+    "t": "Unfortunately, probably because of the low sample size, this study's randomization assigned more older patients with heart disease to the high-dosage group than the low-dosage group. Therefore, a limitation for the conclusions of the study on lethality per group is that the high-dosage group included more patients susceptible to cardiac complications, with or without CQ treatment.",
+    "where": "Discussion",
+    "verified": "primary"
+   },
+   {
+    "t": "We were not able to independently assess the toxic role of CQ because all patients were already using azithromycin, as per hospital protocol.",
+    "where": "Discussion",
+    "verified": "primary"
+   }
+  ]
+ },
+ "whereToLook": {
+  "abstract": "Top of the page, structured.",
+  "design": "Methods. Note what the comparator is.",
+  "numbers": "Results and, crucially, Table 1 - the baseline characteristics, not the outcome table.",
+  "limits": "There IS a labelled section: 'Strengths and Limitations'."
+ },
+ "companion": "",
+ "note": "",
+ "sectionsFilled": true,
+ "fidelity": {
+  "en": "These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.",
+  "ru": "Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."
+ }
+}

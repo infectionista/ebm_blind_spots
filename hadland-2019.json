@@ -1,0 +1,85 @@
+{
+ "schema": 1,
+ "id": "hadland-2019",
+ "title": "Association of Pharmaceutical Industry Marketing of Opioid Products With Mortality From Opioid-Related Overdoses",
+ "citation": "Hadland SE, Rivera-Aguirre A, Marshall BDL, Cerda M. JAMA Netw Open 2019;2(1):e186007",
+ "pmid": "30657529",
+ "doi": "10.1001/jamanetworkopen.2018.6007",
+ "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6484875/",
+ "topic": "addiction",
+ "tier": "strong",
+ "difficulty": "moderate",
+ "status": "No retraction. HAS AN ERRATUM: 'Errors in Results, Table 3, and eTables 2 and 3', JAMA Netw Open 2019;2(3):e191625, PMID 30901034. Finding the erratum and saying what it changed is an exercise of its own.",
+ "claim": "Pharmaceutical marketing of opioid products to physicians caused opioid overdose deaths.",
+ "designOneLine": "Population-based cross-sectional county-level analysis with a one-year lag between marketing and mortality, plus a mediation analysis through county prescribing rates.",
+ "n": "9398 county-years; 434,754 payments totalling $39.7 million to 67,507 physicians across 2208 counties",
+ "theOneThing": "The exposure is measured on COUNTIES, not people. Nothing links the physicians who received the meals to the particular people who died. And marketing and overdose deaths are concentrated in the same kinds of places, so the whole association can be produced by the places. Then look at the mediation: at best 26% of the association runs through prescribing, so three quarters of it goes somewhere else - and the authors quote that and move on.",
+ "sections": {
+  "concl": [
+   {
+    "t": "In this study, across US counties, marketing of opioid products to physicians was associated with increased opioid prescribing and, subsequently, with elevated mortality from overdoses. Amid a national opioid overdose crisis, reexamining the influence of the pharmaceutical industry may be warranted.",
+    "where": "Abstract — Conclusions and Relevance",
+    "verified": "primary"
+   }
+  ],
+  "design": [
+   {
+    "t": "All US counties were included, with data on overdoses from August 1, 2014, to December 31, 2016, linked to marketing data from August 1, 2013, to December 31, 2015, using a 1-year lag.",
+    "where": "Abstract — Design, Setting, and Participants",
+    "verified": "primary"
+   },
+   {
+    "t": "The primary exposure was county-level annual pharmaceutical company opioid marketing to physicians, which we defined in the following 3 ways: (1) marketing value in dollars per 1000 county population, (2) number of payments to physicians per 1000 county population, and (3) number of physicians receiving marketing per 1000 county population.",
+    "where": "Methods — Variables",
+    "verified": "primary"
+   },
+   {
+    "t": "We introduced a 1-year lag between mortality rates and marketing to address the possibility of reverse causality by ensuring that marketing of opioids to physicians preceded observed mortality rates.",
+    "where": "Methods — Statistical Analysis",
+    "verified": "primary"
+   }
+  ],
+  "numbers": [
+   {
+    "t": "mortality from opioid overdoses increased with each 1-SD increase in marketing value in dollars per capita (aRR, 1.09; 95% CI, 1.05-1.12), number of payments to physicians per capita (aRR, 1.18; 95% CI, 1.14-1.21), and number of physicians receiving marketing per capita (aRR, 1.12; 95% CI, 1.08-1.16).",
+    "where": "Results",
+    "verified": "primary"
+   },
+   {
+    "t": "Prescribing rates mediated 3% of the association between opioid marketing and mortality from overdoses in terms of value in dollars per capita, 11% of the association between opioid marketing and mortality from overdoses in terms of number of payments per capita, and 26% of the association between opioid marketing and mortality from overdoses in terms of number of physicians receiving marketing per capita.",
+    "where": "Results",
+    "verified": "primary"
+   }
+  ],
+  "limits": [
+   {
+    "t": "This study has several limitations. First, as outlined earlier, our findings demonstrate associations between opioid marketing and subsequent prescribing and mortality from overdoses; we cannot exclude reverse causation.",
+    "where": "Discussion — Limitations",
+    "verified": "primary"
+   },
+   {
+    "t": "Although there remains the possibility of reverse causality-that is, that counties with high opioid prescribing rates and already experiencing elevated mortality from overdoses are subsequently targeted by pharmaceutical company marketing-it is potentially concerning that physicians in such counties would receive further marketing for opioids.",
+    "where": "Discussion — second paragraph",
+    "verified": "primary"
+   },
+   {
+    "t": "Fourth, with the measures of opioid prescribing used, we are unable to distinguish appropriate opioid prescribing from potentially inappropriate prescribing. In addition, the data sources used do not allow for the differentiation between opioids that are prescribed and those that are illicitly acquired.",
+    "where": "Discussion — Limitations",
+    "verified": "primary"
+   }
+  ]
+ },
+ "whereToLook": {
+  "abstract": "Top of the PMC page.",
+  "design": "Methods - the exposure definition names three separate measures. Pick one and say which.",
+  "numbers": "Table 2 for the rate ratios, Table 4 for the direct, indirect and total effects and the percentage mediated.",
+  "limits": "There IS a labelled Limitations section, and its first sentence is the deciding one."
+ },
+ "companion": "The physician-level sibling: Hadland SE, et al. JAMA Intern Med 2018;178(6):861-863, PMID 29799955, free at PMC6145750. Same team, same question, one level down. Teaching them as a pair makes the level-of-analysis problem visible with no statistics. Its own words: 'Our findings establish an association, not cause and effect.'",
+ "note": "",
+ "sectionsFilled": true,
+ "fidelity": {
+  "en": "These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.",
+  "ru": "Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."
+ }
+}
