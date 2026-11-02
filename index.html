@@ -357,11 +357,13 @@ details.tool[open]>summary::before{content:"\2212 ";}
   <h2 data-t="h8a"></h2>
   <div id="completeness"></div>
   <div class="actions" style="border:0;padding-top:0;margin-top:14px">
+    <span id="sendBox" style="display:none;gap:8px;align-items:center"><input id="groupCode" data-ph="codePh" style="width:150px"><button class="btn" id="btnSend" data-t="btnSend"></button></span>
     <button class="btn" id="btnCopy" data-t="btnCopy"></button>
     <button class="btn ghost" id="btnDl" data-t="btnDl"></button>
     <button class="btn ghost" id="btnSave" data-t="btnSave"></button>
     <label class="btn ghost" style="display:inline-block"><span data-t="btnLoad"></span><input type="file" id="fileIn" accept=".json" hidden></label>
   </div>
+  <p class="sub" id="sendStat" style="display:none"></p>
   <p class="sub" data-t="handinNote"></p>
   <pre class="out" id="out"></pre>
 </section>
@@ -378,10 +380,13 @@ details.tool[open]>summary::before{content:"\2212 ";}
 </div>
 <script>
 /* ===================================================================
-   TEACHER SETUP — edit this one line.
-   Paste the URL of your Google Form. Empty = the hand-in button only
-   copies and downloads.
+   TEACHER SETUP — edit these two lines.
+   SUBMIT_URL: URL of your Apps Script web app (ends in /exec). Set, it
+   shows a "Hand in" button that sends the report straight to the
+   tutor's Drive; students type the group code chosen in the script.
+   FORM_URL: URL of a Google Form. Empty = Copy only copies.
 =================================================================== */
+const SUBMIT_URL = "";
 const FORM_URL = "";
 /* =================================================================== */
 
@@ -1049,6 +1054,13 @@ untriaged:['{n} objection(s) with no answer. Go back to step 6. An objection you
 flagsGo:['{n} open flag(s). They go into the submission as they are. Unresolved is an honest state; hidden is not.','Открытых флагов: {n}. Они уйдут в сдачу как есть. Нерешённое — честное состояние, спрятанное — нет.'],
 allClear:['Nothing contradicts itself.','Ничто не противоречит само себе.'],
 noForm:['Copied. No hand-in form is set in this copy of the trainer — send the text to your tutor, or use Download.','Скопировано. В этой копии тренажёра форма сдачи не задана — отправьте текст преподавателю или скачайте файл.'],
+btnSend:['Hand in','Сдать работу'],
+codePh:['Group code','Код группы'],
+sendBusy:['Sending…','Отправляется…'],
+sendNoCode:['Enter the group code first — your tutor gave it to the class.','Сначала введите код группы — его давал преподаватель.'],
+sendOk:['Handed in — your tutor has the file.','Сдано — файл у преподавателя.'],
+sendErrCode:['The code does not match. Check it with your tutor.','Код не подходит. Сверьте его с преподавателем.'],
+sendErr:['Could not send — check the connection and try again, or use the copy / download buttons.','Отправить не вышло — проверьте связь и попробуйте ещё раз или воспользуйтесь кнопками копирования и скачивания.'],
 });
 
 /* ---------- flags ---------- */
@@ -1342,8 +1354,26 @@ function bind(){
     try{await navigator.clipboard.writeText(t);}catch(e){
       const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();
       try{document.execCommand('copy');}catch(e2){}ta.remove();}
-    if(FORM_URL)window.open(FORM_URL,'_blank','noopener');else alert(tx(T.noForm));});
-  $('#setupNote').innerHTML=FORM_URL?'':' <b>Tutor:</b> set FORM_URL at the top of the script to wire the hand-in button to your form.';
+    if(FORM_URL)window.open(FORM_URL,'_blank','noopener');else if(!SUBMIT_URL)alert(tx(T.noForm));});
+  if(SUBMIT_URL){
+    const sb=$('#sendBox');if(sb)sb.style.display='inline-flex';
+    const gc=$('#groupCode');
+    if(gc){gc.value=S.gcode||'';gc.addEventListener('input',()=>{S.gcode=gc.value.trim();save();});}
+    const stat=(m,bad)=>{const st=$('#sendStat');if(!st)return;st.style.display='';st.textContent=m;st.style.color=bad?'var(--verm)':'var(--petrol)';};
+    $('#btnSend').addEventListener('click',async()=>{
+      const code=(S.gcode||'').trim();
+      if(!code){stat(tx(T.sendNoCode),true);return;}
+      const b=$('#btnSend');b.disabled=true;stat(tx(T.sendBusy),false);
+      try{
+        const r=await fetch(SUBMIT_URL,{method:'POST',body:JSON.stringify({code,name:S.meName||'',paper:S.mePaper||'',report:md()})});
+        const j=await r.json();
+        if(j.ok)stat(tx(T.sendOk),false);
+        else if(/code/i.test(j.error||''))stat(tx(T.sendErrCode),true);
+        else stat(tx(T.sendErr),true);
+      }catch(e){stat(tx(T.sendErr),true);}
+      b.disabled=false;});
+  }
+  $('#setupNote').innerHTML=(FORM_URL||SUBMIT_URL)?'':' <b>Tutor:</b> set SUBMIT_URL (Apps Script) or FORM_URL at the top of the script to wire the hand-in.';
 }
 
 try{const saved=localStorage.getItem('ebm-trainer-2');if(saved)Object.assign(S,JSON.parse(saved));}catch(e){}
