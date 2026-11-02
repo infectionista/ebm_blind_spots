@@ -1,0 +1,1305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>From Association to Causation</title>
+<style>
+:root{
+  --cream:#F5E7C8; --cream-l:#FBF3E2; --paper:#F8EACF;
+  --petrol:#0B5359; --petrol-l:#157079; --verm:#B4573A; --char:#2A2622;
+  --ochre:#C08A3E; --grey:#8C8478; --line:#D9C9A6;
+  --ok:#2F6B4F;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper); color:var(--char);
+  font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px 80px}
+header{border-bottom:2px solid var(--verm);margin-bottom:0;padding:22px 0 16px}
+h1{font-size:26px;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--grey);font-size:14px}
+.idbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.idbar input{flex:1 1 180px;min-width:0}
+input,textarea,select{
+  font:inherit;color:var(--char);background:var(--cream-l);
+  border:1px solid var(--line);border-radius:6px;padding:9px 11px;width:100%;
+}
+textarea{line-height:1.5;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--petrol);outline-offset:-1px;border-color:var(--petrol)}
+.layout{display:grid;grid-template-columns:1fr 290px;gap:28px;align-items:start}
+@media(max-width:880px){.layout{grid-template-columns:1fr}.side{order:-1;position:static!important}}
+.side{position:sticky;top:16px}
+nav.steps{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 24px}
+nav.steps button{
+  font:600 12px/1 inherit;letter-spacing:.02em;padding:9px 11px;border-radius:5px;
+  border:1px solid var(--line);background:var(--cream-l);color:var(--grey);cursor:pointer;
+}
+nav.steps button.on{background:var(--petrol);border-color:var(--petrol);color:var(--cream)}
+nav.steps button.done{color:var(--petrol);border-color:var(--petrol)}
+nav.steps button:disabled{opacity:.4;cursor:not-allowed}
+.panel{display:none}
+.panel.on{display:block}
+.kicker{font:700 11px/1 inherit;letter-spacing:.14em;text-transform:uppercase;color:var(--verm);margin-bottom:8px}
+h2{font-size:22px;margin:0 0 6px}
+.lede{color:var(--grey);margin:0 0 20px;max-width:62ch}
+.field{margin-bottom:18px}
+.field > label{display:block;font-weight:600;margin-bottom:5px}
+.field .help{color:var(--grey);font-size:13px;margin-bottom:6px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:620px){.row2{grid-template-columns:1fr}}
+.card{border:1px solid var(--line);border-radius:8px;background:var(--cream-l);padding:16px;margin-bottom:16px}
+.card.petrol{border-color:var(--petrol)}
+.card.verm{border-color:var(--verm)}
+.card.ochre{border-color:var(--ochre)}
+.card h3{margin:0 0 8px;font-size:15px;letter-spacing:.02em;text-transform:uppercase}
+.btn{
+  font:600 14px/1 inherit;padding:11px 16px;border-radius:6px;cursor:pointer;
+  background:var(--petrol);color:var(--cream);border:1px solid var(--petrol);
+}
+.btn:hover{background:var(--petrol-l)}
+.btn:disabled{background:var(--line);border-color:var(--line);color:#fff;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--petrol)}
+.btn.ghost:hover{background:var(--cream)}
+.btn.verm{background:var(--verm);border-color:var(--verm)}
+.btn.sm{font-size:12px;padding:7px 11px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px;padding-top:18px;border-top:1px solid var(--line)}
+.hint{
+  border-left:3px solid var(--ochre);background:rgba(192,138,62,.09);
+  padding:11px 14px;margin:10px 0;font-size:14px;border-radius:0 5px 5px 0;
+}
+.hint b{color:var(--ochre)}
+.flag{
+  border-left:3px solid var(--verm);background:rgba(180,87,58,.09);
+  padding:11px 14px;margin:10px 0;font-size:14px;border-radius:0 5px 5px 0;
+}
+.good{border-left-color:var(--ok);background:rgba(47,107,79,.08)}
+.locked{opacity:.55;pointer-events:none}
+.pill{
+  display:inline-block;font:700 10px/1 inherit;letter-spacing:.08em;text-transform:uppercase;
+  padding:4px 7px;border-radius:3px;background:var(--line);color:var(--char);
+}
+.pill.v{background:var(--verm);color:var(--cream)}
+.pill.p{background:var(--petrol);color:var(--cream)}
+.pill.o{background:var(--ochre);color:var(--cream)}
+.side .card{font-size:13px}
+.side h3{font-size:11px;letter-spacing:.12em;color:var(--grey)}
+.rival{padding:8px 0;border-bottom:1px solid var(--line)}
+.rival:last-child{border-bottom:0}
+.rival b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--verm)}
+.chk{display:flex;gap:9px;align-items:flex-start;margin-bottom:10px}
+.chk input{width:18px;height:18px;margin:2px 0 0;flex:0 0 auto}
+.chk label{font-weight:600}
+.radios{display:flex;flex-direction:column;gap:8px}
+.radios label{display:flex;gap:9px;align-items:flex-start;font-weight:400}
+.radios input{width:17px;height:17px;margin:2px 0 0;flex:0 0 auto}
+table.g{width:100%;border-collapse:collapse;font-size:14px}
+table.g th{text-align:left;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--grey);padding:0 8px 8px 0;font-weight:700}
+table.g td{padding:7px 8px 7px 0;vertical-align:top;border-top:1px solid var(--line)}
+.gnum{font-weight:700;color:var(--petrol);width:24px}
+.gname{font-weight:600;width:190px}
+.verdict-sel{max-width:160px}
+details.row{border:1px solid var(--line);border-radius:7px;margin-bottom:10px;background:var(--cream-l)}
+details.row[open]{border-color:var(--petrol)}
+details.row > summary{
+  padding:12px 14px;cursor:pointer;display:flex;gap:10px;align-items:center;font-weight:600;
+  list-style:none;
+}
+details.row > summary::-webkit-details-marker{display:none}
+details.row > summary .n{color:var(--petrol);font-weight:700}
+details.row > summary .st{margin-left:auto;display:flex;gap:6px;align-items:center}
+.rowbody{padding:0 14px 16px}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
+.tally{display:flex;gap:14px;flex-wrap:wrap;margin:14px 0}
+.tallybox{flex:1 1 150px;border:1px solid var(--line);border-radius:7px;padding:12px;background:var(--cream-l);text-align:center}
+.tallybox .big{font-size:30px;font-weight:700;line-height:1.1}
+.tallybox .lbl{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--grey);margin-top:3px}
+.attack{border:1px solid var(--verm);border-radius:7px;padding:14px;margin-bottom:12px;background:rgba(180,87,58,.05)}
+.attack .q{font-weight:600;margin-bottom:10px}
+.attack .triage{display:flex;gap:8px;flex-wrap:wrap}
+.attack .triage button{
+  font:600 12px/1 inherit;padding:8px 10px;border-radius:5px;border:1px solid var(--line);
+  background:var(--cream-l);cursor:pointer;color:var(--char)
+}
+.attack .triage button.sel{background:var(--verm);border-color:var(--verm);color:var(--cream)}
+.calc{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}
+@media(max-width:620px){.calc{grid-template-columns:1fr}}
+pre.out{
+  white-space:pre-wrap;word-break:break-word;background:var(--cream-l);
+  border:1px solid var(--line);border-radius:7px;padding:14px;font-size:12.5px;max-height:400px;overflow:auto
+}
+.foot{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--grey);font-size:12px}
+.foot a{color:var(--petrol)}
+
+.langbar{position:absolute;top:18px;right:16px;display:flex;gap:4px}
+.langbar button{font:700 11px/1 inherit;letter-spacing:.06em;padding:7px 10px;border-radius:5px;
+  border:1px solid var(--line);background:var(--cream-l);color:var(--grey);cursor:pointer}
+.langbar button.on{background:var(--petrol);border-color:var(--petrol);color:var(--cream)}
+header{position:relative}
+details.gloss{margin:0 0 14px;border-left:3px solid var(--petrol);background:rgba(11,83,89,.055);border-radius:0 5px 5px 0}
+details.gloss>summary{padding:9px 13px;cursor:pointer;font:600 13px/1.3 inherit;color:var(--petrol);list-style:none}
+details.gloss>summary::-webkit-details-marker{display:none}
+details.gloss>summary::before{content:"? ";font-weight:700}
+details.gloss .gb{padding:0 13px 12px;font-size:13.5px}
+details.gloss .gb p{margin:0 0 8px}
+details.gloss .gb b{color:var(--petrol)}
+details.tool{border:1px solid var(--line);border-radius:7px;background:var(--cream-l);margin-top:18px}
+details.tool>summary{padding:12px 14px;cursor:pointer;font-weight:600;list-style:none}
+details.tool>summary::-webkit-details-marker{display:none}
+details.tool>summary::before{content:"+ ";color:var(--petrol);font-weight:700}
+details.tool[open]>summary::before{content:"\2212 ";}
+.tb{padding:0 14px 16px}
+
+.paper-pane{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:7px;
+  background:#FFF8E9;padding:14px;font-size:13.5px;line-height:1.65;white-space:pre-wrap;
+  word-break:break-word;user-select:text}
+.paper-pane mark{background:rgba(192,138,62,.35);border-radius:2px}
+.paper-pane mark.s-limits{background:rgba(180,87,58,.3)}
+.tagbar{position:sticky;bottom:0;display:flex;gap:7px;flex-wrap:wrap;padding:11px 0;
+  background:var(--paper);border-bottom:1px solid var(--line);margin-bottom:14px;z-index:5}
+.tagbar button{font:600 12px/1 inherit;padding:9px 11px;border-radius:5px;border:1px solid var(--petrol);
+  background:var(--cream-l);color:var(--petrol);cursor:pointer}
+.tagbar button:hover{background:var(--petrol);color:var(--cream)}
+.slot{border:1px solid var(--line);border-radius:7px;padding:11px 13px;margin-bottom:9px;background:var(--cream-l)}
+.slot.empty{border-style:dashed;opacity:.75}
+.slot .sh{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;margin-bottom:5px}
+.slot .sh .x{margin-left:auto;font:600 11px/1 inherit;color:var(--verm);cursor:pointer;background:none;border:0}
+.slot .sv{font-size:12.5px;color:var(--char);max-height:90px;overflow:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="langbar"><button id="lEN" class="on">EN</button><button id="lRU">РУС</button></div>
+  <h1 data-t="h1"></h1>
+  <div class="sub" data-t="sub"></div>
+  <div class="idbar">
+    <input id="meName" data-ph="phName">
+    <input id="mePaper" data-ph="phPaper">
+  </div>
+</header>
+
+<nav class="steps" id="nav"></nav>
+
+<div class="layout">
+<main>
+
+<section class="panel" data-step="0">
+  <div class="kicker" data-t="k0"></div>
+  <h2 data-t="h0"></h2>
+  <p class="lede" data-t="d0"></p>
+
+  <div class="card petrol">
+    <h3 data-t="loadT"></h3>
+    <div id="caseBox"></div>
+    <div class="sub" style="margin:16px 0 7px" data-t="orOwn"></div>
+    <div class="actions" style="border:0;margin:0;padding:0">
+      <label class="btn ghost" style="display:inline-block"><span data-t="loadPdf"></span><input type="file" id="pdfIn" accept="application/pdf" hidden></label>
+      <button class="btn ghost" id="pasteToggle" data-t="loadPaste"></button>
+    </div>
+    <div id="pdfStatus" class="sub" style="margin-top:8px"></div>
+    <div id="pasteBox" hidden style="margin-top:12px">
+      <div class="help" data-t="pasteH"></div>
+      <textarea id="rawPaste" rows="6"></textarea>
+      <button class="btn sm" id="pasteGo" style="margin-top:8px" data-t="pasteGo"></button>
+    </div>
+  </div>
+
+  <div id="tagZone" hidden>
+    <h3 style="font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--grey)" data-t="tagT"></h3>
+    <p class="sub" data-t="tagH"></p>
+    <div id="paperPane" class="paper-pane"></div>
+    <div class="tagbar" id="tagbar"></div>
+    <div id="slots"></div>
+    <div id="flag-load"></div>
+  </div>
+
+  <div class="actions"><button class="btn" data-go="1" data-t="next1"></button></div>
+</section>
+
+<section class="panel" data-step="1">
+  <div class="kicker" data-t="k1"></div>
+  <h2 data-t="h1a"></h2>
+  <p class="lede" data-t="d1"></p>
+  <div class="row2">
+    <div class="field"><label data-t="fX"></label><input data-k="xWhat"></div>
+    <div class="field"><label data-t="fY"></label><input data-k="yWhat"></div>
+  </div>
+  <div class="row2">
+    <div class="field"><label data-t="fXm"></label><textarea rows="3" data-k="xMeas"></textarea></div>
+    <div class="field"><label data-t="fYm"></label><textarea rows="3" data-k="yMeas"></textarea></div>
+  </div>
+  <div class="card ochre">
+    <h3 data-t="periods"></h3>
+    <div class="row2">
+      <div class="field" style="margin:0"><label data-t="pClaim"></label>
+        <div class="calc" style="grid-template-columns:1fr 1fr">
+          <input type="number" data-k="claimFrom" data-ph="phFrom"><input type="number" data-k="claimTo" data-ph="phTo"></div></div>
+      <div class="field" style="margin:0"><label data-t="pData"></label>
+        <div class="calc" style="grid-template-columns:1fr 1fr">
+          <input type="number" data-k="dataFrom" data-ph="phFrom"><input type="number" data-k="dataTo" data-ph="phTo"></div></div>
+    </div>
+    <div id="flag-period"></div>
+  </div>
+  <div class="field"><label data-t="popQ"></label><div class="help" data-t="popH"></div>
+    <div class="radios">
+      <label><input type="radio" name="samepop" value="same" data-k="samePop"> <span data-t="pop1"></span></label>
+      <label><input type="radio" name="samepop" value="diff" data-k="samePop"> <span data-t="pop2"></span></label>
+      <label><input type="radio" name="samepop" value="places" data-k="samePop"> <span data-t="pop3"></span></label>
+    </div><div id="flag-pop"></div></div>
+  <div class="actions"><button class="btn ghost" data-go="0" data-t="back"></button><button class="btn" data-go="2" data-t="next2"></button></div>
+</section>
+
+<section class="panel" data-step="2">
+  <div class="kicker" data-t="k2"></div>
+  <h2 data-t="h2a"></h2>
+  <p class="lede" data-t="d2"></p>
+  <div class="field"><label data-t="qa"></label><input data-k="qA"></div>
+  <div class="field"><label data-t="qb"></label><input data-k="qB"></div>
+  <div class="field"><label data-t="qc"></label><input data-k="qC"></div>
+  <div class="field"><label data-t="pickQ"></label>
+    <div class="radios">
+      <label><input type="radio" name="pick" value="A" data-k="pick"> <span id="lab-A"></span></label>
+      <label><input type="radio" name="pick" value="B" data-k="pick"> <span id="lab-B"></span></label>
+      <label><input type="radio" name="pick" value="C" data-k="pick"> <span id="lab-C"></span></label>
+      <label><input type="radio" name="pick" value="one" data-k="pick"> <span data-t="pickOne"></span></label>
+    </div></div>
+  <button class="btn ghost sm" data-hint="split" data-t="hintBtn"></button>
+  <div class="hint" id="hint-split" hidden data-t="hintSplit"></div>
+  <div class="actions"><button class="btn ghost" data-go="1" data-t="back"></button><button class="btn" data-go="3" data-t="next3"></button></div>
+</section>
+
+<section class="panel" data-step="3">
+  <div class="kicker" data-t="k3"></div>
+  <h2 data-t="h3a"></h2>
+  <p class="lede" data-t="d3"></p>
+  <div class="field"><label data-t="orderQ"></label>
+    <div class="radios">
+      <label><input type="radio" name="order" value="cross" data-k="order"> <span data-t="o1"></span></label>
+      <label><input type="radio" name="order" value="xfirst" data-k="order"> <span data-t="o2"></span></label>
+      <label><input type="radio" name="order" value="yfirst" data-k="order"> <span data-t="o3"></span></label>
+      <label><input type="radio" name="order" value="cant" data-k="order"> <span data-t="o4"></span></label>
+    </div></div>
+  <div class="field"><label data-t="oQuote"></label><textarea rows="3" data-k="orderQuote"></textarea><div id="chk-orderquote"></div></div>
+  <div id="flag-order"></div>
+  <div class="field" id="targetbox" hidden><label data-t="tgQ"></label><div class="help" data-t="tgH"></div>
+    <textarea rows="3" data-k="targetAns"></textarea></div>
+  <div class="actions"><button class="btn ghost" data-go="2" data-t="back"></button><button class="btn" data-go="4" data-t="next4"></button></div>
+</section>
+
+<section class="panel" data-step="4">
+  <div class="kicker" data-t="k4"></div>
+  <h2 data-t="h4a"></h2>
+  <p class="lede" data-t="d4"></p>
+  <div id="rivalwrap"></div>
+  <div class="actions"><button class="btn ghost" data-go="3" data-t="back"></button><button class="btn verm" id="lockBtn" data-t="lock"></button></div>
+  <p class="sub" style="margin-top:10px" data-t="lockNote"></p>
+</section>
+
+<section class="panel" data-step="5">
+  <div class="kicker" data-t="k5"></div>
+  <h2 data-t="h5a"></h2>
+  <p class="lede" data-t="d5"></p>
+  <div class="card ochre" data-t="hillCard"></div>
+  <div id="rows"></div>
+  <div class="actions"><button class="btn ghost" data-go="4" data-t="back"></button><button class="btn" data-go="6" data-t="next6"></button></div>
+</section>
+
+<section class="panel" data-step="6">
+  <div class="kicker" data-t="k6"></div>
+  <h2 data-t="h6a"></h2>
+  <p class="lede" data-t="d6"></p>
+  <div id="morgan"></div>
+  <div class="tally" id="tally"></div>
+  <div id="attacks"></div>
+  <div class="actions"><button class="btn ghost" data-go="5" data-t="back"></button><button class="btn" data-go="7" data-t="next7"></button></div>
+</section>
+
+<section class="panel" data-step="7">
+  <div class="kicker" data-t="k7"></div>
+  <h2 data-t="h7a"></h2>
+  <p class="lede" data-t="d7"></p>
+  <div class="field"><label data-t="vQ"></label>
+    <div class="radios">
+      <label><input type="radio" name="verdict" value="causal" data-k="verdict"> <span data-t="v1"></span></label>
+      <label><input type="radio" name="verdict" value="notcausal" data-k="verdict"> <span data-t="v2"></span></label>
+      <label><input type="radio" name="verdict" value="undecided" data-k="verdict"> <span data-t="v3"></span></label>
+    </div></div>
+  <div id="vSummary"></div>
+  <div class="field"><label data-t="vWhy"></label><div class="help" data-t="vWhyH"></div>
+    <textarea rows="4" data-k="vBecause"></textarea></div>
+  <div class="field"><label data-t="vChg"></label><div class="help" data-t="vChgH"></div>
+    <textarea rows="3" data-k="vChange"></textarea></div>
+  <div class="card" data-t="voiceCard"></div>
+  <details class="tool"><summary data-t="calcT"></summary><div class="tb">
+    <p class="sub" style="margin-top:0" data-t="calcH"></p>
+    <div class="calc">
+      <div><label class="sub">a</label><input id="calcA" type="number" step="any"></div>
+      <div><label class="sub">b</label><input id="calcB" type="number" step="any"></div>
+      <div><button class="btn sm" id="calcGo">a ÷ b</button></div></div>
+    <div id="calcOut"></div>
+    <div class="calc" style="margin-top:14px">
+      <div><label class="sub" data-t="medL"></label><input id="medPct" type="number" step="any"></div><div></div>
+      <div><button class="btn sm" id="medGo" data-t="medBtn"></button></div></div>
+    <div id="medOut"></div>
+  </div></details>
+  <div class="actions"><button class="btn ghost" data-go="6" data-t="back"></button><button class="btn" data-go="8" data-t="next8"></button></div>
+</section>
+
+<section class="panel" data-step="8">
+  <div class="kicker" data-t="k8"></div>
+  <h2 data-t="h8a"></h2>
+  <div id="completeness"></div>
+  <div class="actions" style="border:0;padding-top:0;margin-top:14px">
+    <button class="btn" id="btnCopy" data-t="btnCopy"></button>
+    <button class="btn ghost" id="btnDl" data-t="btnDl"></button>
+    <button class="btn ghost" id="btnSave" data-t="btnSave"></button>
+    <label class="btn ghost" style="display:inline-block"><span data-t="btnLoad"></span><input type="file" id="fileIn" accept=".json" hidden></label>
+  </div>
+  <p class="sub" data-t="handinNote"></p>
+  <pre class="out" id="out"></pre>
+</section>
+
+</main>
+<aside class="side">
+  <div class="card verm" id="sideRivals"><h3 data-t="sRivals"></h3><div id="sideRivalList" class="sub"></div></div>
+  <div class="card" id="sideFlags"><h3 data-t="sFlags"></h3><div id="sideFlagList" class="sub"></div></div>
+  <div class="card"><h3 data-t="sProg"></h3><div id="sideProg" class="sub"></div>
+    <button class="btn ghost sm" id="btnSave2" style="margin-top:10px" data-t="btnSave"></button></div>
+</aside>
+</div>
+<div class="foot"><span data-t="foot"></span><span id="setupNote"></span></div>
+</div>
+const EMBEDDED={"index":{"schema":2,"cases":[{"id":"bendavid-2021","title":"COVID-19 antibody seroprevalence in Santa Clara County, California","citation":"Bendavid E, Mulaney B, Sood N, et al. Int J Epidemiol 2021;50(2):410-419","tier":"strong","topic":"infection","difficulty":"moderate","sectionsFilled":true,"file":"cases/bendavid-2021.json"},{"id":"borba-2020","title":"Effect of high vs low doses of chloroquine diphosphate in severe SARS-CoV-2 infection (CloroCovid-19)","citation":"Borba MGS, Val FFA, Sampaio VS, et al. JAMA Netw Open 2020;3(4):e208857","tier":"weak","topic":"infection","difficulty":"easy-moderate","sectionsFilled":true,"file":"cases/borba-2020.json"},{"id":"carhart-harris-2016","title":"Psilocybin with psychological support for treatment-resistant depression: an open-label feasibility study","citation":"Carhart-Harris RL, et al. Lancet Psychiatry 2016;3(7):619-627","tier":"weak","topic":"psychoactive","difficulty":"moderate","sectionsFilled":true,"file":"cases/carhart-harris-2016.json"},{"id":"danmask-2021","title":"Effectiveness of adding a mask recommendation to other public health measures (DANMASK-19)","citation":"Bundgaard H, Bundgaard JS, Raaschou-Pedersen DET, et al. Ann Intern Med 2021;174(3):335-343","tier":"strong","topic":"infection","difficulty":"easy-moderate","sectionsFilled":true,"file":"cases/danmask-2021.json"},{"id":"gautret-2020","title":"Hydroxychloroquine and azithromycin as a treatment of COVID-19","citation":"Gautret P, Lagier JC, Parola P, et al. Int J Antimicrob Agents 2020;56(1):105949","tier":"weak","topic":"infection","difficulty":"easy","sectionsFilled":true,"file":"cases/gautret-2020.json"},{"id":"hadland-2019","title":"Association of Pharmaceutical Industry Marketing of Opioid Products With Mortality From Opioid-Related Overdoses","citation":"Hadland SE, Rivera-Aguirre A, Marshall BDL, Cerda M. JAMA Netw Open 2019;2(1):e186007","tier":"strong","topic":"addiction","difficulty":"moderate","sectionsFilled":true,"file":"cases/hadland-2019.json"},{"id":"johnson-2014","title":"Pilot study of the 5-HT2AR agonist psilocybin in the treatment of tobacco addiction","citation":"Johnson MW, Garcia-Romeu A, Cosimano MP, Griffiths RR. J Psychopharmacol 2014;28(11):983-992","tier":"weak","topic":"addiction","difficulty":"easy-moderate","sectionsFilled":true,"file":"cases/johnson-2014.json"},{"id":"mitchell-2021","title":"MDMA-assisted therapy for severe PTSD: a randomized, double-blind, placebo-controlled phase 3 study","citation":"Mitchell JM, et al. Nat Med 2021;27(6):1025-1033","tier":"strong","topic":"psychoactive","difficulty":"moderate","sectionsFilled":true,"file":"cases/mitchell-2021.json"},{"id":"porter-jick-1980","title":"Addiction rare in patients treated with narcotics","citation":"Porter J, Jick H. N Engl J Med 1980;302(2):123","tier":"weak","topic":"addiction","difficulty":"easy","sectionsFilled":true,"file":"cases/porter-jick-1980.json"},{"id":"robins-1974","title":"How Permanent Was Vietnam Drug Addiction?","citation":"Robins LN, Davis DH, Nurco DN. Am J Public Health 1974;64(12 Suppl):38-43","tier":"strong","topic":"addiction","difficulty":"easy","sectionsFilled":true,"file":"cases/robins-1974.json"}]},"packs":{"bendavid-2021":{"schema":1,"id":"bendavid-2021","title":"COVID-19 antibody seroprevalence in Santa Clara County, California","citation":"Bendavid E, Mulaney B, Sood N, et al. Int J Epidemiol 2021;50(2):410-419","pmid":"33615345","doi":"10.1093/ije/dyab010","url":"https://pmc.ncbi.nlm.nih.gov/articles/PMC7928865/","topic":"infection","tier":"strong","difficulty":"moderate","status":"no retraction, correction or expression of concern","claim":"A large share of the county's population had already been infected with SARS-CoV-2.","designOneLine":"Cross-sectional serosurvey using a rapid lateral-flow assay; participants recruited by targeted Facebook advertisements; post-stratification weighting by zip, age, sex, race and ethnicity.","n":"3328 tested","theOneThing":"Raw positives were 1.5% and the assay's specificity was 99.5% - meaning about 0.5% of truly uninfected people test positive anyway. When the thing you are hunting is about as common as your instrument's error rate, a large share of your 'cases' can be false. Then watch an analysis choice move the estimate from 1.2% unweighted to 2.8% weighted. And the recruitment: Facebook ads reaching people who suspected they had already had it, who then drove to a test site. Neither the instrument nor the sampling can be corrected away by arithmetic.","sections":{"concl":[{"t":"The estimated prevalence of SARS-CoV-2 antibodies in Santa Clara County implies that COVID-19 was likely more widespread than indicated by the number of cases in late March, 2020. At the time, low-burden contexts such as Santa Clara County were far from herd-immunity thresholds.","where":"Abstract — Conclusion","verified":"primary"}],"design":[{"t":"We recruited participants by placing targeted advertisements on Facebook aimed at residents of Santa Clara County.","where":"Methods — Study participants and sample recruitment","verified":"primary"},{"t":"Over 24 hours, we registered 3285 adults, and each adult was allowed to bring one child from the same household with them (889 children registered).","where":"Methods — Study participants and sample recruitment","verified":"primary"},{"t":"On 3 and 4 April 2020, we tested 3328 county residents for immunoglobulin G (IgG) and immunoglobulin M (IgM) antibodies to SARS-CoV-2 using a rapid lateral-flow assay (Premier Biotech).","where":"Abstract — Methods","verified":"primary"}],"numbers":[{"t":"The total number of positive cases by either IgG or IgM in our unadjusted sample was 50-a crude prevalence rate of 1.50% (exact binomial 95% CI 1.11-1.98%).","where":"Results","verified":"primary"},{"t":"Accounting for test sensitivity and specificity and sampling error, our point estimate of the unweighted population prevalence was 1.22% (bootstrap 95% CI 0.66-1.79%). After adjusting for test performance and weighting our sample to approximate Santa Clara County demographics by zip, race, age and sex, the prevalence was 2.76% (95% CI 1.32 - 4.22%).","where":"Results","verified":"primary"},{"t":"The estimated specificity using data from all the samples was 99.53% [95% confidence interval (CI) 99.24-99.73%] and sensitivity was 85.56% (95% CI 79.69-90.26%).","where":"Results. NOTE: the Abstract gives a DIFFERENT sensitivity - 82.8% (95% CI 76.0-88.4%) - with the same specificity. That is an internal inconsistency in the published paper. Decide deliberately which you quote.","verified":"primary"}],"limits":[{"t":"This study has several limitations. The primary limitation concerns sample selection biases.","where":"Discussion","verified":"primary"},{"t":"The overall direction and magnitude of these selection effects are hard to fully bound, and our estimates reflect the prevalence in our sample, weighted to match county demographics.","where":"Discussion","verified":"primary"},{"t":"Lower test specificity or greater uncertainty in the test performance could, in principle, meaningfully change the study's conclusions.","where":"Discussion","verified":"primary"}]},"whereToLook":{"abstract":"Top of the PMC page.","design":"Methods - recruitment first, then the assay validation, then the weighting.","numbers":"Results: raw positives, unweighted and weighted prevalence, and the specificity figure from the validation data.","limits":"Discussion, paragraphs beginning 'This study has several limitations'. No separate heading."},"companion":"Side by side with the April 2020 medRxiv preprint (doi 10.1101/2020.04.14.20062463), which reported different numbers - an unusually clean demonstration of what peer review actually changed.","note":"","sectionsFilled":true,"fidelity":{"en":"These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.","ru":"Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."}},"borba-2020":{"schema":1,"id":"borba-2020","title":"Effect of high vs low doses of chloroquine diphosphate in severe SARS-CoV-2 infection (CloroCovid-19)","citation":"Borba MGS, Val FFA, Sampaio VS, et al. JAMA Netw Open 2020;3(4):e208857","pmid":"32330277","doi":"10.1001/jamanetworkopen.2020.8857","url":"https://pmc.ncbi.nlm.nih.gov/articles/PMC12124691/","topic":"infection","tier":"weak","difficulty":"easy-moderate","status":"no retraction, correction or expression of concern","claim":"The chloroquine dose affects survival in severe COVID-19.","designOneLine":"Parallel, double-masked, randomised phase IIb trial of two chloroquine doses, with no placebo arm; single centre, Manaus; enrolment halted.","n":"81 of a planned 440 (41 high-dose, 40 low-dose)","theOneThing":"Two beginner-visible failures at once. With no placebo arm, 39% deaths on high dose versus 15% on low dose compares two doses but says nothing about chloroquine against nothing at all. And randomisation did not balance the groups: the high-dose arm was older (54.7 vs 47.4 years) and contained all five patients with heart disease (5/28 vs 0) - in a trial of a drug that prolongs the QT interval. Randomisation is a procedure, not a promise. Always read Table 1.","sections":{"concl":[{"t":"The preliminary findings of this study suggest that the higher CQ dosage should not be recommended for critically ill patients with COVID-19 because of its potential safety hazards, especially when taken concurrently with azithromycin and oseltamivir. These findings cannot be extrapolated to patients with nonsevere COVID-19.","where":"Abstract — Conclusions and Relevance","verified":"primary"}],"design":[{"t":"This parallel, double-masked, randomized, phase IIb clinical trial with 81 adult patients who were hospitalized with severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2) infection was conducted from March 23 to April 5, 2020, at a tertiary care facility in Manaus, Brazilian Amazon.","where":"Abstract — Design, Setting, and Participants","verified":"primary"},{"t":"Patients were allocated to receive high-dosage CQ (ie, 600 mg CQ twice daily for 10 days) or low-dosage CQ (ie, 450 mg twice daily on day 1 and once daily for 4 days).","where":"Abstract — Interventions","verified":"primary"},{"t":"In the absence of a placebo group, we were compelled to use historical data based on very similar patients not receiving CQ.","where":"Discussion","verified":"primary"}],"numbers":[{"t":"Lethality was 39.0% (16 of 41 patients) in the high-dosage group and 15.0% (6 of 40) in the low-dosage group.","where":"Results — Lethality Outcomes","verified":"primary"},{"t":"The high-dosage group was associated with lethality (odds ratio, 3.6; 95% CI, 1.2-10.6). Despite the small sample size, in an exploratory multivariate analysis, the high-dosage CQ was no longer associated with death when controlled by age (odds ratio, 2.8; 95% CI, 0.9-8.5).","where":"Results — Lethality Outcomes","verified":"primary"},{"t":"Older age (mean [SD] age, 54.7 [13.7] years vs 47.4 [13.3] years) and more heart disease (5 of 28 [17.9%] vs 0) were seen in the high-dose group.","where":"Abstract — Results. This is the randomisation imbalance; the same figures are Table 1 rows 'Age, mean (SD), y' and 'Heart disease'.","verified":"primary"}],"limits":[{"t":"However, this study has limitations, including its small sample size; its single-center design; its lack of a placebo control group; and the absence of exclusion criteria based on the QTc interval at baseline.","where":"Discussion — Strengths and Limitations","verified":"primary"},{"t":"Unfortunately, probably because of the low sample size, this study's randomization assigned more older patients with heart disease to the high-dosage group than the low-dosage group. Therefore, a limitation for the conclusions of the study on lethality per group is that the high-dosage group included more patients susceptible to cardiac complications, with or without CQ treatment.","where":"Discussion","verified":"primary"},{"t":"We were not able to independently assess the toxic role of CQ because all patients were already using azithromycin, as per hospital protocol.","where":"Discussion","verified":"primary"}]},"whereToLook":{"abstract":"Top of the page, structured.","design":"Methods. Note what the comparator is.","numbers":"Results and, crucially, Table 1 - the baseline characteristics, not the outcome table.","limits":"There IS a labelled section: 'Strengths and Limitations'."},"companion":"","note":"","sectionsFilled":true,"fidelity":{"en":"These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.","ru":"Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."}},"carhart-harris-2016":{"schema":1,"id":"carhart-harris-2016","title":"Psilocybin with psychological support for treatment-resistant depression: an open-label feasibility study","citation":"Carhart-Harris RL, et al. Lancet Psychiatry 2016;3(7):619-627","pmid":"27210031","doi":"10.1016/S2215-0366(16)30065-7","url":"https://doi.org/10.1016/S2215-0366(16)30065-7","topic":"psychoactive","tier":"weak","difficulty":"moderate","status":"no retraction, correction or expression of concern","claim":"Psilocybin with psychological support reduces depression in treatment-resistant patients.","designOneLine":"Open-label single-arm feasibility study; every patient received both doses and was compared against their own baseline.","n":"12 (six men, six women)","theOneThing":"Twelve self-selected volunteers who wanted a psilocybin trial, no comparison group at all, and a headline effect of Hedges' g = 3.1. An effect three standard deviations wide in twelve uncontrolled patients cannot be separated from expectancy, regression to the mean, and the intensive psychological support every patient also received.","sections":{"concl":[{"t":"This study provides preliminary support for the safety and efficacy of psilocybin for treatment-resistant depression and motivates further trials, with more rigorous designs, to better examine the therapeutic potential of this approach.","where":"Abstract — Interpretation","verified":"primary"},{"t":"In conclusion, we sought to assess the safety and tolerability of psilocybin plus psychological support in patients with unipolar treatment-resistant depression. Our findings support the feasibility of this approach and the magnitude and duration of the post-treatment reductions in symptom severity motivate further controlled research.","where":"Discussion — closing paragraph","verified":"primary"}],"design":[{"t":"In this open-label feasibility trial, 12 patients (six men, six women) with moderate-to-severe, unipolar, treatment-resistant major depression received two oral doses of psilocybin (10 mg and 25 mg, 7 days apart) in a supportive setting.","where":"Abstract — Methods","verified":"primary"},{"t":"There was no control group.","where":"Abstract — Methods. One sentence, standing alone.","verified":"primary"},{"t":"This was an open-label feasibility study in patients with treatment-resistant depression; there was no control group. Patients, investigators, raters, and statisticians were not masked to treatment assignment, and all participants received the study intervention (psilocybin administered in two dosing sessions; an initial safety [low] dose and a subsequent treatment [high] dose).","where":"Methods — Study design and participants","verified":"primary"},{"t":"Enrolment started on May 1, 2015, and finished on Aug 25, 2015.","where":"Results","verified":"primary"}],"numbers":[{"t":"Relative to baseline, depressive symptoms were markedly reduced 1 week (mean QIDS difference -11.8, 95% CI -9.15 to -14.35, p=0.002, Hedges' g=3.1) and 3 months (-9.2, 95% CI -5.69 to -12.71, p=0.003, Hedges' g=2) after high-dose treatment.","where":"Abstract — Findings. Lancet house style prints decimals with a middle dot; rendered here with ordinary full stops.","verified":"primary"}],"limits":[{"t":"Because this was a small-scale feasibility study with an open-label design, strong inferences cannot be made about the treatment's therapeutic efficacy.","where":"Discussion","verified":"primary"},{"t":"One should be cautious of the potential for inflated effect sizes in early trials, particularly when the sample size is small. That all patients showed some improvement in their depressive symptoms for up to 3 weeks after treatment could be suggestive of an expectancy bias.","where":"Discussion","verified":"primary"},{"t":"enduring improvements beyond 3 weeks were not observed universally, and five of the 12 patients showed a degree of relapse at 3 months","where":"Discussion","verified":"primary"}]},"whereToLook":{"abstract":"Free on the journal page. The load-bearing sentence is in Methods.","design":"Methods - note what is absent, not only what is present.","numbers":"Results: QIDS scores at 1 week and 3 months, with Hedges' g.","limits":"Discussion. Presence of a labelled Limitations heading not confirmed."},"companion":"The contrast: Carhart-Harris R, et al. Trial of Psilocybin versus Escitalopram for Depression. N Engl J Med 2021;384(15):1402-1411. PMID 33852780. Double-blind RCT, n=59, PRIMARY OUTCOME NULL (difference 2.0 points, 95% CI -5.0 to 0.9, P=0.17) with 16 uncorrected secondary outcomes. Paywalled, but the free abstract carries the whole lesson.","note":"","sectionsFilled":true,"provenance":"The journal site blocks automated access, but the paper is CC BY and the Version of Record was retrieved from the King's College London repository, so these are full-text quotes, not abstract-only.","fidelity":{"en":"These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.","ru":"Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."}},"danmask-2021":{"schema":1,"id":"danmask-2021","title":"Effectiveness of adding a mask recommendation to other public health measures (DANMASK-19)","citation":"Bundgaard H, Bundgaard JS, Raaschou-Pedersen DET, et al. Ann Intern Med 2021;174(3):335-343","pmid":"33205991","doi":"10.7326/M20-6817","url":"https://pmc.ncbi.nlm.nih.gov/articles/PMC7707213/","topic":"infection","tier":"strong","difficulty":"easy-moderate","status":"no retraction, correction or expression of concern","claim":"Recommending a mask reduces the wearer's own risk of SARS-CoV-2 infection.","designOneLine":"Open-label individually randomised controlled trial: a mask recommendation plus 50 surgical masks versus no recommendation, both on top of distancing advice, over one month.","n":"6024 randomised (3030 mask, 2994 control); 4862 completed","theOneThing":"1.8% versus 2.1%; odds ratio 0.82 (95% CI 0.54 to 1.23). The authors wrote the lesson themselves: the interval is compatible with a large benefit AND a modest harm. The trial was powered to detect a 50% reduction, so a real 20-30% benefit was never detectable. 'Not statistically significant' here means we could not tell, not that masks do not work. Second point: the outcome was infection IN THE WEARER, so the trial says nothing about protecting other people - and the authors list that as a limitation.","sections":{"concl":[{"t":"The recommendation to wear surgical masks to supplement other public health measures did not reduce the SARS-CoV-2 infection rate among wearers by more than 50% in a community with modest infection rates, some degree of social distancing, and uncommon general mask use. The data were compatible with lesser degrees of self-protection.","where":"Abstract — Conclusion","verified":"primary"}],"design":[{"t":"Eligible persons were community-dwelling adults aged 18 years or older without current or prior symptoms or diagnosis of COVID-19 who reported being outside the home among others for at least 3 hours per day and who did not wear masks during their daily work.","where":"Methods — Participants and Study Period","verified":"primary"},{"t":"Recruitment occurred from 3 through 24 April 2020. Half of participants were randomly assigned to a group on 12 April and half on 24 April.","where":"Methods — Participants and Study Period","verified":"primary"},{"t":"Eligible participants were randomly assigned 1:1 to the mask or control group using a computer algorithm and were stratified by the 5 regions of Denmark.","where":"Methods — Intervention","verified":"primary"}],"numbers":[{"t":"The primary outcome occurred in 42 participants (1.8%) in the mask group and 53 (2.1%) in the control group. In an intention-to-treat analysis, the between-group difference was -0.3 percentage point (CI, -1.2 to 0.4 percentage point; P = 0.38) (odds ratio [OR], 0.82 [CI, 0.54 to 1.23]; P = 0.33) in favor of the mask group.","where":"Results — Primary Outcome","verified":"primary"},{"t":"Although the difference observed was not statistically significant, the 95% CIs are compatible with a 46% reduction to a 23% increase in infection.","where":"Abstract — Results. The paper says this THREE times in three wordings; the Discussion version uses 'decrease' and calls it 'the most important limitation'.","verified":"primary"}],"limits":[{"t":"Inconclusive results, missing data, variable adherence, patient-reported findings on home tests, no blinding, and no assessment of whether masks could decrease disease transmission from mask wearers to others.","where":"Abstract — Limitation. The ONLY paper of the ten with a dedicated abstract field for this.","verified":"primary"},{"t":"The most important limitation is that the findings are inconclusive, with CIs compatible with a 46% decrease to a 23% increase in infection.","where":"Discussion","verified":"primary"},{"t":"It is important to emphasize that this trial did not address the effects of masks as source control or as protection in settings where social distancing and other public health measures are not in effect.","where":"Discussion","verified":"primary"}]},"whereToLook":{"abstract":"The structured abstract has a dedicated 'Limitation:' field. This is the only paper in the set that does.","design":"Methods.","numbers":"Results - and read the confidence interval, not the p-value.","limits":"The abstract's Limitation field, then the Discussion."},"companion":"Six published letters in Ann Intern Med 2021;174(8) and BMJ 2020;371:m4919 - a ready-made dossier on how one paper was misread in both directions at once.","note":"","sectionsFilled":true,"fidelity":{"en":"These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.","ru":"Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."}},"gautret-2020":{"schema":1,"id":"gautret-2020","title":"Hydroxychloroquine and azithromycin as a treatment of COVID-19","citation":"Gautret P, Lagier JC, Parola P, et al. Int J Antimicrob Agents 2020;56(1):105949","pmid":"32205204","doi":"10.1016/j.ijantimicag.2020.105949","url":"https://pmc.ncbi.nlm.nih.gov/articles/PMC7102549/","topic":"infection","tier":"weak","difficulty":"easy","status":"RETRACTED 9 January 2025. Notice: Int J Antimicrob Agents 2025;65(1):107416, PMID 39730229. No expression of concern was ever issued - it went from ISAC statements straight to retraction.","claim":"Hydroxychloroquine, with azithromycin, clears SARS-CoV-2 from the nasopharynx.","designOneLine":"Non-randomised open-label study; the drug was offered at one centre, and controls were patients who refused it, met exclusion criteria, or were treated elsewhere.","n":"42 enrolled, 36 analysed (20 treated vs 16 control). The paper's own counts do not reconcile: Results give 26 treated + 16 control = 42, while the text says 36 of 42.","theOneThing":"Six of the 26 hydroxychloroquine patients were dropped from the analysis: three transferred to intensive care, one died on day 3, one left hospital, one stopped the drug for nausea. No control patient was lost. The sickest treated patients were removed from the denominator, so '70% cleared the virus' counts only those who stayed well enough to be counted. A dead patient was recorded as neither a success nor a failure.","sections":{"concl":[{"t":"Despite its small sample size, our survey shows that hydroxychloroquine treatment is significantly associated with viral load reduction/disappearance in COVID-19 patients and its effect is reinforced by azithromycin.","where":"Abstract — Conclusion","verified":"primary"},{"t":"We therefore recommend that COVID-19 patients be treated with hydroxychloroquine and azithromycin to cure their infection and to limit the transmission of the virus to other people in order to curb the spread of COVID-19 in the world.","where":"Discussion","verified":"primary"}],"design":[{"t":"All patients in the Marseille center were proposed oral hydroxychloroquine sulfate 200 mg, three times per day for ten days. Patients who refused the treatment or had an exclusion criteria, served as controls in the Marseille centre. Patients in other centers did not receive hydroxychloroquine and served as controls.","where":"Methods 2.4 Procedure","verified":"primary"},{"t":"A total of 26 patients received hydroxychloroquine and 16 were control patients.","where":"Results 3.1","verified":"primary"},{"t":"Six hydroxychloroquine-treated patients were lost during the follow-up of the survey because of early cessation of treatment. Reasons are as follows: three patients were transferred to intensive care unit, including one transferred on day2 post-inclusion who was PCR-positive on day1, one transferred on day3 post-inclusion who was PCR-positive on days1-2 and one transferred on day4 post-inclusion who was PCR-positive on day1 and day3; one patient died on day3 post inclusion and was PCR-negative on day2; one patient decided to leave the hospital on day3 post-inclusion and was PCR-negative on days1-2; finally, one patient stopped the treatment on day3 post-inclusion because of nausea and was PCR-positive on days1-2-3. The results presented here are therefore those of 36 patients (20 hydroxychloroquine-treated patients and 16 control patients). None of the control patients were lost during follow-up.","where":"Results 3.1","verified":"primary"}],"numbers":[{"t":"At day6 post-inclusion, 70% of hydroxychloroquine-treated patients were virologically cured compared to 12.5% in the control group (p= 0.001).","where":"Results 3.3","verified":"primary"},{"t":"NO CONFIDENCE INTERVAL EXISTS ANYWHERE IN THIS PAPER. No effect size, no risk ratio, no odds ratio. Results are proportions with p-values only.","where":"— checked across the full text","verified":"absence verified"}],"limits":[{"t":"Our study has some limitations including a small sample size, limited long-term outcome follow-up, and dropout of six patients from the study, however in the current context, we believe that our results should be shared with the scientific community.","where":"Discussion — final sentence","verified":"primary"}]},"whereToLook":{"abstract":"Top of the PMC page, under the retraction banner.","design":"Methods - read the paragraph on how patients were allocated, and the one on exclusions.","numbers":"Results: virological clearance at day 6, 70% vs 12.5%. Also find the six lost patients in the text or Figure.","limits":"One sentence at the end of the Discussion. There is no Limitations heading."},"companion":"Rosendaal FR. Review of 'Hydroxychloroquine and azithromycin...'. Int J Antimicrob Agents 2020;56(1):106063. PMID 32674928 - the journal's commissioned independent methodological review, two pages, free. Often better assigned reading than the paper.","note":"","sectionsFilled":true,"fidelity":{"en":"These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.","ru":"Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."}},"hadland-2019":{"schema":1,"id":"hadland-2019","title":"Association of Pharmaceutical Industry Marketing of Opioid Products With Mortality From Opioid-Related Overdoses","citation":"Hadland SE, Rivera-Aguirre A, Marshall BDL, Cerda M. JAMA Netw Open 2019;2(1):e186007","pmid":"30657529","doi":"10.1001/jamanetworkopen.2018.6007","url":"https://pmc.ncbi.nlm.nih.gov/articles/PMC6484875/","topic":"addiction","tier":"strong","difficulty":"moderate","status":"No retraction. HAS AN ERRATUM: 'Errors in Results, Table 3, and eTables 2 and 3', JAMA Netw Open 2019;2(3):e191625, PMID 30901034. Finding the erratum and saying what it changed is an exercise of its own.","claim":"Pharmaceutical marketing of opioid products to physicians caused opioid overdose deaths.","designOneLine":"Population-based cross-sectional county-level analysis with a one-year lag between marketing and mortality, plus a mediation analysis through county prescribing rates.","n":"9398 county-years; 434,754 payments totalling $39.7 million to 67,507 physicians across 2208 counties","theOneThing":"The exposure is measured on COUNTIES, not people. Nothing links the physicians who received the meals to the particular people who died. And marketing and overdose deaths are concentrated in the same kinds of places, so the whole association can be produced by the places. Then look at the mediation: at best 26% of the association runs through prescribing, so three quarters of it goes somewhere else - and the authors quote that and move on.","sections":{"concl":[{"t":"In this study, across US counties, marketing of opioid products to physicians was associated with increased opioid prescribing and, subsequently, with elevated mortality from overdoses. Amid a national opioid overdose crisis, reexamining the influence of the pharmaceutical industry may be warranted.","where":"Abstract — Conclusions and Relevance","verified":"primary"}],"design":[{"t":"All US counties were included, with data on overdoses from August 1, 2014, to December 31, 2016, linked to marketing data from August 1, 2013, to December 31, 2015, using a 1-year lag.","where":"Abstract — Design, Setting, and Participants","verified":"primary"},{"t":"The primary exposure was county-level annual pharmaceutical company opioid marketing to physicians, which we defined in the following 3 ways: (1) marketing value in dollars per 1000 county population, (2) number of payments to physicians per 1000 county population, and (3) number of physicians receiving marketing per 1000 county population.","where":"Methods — Variables","verified":"primary"},{"t":"We introduced a 1-year lag between mortality rates and marketing to address the possibility of reverse causality by ensuring that marketing of opioids to physicians preceded observed mortality rates.","where":"Methods — Statistical Analysis","verified":"primary"}],"numbers":[{"t":"mortality from opioid overdoses increased with each 1-SD increase in marketing value in dollars per capita (aRR, 1.09; 95% CI, 1.05-1.12), number of payments to physicians per capita (aRR, 1.18; 95% CI, 1.14-1.21), and number of physicians receiving marketing per capita (aRR, 1.12; 95% CI, 1.08-1.16).","where":"Results","verified":"primary"},{"t":"Prescribing rates mediated 3% of the association between opioid marketing and mortality from overdoses in terms of value in dollars per capita, 11% of the association between opioid marketing and mortality from overdoses in terms of number of payments per capita, and 26% of the association between opioid marketing and mortality from overdoses in terms of number of physicians receiving marketing per capita.","where":"Results","verified":"primary"}],"limits":[{"t":"This study has several limitations. First, as outlined earlier, our findings demonstrate associations between opioid marketing and subsequent prescribing and mortality from overdoses; we cannot exclude reverse causation.","where":"Discussion — Limitations","verified":"primary"},{"t":"Although there remains the possibility of reverse causality-that is, that counties with high opioid prescribing rates and already experiencing elevated mortality from overdoses are subsequently targeted by pharmaceutical company marketing-it is potentially concerning that physicians in such counties would receive further marketing for opioids.","where":"Discussion — second paragraph","verified":"primary"},{"t":"Fourth, with the measures of opioid prescribing used, we are unable to distinguish appropriate opioid prescribing from potentially inappropriate prescribing. In addition, the data sources used do not allow for the differentiation between opioids that are prescribed and those that are illicitly acquired.","where":"Discussion — Limitations","verified":"primary"}]},"whereToLook":{"abstract":"Top of the PMC page.","design":"Methods - the exposure definition names three separate measures. Pick one and say which.","numbers":"Table 2 for the rate ratios, Table 4 for the direct, indirect and total effects and the percentage mediated.","limits":"There IS a labelled Limitations section, and its first sentence is the deciding one."},"companion":"The physician-level sibling: Hadland SE, et al. JAMA Intern Med 2018;178(6):861-863, PMID 29799955, free at PMC6145750. Same team, same question, one level down. Teaching them as a pair makes the level-of-analysis problem visible with no statistics. Its own words: 'Our findings establish an association, not cause and effect.'","note":"","sectionsFilled":true,"fidelity":{"en":"These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.","ru":"Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."}},"johnson-2014":{"schema":1,"id":"johnson-2014","title":"Pilot study of the 5-HT2AR agonist psilocybin in the treatment of tobacco addiction","citation":"Johnson MW, Garcia-Romeu A, Cosimano MP, Griffiths RR. J Psychopharmacol 2014;28(11):983-992","pmid":"25213996","doi":"10.1177/0269881114548296","url":"https://pmc.ncbi.nlm.nih.gov/articles/PMC4286320/","topic":"addiction","tier":"weak","difficulty":"easy-moderate","status":"no retraction, correction or expression of concern","claim":"Psilocybin helps people stop smoking.","designOneLine":"Open-label pilot with no control condition; psychiatrically screened volunteers who sought out a psychedelic trial.","n":"15 nicotine-dependent smokers; 12 of 15 (80%) abstinent at 6 months","theOneThing":"The authors name the flaw and then commit it in consecutive sentences. After saying no conclusions can be drawn about the causal role of psilocybin, they compare their 80% to bupropion (24.9-26.3%) and varenicline (33.5-35.2%). Find the two sentences and put them next to each other. Also: three people's outcomes move the headline by 20 points, and the 15 had a mean of six previous quit attempts.","sections":{"concl":[{"t":"Although the open-label design does not allow for definitive conclusions regarding the efficacy of psilocybin, these findings suggest psilocybin may be a potentially efficacious adjunct to current smoking cessation treatment models.","where":"Abstract","verified":"primary"}],"design":[{"t":"Participants were 15 psychiatrically healthy nicotine-dependent smokers (10 males; mean age of 51 years), with a mean of 6 previous lifetime quit attempts, and smoking a mean of 19 cigarettes per day for a mean of 31 years at intake.","where":"Abstract","verified":"primary"},{"t":"Participants were recruited through advertisements offering a novel treatment for smoking cessation involving psilocybin. Three hundred twenty-three individuals were telephone screened, and 27 of these underwent in-person medical and psychological screening.","where":"Methods — Participants","verified":"primary"},{"t":"NO STUDY DATES ANYWHERE IN THIS PAPER. No enrolment period, no follow-up window, no trial registration number. A reader cannot date this cohort from the paper.","where":"— checked across the full text","verified":"absence verified"}],"numbers":[{"t":"Based on the Timeline Follow-back and verified by CO and cotinine measures, 12 of 15 (80%) participants showed seven-day point prevalence abstinence at 6-month follow-up.","where":"Results — Smoking cessation outcomes","verified":"primary"},{"t":"NO CONFIDENCE INTERVAL ANYWHERE IN THIS PAPER. The 80% is a bare proportion. For n=15 that is itself worth noticing.","where":"— checked across the full text","verified":"absence verified"}],"limits":[{"t":"Therefore, this pilot study was conducted without a control condition as a first step to evaluate both the safety of the approach, and whether efficacy rates would be promising enough to warrant the investment of resources necessary for a randomized trial.","where":"Introduction — final sentence","verified":"primary"},{"t":"Results should be interpreted with caution given the small N and open-label design. Therefore, no definitive conclusions can be drawn about the causal role of psilocybin per se.","where":"Discussion","verified":"primary"},{"t":"However, abstinence rates were substantially higher than typical. For example, when paired with 12 brief weekly counseling meetings, pharmacotherapies have shown seven-day point prevalence abstinence rates of 24.9% to 26.3% (bupropion) and 33.5% to 35.2% (varenicline) at approximately 6 months post-TQD.","where":"Discussion — the two sentences IMMEDIATELY AFTER the caveat above","verified":"primary"}]},"whereToLook":{"abstract":"Top of the PMC page.","design":"Methods - the phrase about the control condition is in the first part.","numbers":"Results - abstinence at 6 months. The comparison figures are in the Discussion, not the Results.","limits":"Discussion. No separate heading; sections are Introduction / Methods / Results / Discussion."},"companion":"","note":"","sectionsFilled":true,"fidelity":{"en":"These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.","ru":"Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."}},"mitchell-2021":{"schema":1,"id":"mitchell-2021","title":"MDMA-assisted therapy for severe PTSD: a randomized, double-blind, placebo-controlled phase 3 study","citation":"Mitchell JM, et al. Nat Med 2021;27(6):1025-1033","pmid":"33972795","doi":"10.1038/s41591-021-01336-3","url":"https://pmc.ncbi.nlm.nih.gov/articles/PMC8205851/","topic":"psychoactive","tier":"strong","difficulty":"moderate","status":"no retraction, correction or expression of concern","claim":"MDMA-assisted therapy reduces PTSD symptoms.","designOneLine":"Multi-site randomised double-blind placebo-controlled phase 3 trial with an inactive placebo.","n":"345 screened, 131 enrolled, 91 randomised, 90 analysed (46 MDMA, 44 placebo)","theOneThing":"A trial labelled double-blind used an inactive placebo against a drug with unmistakable subjective effects, never formally assessed whether the blind held, and then reported only the share who guessed WRONG - about 10%. Which means roughly 90% guessed right. Restate the number out loud as 'nine in ten knew which arm they were in' and ask what is left of the blinding.","sections":{"concl":[{"t":"These data indicate that, compared with manualized therapy with inactive placebo, MDMA-assisted therapy is highly efficacious in individuals with severe PTSD, and treatment is safe and well-tolerated, even in those with comorbidities. We conclude that MDMA-assisted therapy represents a potential breakthrough treatment that merits expedited clinical evaluation.","where":"Abstract","verified":"primary"}],"design":[{"t":"Participants were recruited from 7 November 2018 to 26 May 2020, with the last participant visit conducted on 21 August 2020.","where":"Results — Demographics","verified":"primary"},{"t":"A total of 345 participants were assessed for eligibility, 131 were enrolled, 91 were confirmed for randomization (United States, n = 77; Canada, n = 9; Israel, n = 5), and 46 were randomized to MDMA and 44 to placebo.","where":"Results — Demographics","verified":"primary"},{"t":"Participants were randomized in a blinded fashion and were allocated 1:1 to either the MDMA-assisted therapy group or the placebo with therapy group.","where":"Methods — Randomization, masking and bias minimization","verified":"primary"}],"numbers":[{"t":"Mixed model repeated measure (MMRM) analysis of the de jure estimand (that is, the effects of the drug if taken as directed) showed a significant difference in treatment arms (n = 89 (MDMA n = 46), P < 0.0001, between-group difference = 11.9, 95% confidence interval (CI) = 6.3-17.4, d.f. = 71).","where":"Results — Efficacy","verified":"primary"},{"t":"The effect size of the MDMA-assisted therapy treatment compared with placebo with therapy was d = 0.91 (95% CI = 0.44-1.37, pooled s.d. = 11.55) in the de jure estimand.","where":"Results — Efficacy","verified":"primary"}],"limits":[{"t":"There are several limitations to the current trial. First, ...","where":"Discussion — the opening of the enumerated limitations paragraph; the blinding item below is the fifth, 'Last,'","verified":"primary"},{"t":"Last, given the subjective effects of MDMA, the blinding of participants was also challenging and possibly led to expectation effects. However, although blinding was not formally assessed during the study, when participants were contacted to be informed of their treatment assignment at the time of study unblinding it became apparent that at least 10% had inaccurately guessed their treatment arm. Although anecdotal, at least 7 of 44 participants in the placebo group (15.9%) inaccurately believed that they had received MDMA, and at least 2 of 46 participants in the MDMA group (4.3%) inaccurately believed that they had received placebo.","where":"Discussion","verified":"primary"}]},"whereToLook":{"abstract":"Top of the PMC page, CC BY.","design":"Methods - and note what the placebo was.","numbers":"Results - CAPS-5 change, with Cohen's d.","limits":"Discussion, an enumerated paragraph beginning 'There are several limitations to the current trial. First... Second... Third... Fourth... Last...'. No separate heading."},"companion":"","note":"","sectionsFilled":true,"fidelity":{"en":"These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.","ru":"Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."}},"porter-jick-1980":{"schema":1,"id":"porter-jick-1980","title":"Addiction rare in patients treated with narcotics","citation":"Porter J, Jick H. N Engl J Med 1980;302(2):123","pmid":"7350425","doi":"10.1056/NEJM198001103020221","url":"https://www.nejm.org/doi/10.1056/NEJM198001103020221","topic":"addiction","tier":"weak","difficulty":"easy","status":"no retraction, correction or expression of concern","claim":"Addiction is rare in patients treated with narcotics.","designOneLine":"A five-sentence letter reporting a retrospective count from a hospital drug-surveillance database.","n":"nearly 12,000 patients who received at least one narcotic; 4 documented addiction cases","theOneThing":"The patients were hospitalised inpatients given short supervised courses, and nobody followed them after discharge - yet the letter was cited for decades as evidence about outpatients on long-term opioids. The population studied is not the population the claim is about.","sections":{"concl":[{"t":"We conclude that despite widespread use of narcotic drugs in hospitals, the development of addiction is rare in medical patients with no history of addiction.","where":"sentence 5 of 5","verified":"reproduction-verified: quoted verbatim in four peer-reviewed articles"}],"design":[{"t":"Recently, we examined our current files to determine the incidence of narcotic addiction in 39,946 hospitalized medical patients who were monitored consecutively.","where":"sentence 1 of 5","verified":"reproduction-verified: three independent full reproductions agree; least independently corroborated of the five"},{"t":"NO DATES, NO FOLLOW-UP, NO DEFINITION OF ADDICTION. The letter says nothing about when the records covered, what happened to anyone after discharge, or how addiction was defined.","where":"— the whole letter is 5 sentences, 101 words","verified":"absence verified"}],"numbers":[{"t":"Although there were 11,882 patients who received at least one narcotic preparation, there were only four cases of reasonably well documented addiction in patients who had no history of addiction.","where":"sentence 2 of 5","verified":"reproduction-verified; second clause also quoted verbatim in a peer-reviewed article"},{"t":"The addiction was considered major in only one instance. The drugs implicated were meperidine in two patients, Percodan in one, and hydromorphone in one.","where":"sentences 3 and 4 of 5","verified":"reproduction-verified"},{"t":"NO INTERVAL, NO STATISTICAL TEST, NO DENOMINATOR FOR THE FOUR CASES.","where":"— checked across the whole letter","verified":"absence verified"}],"limits":[{"t":"NOTHING. The letter contains no limitations statement of any kind. That absence is the sharpest teaching object in this case: it was cited 608 times, 439 of those as substantive evidence.","where":"— the whole letter","verified":"absence verified"}]},"whereToLook":{"abstract":"There is no abstract. The letter IS the abstract - all five sentences.","design":"There is no methods section. That absence is the finding: say so in your own words.","numbers":"Both numbers are in the letter itself.","limits":"None stated anywhere. Record that as 'none stated' - an absent limitations paragraph is a finding about the paper."},"companion":"Leung PTM, Macdonald EM, Stanbrook MB, Dhalla IA, Juurlink DN. A 1980 Letter on the Risk of Opioid Addiction. N Engl J Med 2017;376(22):2194-2195. PMID 28564561. Counted 608 citations, 439 of them (72.2%) treating it as substantive evidence.","note":"The figure 11,882 circulates widely but could not be confirmed against a readable source. Use 'nearly 12,000'.","sectionsFilled":true,"provenance":"The primary source is unreachable (NEJM blocks automated access; the letter is not in PMC). Every sentence below is REPRODUCTION-VERIFIED: three independent full reproductions agree character for character (671 characters, 101 words, 5 sentences), and four of the five sentences are also quoted verbatim in peer-reviewed articles. Tell students this - the provenance is part of the lesson.","fidelity":{"en":"These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.","ru":"Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."}},"robins-1974":{"schema":1,"id":"robins-1974","title":"How Permanent Was Vietnam Drug Addiction?","citation":"Robins LN, Davis DH, Nurco DN. Am J Public Health 1974;64(12 Suppl):38-43","pmid":"4429174","doi":"10.2105/ajph.64.12_suppl.38","url":"https://pmc.ncbi.nlm.nih.gov/articles/PMC1775687/","topic":"addiction","tier":"strong","difficulty":"easy","status":"no retraction, correction or expression of concern","claim":"Heroin dependence acquired in Vietnam persisted after the men returned home.","designOneLine":"Follow-up of a random sample of US Army enlisted men who left Vietnam in September 1971, re-interviewed with urine screening 8-12 months after return.","n":"943 sought, 900 interviewed, 876 urine specimens; two strata - a general sample and a sample positive for opiates on the departure urine test","theOneThing":"The exposed group is defined by the MANDATORY DEPARTURE URINE TEST - a record that existed before anyone planned a study. No self-selection, no treatment-seeking sample, and the denominator is everyone who left in one month. Then the finding: around 20% were dependent in Vietnam and under 1% after return. A design nobody could have built on purpose answered a question that clinical samples cannot.","sections":{"concl":[{"t":"Of course, those who feel they need treatment should have access to the best that we have to offer them, but at least for Vietnam veterans there seems no reason to proceed as though anyone found using heroin is in immediate and serious danger of lifelong addiction unless put into treatment.","where":"Discussion, p. 43","verified":"primary — read off the page scan"},{"t":"We can no longer justify applying policies to every narcotics user that are based only on information about the careers of those addicts whose appearance in treatment facilities as volunteers or in lieu of prison sentences shows an inability to terminate their addiction on their own.","where":"Discussion, final sentence, p. 43","verified":"primary — read off the page scan"}],"design":[{"t":"Approximately 13,760 Army enlisted men returned to the United States from Vietnam in September 1971. From this population of returnees, a simple random sample of 470 was selected as the General Sample. Within the population of 13,760, approximately 1,400 had been found to have urines positive for narcotics at time of departure. From this subpopulation who had shown positive urines at departure from Vietnam, a simple random sample of 495 was selected, the Drug Positive sample.","where":"The Study, p. 38","verified":"primary — read off the page scan"},{"t":"Between May and September 1972 (8 to 12 months after return), these men were sought for interview and a urine sample.","where":"The Study, p. 39","verified":"primary — read off the page scan"}],"numbers":[{"t":"There have been no studies of addict populations in this country that show anything like the 95 percent remission rate after ten months, which is what a drop from 20 percent addicted while in Vietnam to 1 percent after Vietnam suggests.","where":"Results, p. 39","verified":"primary — read off the page scan"},{"t":"Among returnees in the general sample, 43 percent reported having used narcotics in Vietnam. Not quite one-half (46 percent) of the men who said they used narcotics in Vietnam reported becoming addicted to them while there and 23 percent of the users had a positive urine at departure.","where":"Results, p. 39","verified":"primary — read off the page scan"},{"t":"NO CONFIDENCE INTERVALS ANYWHERE IN THIS PAPER. Percentages only, no interval estimates, no significance tests.","where":"— checked across the scan","verified":"absence verified"}],"limits":[{"t":"Before suggesting that that policy might be revised in the light of our Vietnam findings, we need to answer two questions: (1) Was ten months back in the United States long enough to see a resumption of addiction?; (2) Had these men really been addicted in Vietnam?","where":"p. 42. There is no Limitations heading: the authors pose their own two threats to validity as questions, then spend two pages answering them.","verified":"primary — read off the page scan"},{"t":"At this point, we do not know whether their high remission rate at 8 to 12 months after return will be long-lasting. To learn this, we are planning to reinterview these veterans after they have been home three years. It would also be important to know whether this high remission rate-whether or not it continues-is characteristic only of military personnel or only of those military personnel whose addiction began in a setting as different from the United States as Vietnam.","where":"Discussion, p. 43","verified":"primary — read off the page scan"}]},"whereToLook":{"abstract":"Scanned PDF, six pages. Read it whole - it is shorter than most abstracts' worth of modern methods.","design":"The sampling and the urine test are described early.","numbers":"Use and dependence in Vietnam versus after return, by stratum.","limits":"Presence of a labelled section not confirmed. Look for where the authors say what they cannot know - that framing, not the word."},"companion":"Fuller cohort description: Robins LN, Davis DH, Goodwin DW. Am J Epidemiol 1974;99(4):235-249, PMID 4818714 (paywalled). Also Robins LN, Helzer JE, Davis DH. Arch Gen Psychiatry 1975;32(8):955-961, PMID 1156114 (paywalled).","note":"A widely repeated citation 'Robins, Davis & Goodwin, Arch Gen Psychiatry 1975' for the heroin finding does not exist as described - that 1975 paper is Robins/Helzer/Davis, and the Davis+Goodwin 1975 paper in that journal is about alcohol.","sectionsFilled":true,"provenance":"PMC holds only a page-image scan. An OCR layer exists but is error-ridden, so every quote here was read off the rendered page images rather than taken from the OCR.","fidelity":{"en":"These passages were copied from the paper, but they are not photographs of the page. Three things were changed, deliberately and in every pack. (1) Special characters were made ordinary: the middle dot some journals use as a decimal point, thin spaces inside numbers, true minus signs and en dashes all became plain full stops, spaces and hyphens. (2) Superscript reference numbers that sat inside a sentence were removed; no words were changed. (3) Where a passage was shortened, the cut is marked [...]. Each quote carries where it sits in the paper, and any quote that could not be taken from the publisher's own text says so under it. If the exact wording carries your argument - and sometimes it does - open the paper and check it there. That is not cheating; it is the job.","ru":"Эти куски скопированы из статьи, но это не фотография страницы. Три вещи изменены намеренно и во всех паках. (1) Спецсимволы приведены к обычным: средняя точка, которой часть журналов отделяет десятичные, тонкие пробелы внутри чисел, настоящие минусы и длинные тире стали обычными точками, пробелами и дефисами. (2) Надстрочные номера ссылок, стоявшие внутри предложения, убраны; слова не менялись. (3) Там, где кусок сокращён, пропуск помечен [...]. У каждой цитаты указано, где она в статье стоит, а если цитату не удалось взять из текста издателя - под ней так и написано. Если точность формулировки несёт твой аргумент - а иногда несёт - открой статью и сверь. Это не обход задания, это и есть работа."}}}};
+<script>
+/* ===================================================================
+   TEACHER SETUP — edit this one line.
+   Paste the URL of your Google Form. Empty = the hand-in button only
+   copies and downloads.
+=================================================================== */
+const FORM_URL = "";
+/* =================================================================== */
+
+let L='en';
+const T={
+h1:['From Association to Causation','От связи к причине'],
+sub:['A guided pass. You bring the paper; the trainer keeps the order and holds you to it.','Проход по шагам. Статью приносишь ты; тренажёр держит порядок и не даёт его нарушить.'],
+phName:['Your name','Твоё имя'],
+phPaper:['Paper: first author, journal, year','Статья: первый автор, журнал, год'],
+
+k0:['Step 0 · The paper','Шаг 0 · Статья'],
+h0:['Load it, then find its parts','Загрузи её и найди в ней части'],
+d0:['Nobody labels the sections for you in real life. Load the whole paper, then select the passages yourself and say which part of the paper each one is. Everything you quote later must come from this text — the trainer checks.','В жизни никто не подписывает разделы за тебя. Загрузи статью целиком, потом сам выделяй куски и говори, какая это часть. Всё, что ты процитируешь дальше, должно быть отсюда — тренажёр проверит.'],
+loadT:['Load the paper','Загрузить статью'],
+loadPdf:['Choose a PDF','Выбрать PDF'],
+loadPaste:['or paste the text','или вставить текст'],
+pasteH:['Open the paper in your browser, select all, copy, and paste it here. A link cannot be fetched by this page — your browser forbids it, and that is not a bug in the trainer.','Открой статью в браузере, выдели всё, скопируй и вставь сюда. Скачать по ссылке эта страница не может — браузер запрещает, и это не поломка тренажёра.'],
+pasteGo:['Use this text','Взять этот текст'],
+tagT:['Tag the sections','Разметь разделы'],
+tagH:['Select a passage with the mouse, then press the button for the part it belongs to. Select again to replace. You do not need the whole section — the sentences that carry the information are enough.','Выдели кусок мышью и нажми кнопку той части, к которой он относится. Выделил снова — заменит. Весь раздел не нужен, хватит предложений, которые несут информацию.'],
+next1:['Next: name X and Y','Дальше: назвать X и Y'],
+back:['Back','Назад'],
+
+k1:['Step 1 · The claim','Шаг 1 · Утверждение'],
+h1a:['Write it as X causes Y — exactly','Запиши как «X вызывает Y» — точно'],
+d1:['Most hard cases are decided here, before any evidence is weighed. If you cannot say how something was measured, you do not yet have a claim; you have a slogan.','Трудные случаи решаются здесь, до всякого взвешивания доказательств. Не можешь сказать, чем измерено, — у тебя пока не утверждение, а лозунг.'],
+fX:['X — the exposure','X — воздействие'],
+fY:['Y — the outcome','Y — исход'],
+fXm:['How was X measured, and in whom?','Чем измерен X и у кого?'],
+fYm:['How was Y measured, and in whom?','Чем измерен Y и у кого?'],
+periods:['Periods','Периоды'],
+pClaim:['The claim is about the years…','Утверждение о годах…'],
+pData:['The data on X cover the years…','Данные о X покрывают годы…'],
+phFrom:['from','с'],phTo:['to','по'],
+popQ:['Are the two populations the same one?','Это одни и те же люди?'],
+popH:['The people in whom X was measured, and the people in whom Y was measured.','Те, у кого измеряли X, и те, у кого измеряли Y.'],
+pop1:['Yes — the same people.','Да — те же самые.'],
+pop2:['No — X was measured in one group, Y in another.','Нет — X у одной группы, Y у другой.'],
+pop3:['Neither — these are places, not people (counties, states, countries).','Ни те ни другие — это места, а не люди (округа, штаты, страны).'],
+next2:['Next: split the question','Дальше: расщепить вопрос'],
+
+k2:['Step 2 · Split','Шаг 2 · Расщепление'],
+h2a:['Does your claim hide more than one question?','Сколько вопросов спрятано в твоём утверждении?'],
+d2:['A sentence like "marketing caused the epidemic" is three different questions with three different answers. Judging all of them at once is how an answer turns to mush.','Фраза вроде «маркетинг вызвал эпидемию» — это три разных вопроса с тремя разными ответами. Судить их разом — так ответ и превращается в кашу.'],
+qa:['Question A','Вопрос A'],qb:['Question B','Вопрос B'],qc:['Question C','Вопрос C'],
+pickQ:['Which one are you judging in this pass?','Какой из них ты судишь в этом проходе?'],
+pickOne:['My claim really is a single question.','Моё утверждение действительно один вопрос.'],
+hintBtn:['Give me a hint','Подсказку'],
+hintSplit:['<b>Hint.</b> Three cuts usually do it. <b>By link in the chain:</b> did X change the middle thing, and did the middle thing change Y? <b>By period:</b> what started it, and what is keeping it going now — these can have different causes. <b>By level:</b> a claim about places is not a claim about a person.','<b>Подсказка.</b> Обычно хватает трёх разрезов. <b>По звену цепочки:</b> изменил ли X промежуточное звено, и изменило ли звено Y? <b>По периоду:</b> что это начало и что поддерживает сейчас — причины могут быть разные. <b>По уровню:</b> утверждение про места — не утверждение про человека.'],
+next3:['Next: order in time','Дальше: порядок во времени'],
+
+k3:['Step 3 · Order','Шаг 3 · Порядок'],
+h3a:['Can you see the order in time?','Виден ли тебе порядок во времени?'],
+d3:['This step asks about your instrument, not about the world: does this design let you see which came first? The next step asks whether the order you can see is the real one.','Этот шаг про прибор, а не про мир: позволяет ли дизайн увидеть, что было раньше? Следующий шаг спросит, настоящий ли этот порядок.'],
+orderQ:['In this study —','В этом исследовании —'],
+o1:['<b>Both were measured at the same moment.</b> A cross-section: there is no order to see.','<b>И то и другое измерено в один момент.</b> Срез: порядка не видно.'],
+o2:['<b>X was measured before Y.</b> A cohort, a lag, a before-and-after.','<b>X измерен раньше Y.</b> Когорта, лаг, «до и после».'],
+o3:['<b>Y was measured before X.</b>','<b>Y измерен раньше X.</b>'],
+o4:['<b>I cannot tell from what I loaded.</b>','<b>По загруженному не могу понять.</b>'],
+oQuote:['Paste the sentence that tells you this','Вставь предложение, из которого это следует'],
+tgQ:['X came first. But could the thing that decided X have existed even earlier?','X был раньше. Но то, что решило, куда пойдёт X, — могло существовать ещё раньше?'],
+tgH:['Nobody spread X at random. Who decided which places or people got it — and what did they look at when deciding?','X никто не рассыпал случайно. Кто решал, кому или куда он достанется, — и на что этот кто-то смотрел, решая?'],
+next4:['Next: name your rivals','Дальше: назвать соперников'],
+
+k4:['Step 4 · Rivals','Шаг 4 · Соперники'],
+h4a:['Name them before you look at the evidence','Назови их до того, как посмотришь на доказательства'],
+d4:['A rival is a specific story that would produce this same association with no effect at all. "There might be confounding" is not a rival; it is a word. Name them first, because once you have read the evidence every answer becomes the next premise and you will find what you went looking for.','Соперник — это конкретная история, которая даст ту же связь при полном отсутствии эффекта. «Возможен конфаундинг» — не соперник, а слово. Называй до чтения: иначе каждый ответ становится следующей посылкой, и ты найдёшь то, за чем пришёл.'],
+lock:['Lock my rivals and continue','Зафиксировать и продолжить'],
+lockNote:['After locking you can still read them, but not rewrite them. That is the point.','После замка их можно читать, но не переписывать. В этом и смысл.'],
+
+k5:['Step 5 · The nine','Шаг 5 · Девять'],
+h5a:['Nine guidelines, one question each','Девять ориентиров, у каждого свой вопрос'],
+d5:['For each row: a verdict, the evidence, where it came from, and the standard you hold it to. Then the row that does the work — could one of your own rivals have produced this same observation? Open "what this asks" if a row is unclear.','На каждую строку: вердикт, доказательство, откуда оно, и стандарт, по которому ты его держишь. Потом главное: мог ли твой собственный соперник дать то же наблюдение? Непонятна строка — открой «что спрашивает эта строка».'],
+hillCard:['<b>This is not a score out of nine.</b> In your case some rows will say nothing at all, and one or two will decide everything. Hill, who wrote the original list: <i>"None of my nine viewpoints can bring indisputable evidence for or against the cause-and-effect hypothesis and none can be required as a sine qua non."</i>','<b>Это не счёт из девяти.</b> В твоём случае часть строк не скажет ничего, а одна-две решат всё. Хилл, автор исходного списка: <i>«Ни один из моих девяти пунктов не даёт неоспоримого доказательства за или против причинности, и ни один нельзя требовать как обязательный».</i>'],
+next6:['Next: the Morgan pass','Дальше: проверка Морганом'],
+
+k6:['Step 6 · Morgan','Шаг 6 · Морган'],
+h6a:['Does each row beat doing nothing?','Бьёт ли строка ничегонеделание?'],
+d6:['Morgan is a cat. He sits and purrs. For every row you marked supports, the null hypothesis is your own rival: if your rival produces the same observation, the row has told you nothing that purring would not have told you. Name the improvement or let Morgan have it.','Морган — кот. Он лежит и мурчит. Для каждой строки, помеченной «поддерживает», нулевая гипотеза — твой собственный соперник: если он даёт то же наблюдение, строка не сказала ничего сверх мурчания. Назови улучшение или отдай строку коту.'],
+next7:['Next: decide','Дальше: решение'],
+
+k7:['Step 7 · Decide','Шаг 7 · Решение'],
+h7a:['Your verdict','Твой вердикт'],
+d7:['Two questions here, and they are the whole point. The other two — the strongest argument against you, and what you would do this week — belong in your recording, not here.','Здесь два вопроса, и в них весь смысл. Два других — сильнейший контраргумент и что делать на этой неделе — идут в аудиозапись, не сюда.'],
+vQ:['On the question you picked, the association is —','По выбранному вопросу связь —'],
+v1:['<b>Causal.</b>','<b>Причинная.</b>'],
+v2:['<b>Not causal</b> — and I can say what produced it instead.','<b>Не причинная</b> — и я могу сказать, что её породило.'],
+v3:['<b>Cannot be decided yet</b> — and I can design the test that would decide it.','<b>Пока не решается</b> — и я могу спроектировать проверку, которая решит.'],
+vWhy:['Which rows decided it, and why those?','Какие строки решили, и почему именно они?'],
+vWhyH:['Your own tally is printed above. Explain it, do not repeat it.','Твой собственный счёт напечатан выше. Объясни его, а не повтори.'],
+vChg:['Design the test','Спроектируй проверку'],
+vChgH:['Not "more research is needed". What would you measure, in whom, over what period — and what result would you accept as deciding it? If your verdict is causal or not causal: name the one fact that, if it turned out to be wrong, would change your answer.','Не «нужны дополнительные исследования». Что измеряешь, у кого, за какой период — и какой результат примешь как решающий? Если вердикт «причинная» или «не причинная»: назови один факт, который, окажись он неверным, изменит твой ответ.'],
+voiceCard:['<b>For your recording, not for this box.</b> State the strongest argument against you in its best form, then say what you do with it. And: if the decision had to be made this week, what would you do?','<b>Для записи, не для этого поля.</b> Сформулируй сильнейший аргумент против себя в его лучшей форме и скажи, что ты с ним делаешь. И: если решение надо принять на этой неделе — что делаешь?'],
+calcT:['Finish the number','Доделать число'],
+calcH:['A ratio you quote and do not divide is a number you did not use.','Отношение, которое ты привёл и не поделил, — это число, которым ты не воспользовался.'],
+medL:['% of the association that runs through the proposed pathway','% связи, которая идёт предложенным путём'],
+medBtn:['And the rest?','А остальное?'],
+next8:['Next: hand in','Дальше: сдача'],
+
+k8:['Step 8 · Hand in','Шаг 8 · Сдача'],
+h8a:['Your pass, written up','Твой проход, собранный'],
+btnCopy:['Copy and open the hand-in form','Скопировать и открыть форму сдачи'],
+btnDl:['Download as .md','Скачать .md'],
+btnSave:['Save progress','Сохранить прогресс'],
+btnLoad:['Load progress','Загрузить прогресс'],
+handinNote:['The form opens in a new tab. Paste into the long field, add your name, press send.','Форма откроется в новой вкладке. Вставь в длинное поле, добавь имя, отправь.'],
+sRivals:['Your rivals','Твои соперники'],
+sFlags:['Open flags','Открытые флаги'],
+sProg:['Progress','Прогресс'],
+foot:['The trainer never grades you and never tells you the answer. It keeps the order, holds your quotes to the paper you loaded, and refuses to let a verdict disagree with its own evidence. Everything it cannot check — whether your rival is real, whether your evidence means what you say — needs a reader. That is your tutor, or a classmate.','Тренажёр не ставит оценок и не подсказывает ответов. Он держит порядок, сверяет цитаты с загруженной статьёй и не даёт вердикту спорить с собственным доказательством. Всё, что он проверить не может — настоящий ли соперник, то ли значит доказательство, — требует читателя. Это преподаватель или однокурсник.'],
+
+notLocked:['Not locked yet. Step 4.','Пока не зафиксированы. Шаг 4.'],
+none:['None.','Нет.'],
+verdictL:['Verdict','Вердикт'],
+stdL:['The standard you are holding this to','Стандарт, по которому ты это держишь'],
+evL:['The evidence, in one sentence','Доказательство, одним предложением'],
+srcL:['Where it came from — page, table, figure','Откуда — страница, таблица, рисунок'],
+beatsL:['Could one of your own rivals produce this same observation?','Мог ли твой собственный соперник дать то же наблюдение?'],
+beatsH:['If it could, the observation is not evidence. It is decoration.','Если мог — это не доказательство, а декорация.'],
+glossT:['what this row asks, and how to read your answer','что спрашивает эта строка и как читать свой ответ'],
+supports:['Supports','Поддерживает'],
+against:['Goes against','Против'],
+nothing:['Says nothing','Ничего не говорит'],
+nkT:['Which kind of nothing?','Какого рода «ничего»?'],
+nk1:['There is no evidence <b>in what I loaded</b> — I may not have found the right section.','Доказательства нет <b>в том, что я загрузил</b> — возможно, я не нашёл нужный раздел.'],
+nk2:['The evidence exists, but <b>in another paper</b> — not in this one.','Доказательство есть, но <b>в другой статье</b> — не в этой.'],
+nk3:['<b>This design cannot produce it</b>, however well it was executed.','<b>Этот дизайн не может его дать</b>, как бы безупречно его ни выполнили.'],
+nkFoot:['The third answer is the strongest thing you can say about a paper, and the hardest to earn: it is a limit of the instrument, not a failure of the people who used it. "Not found" is not "does not exist".','Третий ответ — самое сильное, что можно сказать о статье, и самое трудное: это предел прибора, а не промах тех, кто им пользовался. «Не нашёл» — не «не существует».'],
+};
+const t=k=>(T[k]?T[k][L==='en'?0:1]:k);
+
+/* ---------- data ---------- */
+const SECTIONS=[
+ {k:'concl',  q:['What does the paper conclude?','Что статья утверждает в выводе?'],
+  h:['The sentence where the authors say what they found. Usually the last line of the abstract.','Предложение, где авторы говорят, что нашли. Обычно последняя строка абстракта.']},
+ {k:'design', q:['Who was studied, how, and when?','Кого изучали, как и когда?'],
+  h:['Who was in it, how they were chosen or allocated, over what years.','Кто в этом участвовал, как их отбирали или распределяли, за какие годы.']},
+ {k:'numbers',q:['What are the numbers?','Какие числа?'],
+  h:['The main result with its confidence interval. Not the p-value alone.','Главный результат с доверительным интервалом. Не одно только p.']},
+ {k:'limits', q:['Where do the authors say what they cannot know?','Где авторы говорят, чего они не могут знать?'],
+  h:['Most papers have no heading called Limitations. Look for "we cannot", "could not", "we were unable", "should not be inferred".','У большинства статей нет заголовка Limitations. Ищи «we cannot», «could not», «we were unable», «should not be inferred».']}
+];
+const RIVALS=[
+ {k:'chance',n:['Chance','Случайность'],
+  ask:['How far is your result from no effect, and how small an effect could this study have seen at all?','Насколько результат далёк от «эффекта нет», и какой минимальный эффект это исследование вообще могло увидеть?']},
+ {k:'bias',n:['Bias in who was measured and how','Систематическая ошибка в том, кого и чем мерили'],
+  ask:['Who was left out or mismeasured - and in which direction does that push the result?','Кого не учли или измерили не тем - и в какую сторону это двигает результат?']},
+ {k:'third',n:['A third factor that causes both','Третий фактор, вызывающий и то и другое'],
+  ask:['Name the variable. Not "confounding" - the variable, and which way it pushes.','Назови переменную. Не «конфаундинг» - именно переменную и направление.']},
+ {k:'back',n:['The outcome produced the exposure','Исход породил воздействие'],
+  ask:['Which shape: illness brought the treatment, harm already happening attracted the intervention, or getting worse made people stop?','Какая форма: болезнь привела к лечению, уже происходящая беда притянула вмешательство, или ухудшение заставило прекратить?']}
+];
+const NINE=[
+ {i:1,n:['Temporal relationship','Временная связь'],
+  q:['Did the exposure come before the outcome?','Воздействие было раньше исхода?'],
+  r:['A gate, not a point. If it fails you stop; if it passes you have earned nothing - every other row still has to be fought for. And a lag in the data is not the same as a cause in the world.','Это ворота, а не очко. Не прошёл - стоп; прошёл - не заработал ничего, остальные восемь всё равно надо отвоёвывать. И лаг в данных не то же самое, что причина в мире.']},
+ {i:2,n:['Strength of the association','Сила связи'],
+  q:['How big is the effect? A big one is harder to explain away.','Насколько велик эффект? Большой труднее объяснить иначе.'],
+  r:['A ratio of 1.00 means no difference; 1.18 means 18% more. The question is never "is it big" but "is it bigger than the bias this design can carry". Rough scale: below 1.5 weak - moderate unmeasured confounding alone produces it; 1.5 to 3 moderate; above 3 hard to explain by bias; above 8 very hard (Snow’s water companies 8-9x, DES 7 of 8 against 0 of 32, toxic shock odds ratio 18). Two traps: a large ratio on a near-zero baseline is still very few people, and a small ratio across a country is very many. Strength is about explaining away, not about importance.','Отношение 1,00 - разницы нет; 1,18 - на 18% больше. Вопрос никогда не «большое ли число», а «больше ли оно ошибки, которую этот дизайн способен нести». Грубая шкала: до 1,5 слабо - умеренный неучтённый конфаундинг даёт это сам; 1,5-3 умеренно; выше 3 ошибкой объяснить трудно; выше 8 очень трудно (у Сноу 8-9x, у DES 7 из 8 против 0 из 32, при СТШ ОШ 18). Две ловушки: большое отношение на почти нулевом базовом риске - всё равно мало людей, маленькое отношение на целой стране - много. Сила про «объяснить иначе», а не про «важно».']},
+ {i:3,n:['Dose-response','Доза-эффект'],
+  q:['More exposure, more outcome?','Больше воздействия - больше исхода?'],
+  r:['Strong when the gradient is something your rival would not produce. If your rival predicts the same gradient - for example because whoever delivered the exposure went back most often where the outcome was already common - the gradient discriminates nothing.','Силён, когда градиент - это то, чего соперник не даёт. Если соперник предсказывает тот же градиент (например, тот, кто доставлял воздействие, чаще возвращался туда, где исход и так был част) - градиент не различает ничего.']},
+ {i:4,n:['Replication of the findings','Воспроизводимость'],
+  q:['Found again - other people, other researchers, other designs?','Нашли снова - у других людей, другими исследователями, другими дизайнами?'],
+  r:['Repeating a design repeats its bias. Dozens of studies agreeing is evidence only if they could have failed in different ways. Ask what was different between them, not how many there were.','Повторение дизайна повторяет его ошибку. Десятки совпадающих исследований - доказательство только если они могли провалиться по-разному. Спрашивай, чем они отличались, а не сколько их.']},
+ {i:5,n:['Biologic plausibility','Правдоподобие механизма'],
+  q:['Is there a mechanism that makes sense?','Есть ли механизм, который имеет смысл?'],
+  r:['This row rules out nothing. A mechanism makes a story easier to believe, not more likely to be true. Snow had no mechanism and was right; hormone therapy had a beautiful one and was wrong. If you cannot name a rival your mechanism excludes, the row is decoration.','Эта строка не исключает ничего. Механизм делает историю легче для веры, а не вероятнее для правды. У Сноу механизма не было, и он был прав; у ЗГТ был прекрасный, и она была неправа. Не можешь назвать соперника, которого твой механизм исключает - строка декорация.']},
+ {i:6,n:['Consideration of alternate explanations','Альтернативные объяснения'],
+  q:['Could chance, bias, a third factor or a backwards arrow produce this with no real effect?','Могут ли случайность, систематическая ошибка, третий фактор или обратная стрелка дать это при отсутствии эффекта?'],
+  r:['This is not one of the nine. It is the question the other eight exist to answer. Verdict and evidence must agree here: if the sentence you write admits the deciding rival was not tested, the verdict is not "supports".','Это не один из девяти. Это вопрос, ради ответа на который существуют остальные восемь. Вердикт и доказательство здесь обязаны совпадать: если в твоём предложении признано, что решающий соперник не проверялся, вердикт не «поддерживает».']},
+ {i:7,n:['Cessation of exposure','Прекращение воздействия'],
+  q:['When the exposure stops, does the outcome fall?','Когда воздействие прекращается, исход падает?'],
+  r:['One of the strongest rows: a fixed trait cannot fall when you stop. But it says nothing against a factor that changes at the same time as the exposure. Check whether the exposure actually stopped somewhere, or whether you are reasoning about what would happen.','Одна из сильнейших строк: врождённый признак не может упасть, когда ты прекратил. Но она ничего не говорит против фактора, который меняется одновременно с воздействием. Проверь, прекращалось ли воздействие где-то на самом деле, или ты рассуждаешь о том, что было бы.']},
+ {i:8,n:['Consistency with other knowledge','Согласованность с другим знанием'],
+  q:['Does it fit trends over time, other countries, other kinds of evidence?','Сходится ли это с трендами во времени, другими странами, другими типами данных?'],
+  r:['Where a natural experiment belongs - a change in the exposure caused by something unrelated to the outcome. That is the strongest evidence available outside a trial, and the nine have no row of their own for it. If you have one, say loudly why the rival cannot produce it.','Сюда попадает естественный эксперимент - изменение воздействия, вызванное чем-то посторонним по отношению к исходу. Это сильнейшее доказательство вне испытания, и своей клетки у девяти для него нет. Есть такое - громко скажи, почему соперник этого дать не может.']},
+ {i:9,n:['Specificity','Специфичность'],
+  q:['One exposure, one outcome?','Одно воздействие - один исход?'],
+  r:['An inheritance from the era of one germ, one disease. Smoking has a dozen outcomes and is still a cause. Failing this row is almost never an argument against causation; passing it, as with a rare tumour in a rare age group, can be very strong.','Наследство эпохи «один возбудитель - одна болезнь». У курения десяток исходов, и оно всё равно причина. Провал этой строки почти никогда не аргумент против причинности; а прохождение - как редчайшая опухоль в редчайшем возрасте - бывает очень сильным.']}
+];
+const STANDARDS=[
+ {v:'phrase',n:['Nice phrase','Красивая фраза'],d:['approximate wording is enough','приблизительной формулировки достаточно']},
+ {v:'attributed',n:['Attributed','С атрибуцией'],d:['author and work named','названы автор и работа']},
+ {v:'exact',n:['Exact','Точно'],d:['verbatim from the source, with context','дословно из источника, с контекстом']},
+ {v:'court',n:['Court','Как в суде'],d:['checked against the original edition','сверено с оригинальным изданием']}
+];
+const STEPS=[['The paper','Статья'],['Claim','Утверждение'],['Split','Расщепление'],['Order','Порядок'],
+ ['Rivals','Соперники'],['The nine','Девять'],['Morgan','Морган'],['Decide','Решение'],['Hand in','Сдача']];
+
+const S={paper:'',sec:{},rivals:{},rows:{},morgan:{},answers:{},rivalsLocked:false,step:0,lang:'en'};
+SECTIONS.forEach(s=>S.sec[s.k]='');
+RIVALS.forEach(r=>S.rivals[r.k]={on:false,text:''});
+NINE.forEach(g=>{S.rows[g.i]={verdict:'',evidence:'',source:'',standard:'',beats:{},nothingKind:'',both:''};
+                 S.morgan[g.i]={outcome:'',improvement:''};});
+
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const LI=()=>L==='en'?0:1;
+const tx=a=>Array.isArray(a)?a[LI()]:a;
+const norm=t=>(t||'').toLowerCase().replace(/[‘’“”]/g,"'")
+  .replace(/[‐-―]/g,'-').replace(/\s+/g,' ').trim();
+const esc=t=>(t||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const inPaper=t=>{const q=norm(t);if(q.length<15)return false;
+  if(norm(S.paper).includes(q))return true;
+  return (S.extra||[]).some(x=>norm(x).includes(q));};
+
+/* ---------- language ---------- */
+function applyLang(){
+  document.documentElement.lang=L;
+  $$('[data-t]').forEach(el=>{const v=T[el.dataset.t];if(v)el.innerHTML=v[LI()];});
+  $$('[data-ph]').forEach(el=>{const v=T[el.dataset.ph];if(v)el.placeholder=v[LI()];});
+  $('#lEN').classList.toggle('on',L==='en');$('#lRU').classList.toggle('on',L==='ru');
+  buildNav();buildRivals();buildRows();buildTagbar();buildCaseBox();restore();render();
+}
+
+function buildNav(){
+  $('#nav').innerHTML=STEPS.map((s,i)=>`<button data-go="${i}">${i}. ${tx(s)}</button>`).join('');
+}
+function go(n){
+  if(n>=5&&!S.rivalsLocked){alert(tx(T.lockFirst));return;}
+  S.step=n;
+  $$('.panel').forEach(p=>p.classList.toggle('on',+p.dataset.step===n));
+  $$('#nav button').forEach((b,i)=>{b.classList.toggle('on',i===n);b.classList.toggle('done',i<n);
+    b.disabled=(i>=5&&!S.rivalsLocked);});
+  render();window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ---------- paper: load ---------- */
+function setPaper(txt){
+  S.paper=(txt||'').replace(/\r/g,'').replace(/\n{3,}/g,'\n\n').trim();
+  if(!S.paper)return;
+  $('#tagZone').hidden=false;
+  renderPane();hintsFromPaper();save();
+}
+$('#pasteToggle').addEventListener('click',()=>{const b=$('#pasteBox');b.hidden=!b.hidden;});
+$('#pasteGo').addEventListener('click',()=>{setPaper($('#rawPaste').value);$('#pasteBox').hidden=true;});
+$('#pdfIn').addEventListener('change',async e=>{
+  const f=e.target.files[0];if(!f)return;
+  const st=$('#pdfStatus');st.textContent=tx(T.pdfWait);
+  try{
+    if(!window.pdfjsLib){
+      await new Promise((res,rej)=>{const s=document.createElement('script');
+        s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+      pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    const buf=await f.arrayBuffer();
+    const doc=await pdfjsLib.getDocument({data:buf}).promise;
+    let out=[];
+    for(let p=1;p<=doc.numPages;p++){
+      const page=await doc.getPage(p);const c=await page.getTextContent();
+      out.push(c.items.map(i=>i.str).join(' '));
+    }
+    setPaper(out.join('\n\n'));
+    st.textContent=tx(T.pdfOk).replace('{n}',doc.numPages);
+  }catch(err){
+    st.innerHTML=`<span style="color:var(--verm)">${tx(T.pdfFail)}</span>`;
+    $('#pasteBox').hidden=false;
+  }
+});
+
+/* ---------- paper: tagging ---------- */
+function buildTagbar(){
+  const b=$('#tagbar');if(!b)return;
+  b.innerHTML=SECTIONS.map(s=>`<button data-sec="${s.k}">${tx(s.q)}</button>`).join('');
+  $$('#tagbar button').forEach(btn=>btn.addEventListener('click',()=>assign(btn.dataset.sec)));
+}
+function offsetsIn(pane,range){
+  let pos=0,st=null,en=null;
+  const walk=n=>{
+    if(n.nodeType===3){
+      if(n===range.startContainer)st=pos+range.startOffset;
+      if(n===range.endContainer)en=pos+range.endOffset;
+      pos+=n.nodeValue.length;
+    } else for(const c of n.childNodes) walk(c);
+  };
+  walk(pane);
+  return (st!==null&&en!==null&&en>st)?[st,en]:null;
+}
+function assign(k){
+  const pane=$('#paperPane'),sel=window.getSelection();
+  if(!sel||sel.isCollapsed||!pane.contains(sel.anchorNode)){alert(tx(T.selectFirst));return;}
+  const o=offsetsIn(pane,sel.getRangeAt(0));
+  if(!o){alert(tx(T.selectFirst));return;}
+  const t=S.paper.slice(o[0],o[1]).trim();
+  if(t.length<20){alert(tx(T.selectMore));return;}
+  S.sec[k]=t;S.ranges=S.ranges||{};S.ranges[k]=o;
+  sel.removeAllRanges();renderPane();renderSlots();render();save();
+}
+function renderPane(){
+  const pane=$('#paperPane');if(!pane)return;
+  const r=Object.entries(S.ranges||{}).map(([k,v])=>({k,a:v[0],b:v[1]})).sort((x,y)=>x.a-y.a);
+  let html='',at=0;
+  for(const x of r){
+    if(x.a<at)continue;
+    html+=esc(S.paper.slice(at,x.a))+`<mark class="s-${x.k}">`+esc(S.paper.slice(x.a,x.b))+'</mark>';
+    at=x.b;
+  }
+  html+=esc(S.paper.slice(at));
+  pane.innerHTML=html;
+}
+function renderSlots(){
+  const el=$('#slots');if(!el)return;
+  const CQ=S.caseQuotes&&Object.keys(S.caseQuotes).length?S.caseQuotes:null;
+  if(CQ){
+    const pane=$('#paperPane');if(pane)pane.style.display='none';
+    const bar=$('#tagbar');if(bar)bar.style.display='none';
+    const th=$('[data-t="tagH"]');if(th)th.textContent=tx(T.caseModeH);
+    el.innerHTML=(S.caseFid?`<details class="gloss" open><summary>${tx(T.fidT)}</summary><div class="gb"><p>${esc(S.caseFid[L]||S.caseFid.en)}</p></div></details>`:'')+
+     (S.caseProv?`<div class="flag"><b>${tx(T.provT)}</b> ${esc(S.caseProv)}</div>`:'')+
+     SECTIONS.map(s=>{const qs=CQ[s.k]||[];
+      return `<div class="slot ${qs.length?'':'empty'}">
+        <div class="sh">${tx(s.q)}</div>
+        ${qs.length?qs.map(q=>{
+          const absent=/^(NO |NOTHING)/.test(q.t);
+          return `<div style="margin:0 0 11px;padding-left:11px;border-left:3px solid ${absent?'var(--verm)':'var(--petrol)'}">
+            <div style="font-size:13.5px">${absent?'<b style="color:var(--verm)">'+esc(q.t)+'</b>':'&laquo;'+esc(q.t)+'&raquo;'}</div>
+            <div class="sub" style="font-size:11.5px;margin-top:3px">${esc(q.where)}${q.verified&&q.verified!=='primary'?' · <i>'+esc(q.verified)+'</i>':''}</div>
+          </div>`;}).join('')
+         :`<div class="sv"><i style="color:var(--grey)">${tx(T.notInPack)}</i></div>`}
+      </div>`;}).join('');
+    return;
+  }
+  const pane=$('#paperPane');if(pane)pane.style.display='';
+  const bar=$('#tagbar');if(bar)bar.style.display='';
+  el.innerHTML=SECTIONS.map(s=>{
+    const v=S.sec[s.k];
+    return `<div class="slot ${v?'':'empty'}">
+      <div class="sh">${tx(s.q)}${v?`<button class="x" data-clr="${s.k}">${tx(T.clear)}</button>`:''}</div>
+      <div class="sv">${v?esc(v.slice(0,400))+(v.length>400?'…':''):'<i style="color:var(--grey)">'+tx(s.h)+'</i>'}</div>
+    </div>`;}).join('');
+  $$('[data-clr]').forEach(b=>b.addEventListener('click',()=>{
+    const k=b.dataset.clr;S.sec[k]='';if(S.ranges)delete S.ranges[k];
+    renderPane();renderSlots();render();save();}));
+}
+function hintsFromPaper(){
+  const el0=$('#flag-load');
+  if(S.caseQuotes&&Object.keys(S.caseQuotes).length){if(el0)el0.innerHTML='';return;}
+  const p=norm(S.paper),f=[];
+  const probes=[['we cannot','we cannot'],['could not','could not'],['we were unable','we were unable'],
+    ['limitation','limitation'],['should not be inferred','should not be inferred'],
+    ['cross-sectional','cross-sectional'],['no control group','no control group'],
+    ['open-label','open-label'],['was not assessed','was not assessed']];
+  probes.forEach(([lab,needle])=>{const c=p.split(needle).length-1;if(c)f.push([lab,c]);});
+  const el=$('#flag-load');if(!el)return;
+  el.innerHTML = f.length
+    ? `<div class="hint"><b>${tx(T.foundPhrases)}</b> ${f.map(x=>`<span class="mono">${x[0]}</span>&nbsp;×${x[1]}`).join(' · ')}<br>${tx(T.foundPhrasesH)}</div>`
+    : '';
+}
+
+/* ---------- rivals ---------- */
+function buildRivals(){
+  const w=$('#rivalwrap');if(!w)return;
+  w.innerHTML=RIVALS.map(r=>`
+   <div class="card">
+     <div class="chk"><input type="checkbox" id="rv-${r.k}"><label for="rv-${r.k}">${tx(r.n)}</label></div>
+     <div class="help sub" style="margin:0 0 6px 27px">${tx(r.ask)}</div>
+     <textarea id="rt-${r.k}" rows="2" style="margin-left:27px;width:calc(100% - 27px)"></textarea>
+     <div id="rf-${r.k}" style="margin-left:27px"></div>
+   </div>`).join('');
+  RIVALS.forEach(r=>{
+    $('#rv-'+r.k).addEventListener('change',e=>{S.rivals[r.k].on=e.target.checked;render();save();});
+    $('#rt-'+r.k).addEventListener('input',e=>{S.rivals[r.k].text=e.target.value;render();save();});
+  });
+}
+function specific(t){
+  t=(t||'').trim();
+  if(t.length<25)return false;
+  return !/^(confounding|bias|chance|reverse causation|selection|selection bias|random error|конфаундинг|смещение|случайность|обратная причинность)\.?$/i.test(t);
+}
+function onRivals(){return RIVALS.filter(r=>S.rivals[r.k].on);}
+
+/* ---------- the nine ---------- */
+function buildRows(){
+  const el=$('#rows');if(!el)return;
+  el.innerHTML=NINE.map(g=>`
+  <details class="row" id="row-${g.i}">
+    <summary><span class="n">${g.i}</span> ${tx(g.n)} <span class="st" id="st-${g.i}"></span></summary>
+    <div class="rowbody">
+      <details class="gloss"><summary>${tx(T.glossT)}</summary><div class="gb">
+        <p><b>${tx(T.glossAsks)}</b> ${tx(g.q)}</p><p>${tx(g.r)}</p></div></details>
+      <div class="field"><label>${tx(T.verdictL)}</label>
+        <select class="verdict-sel" id="v-${g.i}"><option value="">—</option>
+          <option value="supports">${tx(T.supports)}</option>
+          <option value="against">${tx(T.against)}</option>
+          <option value="nothing">${tx(T.nothing)}</option></select></div>
+      <div id="nk-${g.i}"></div>
+      <div class="field"><label>${tx(T.stdL)}</label>
+        <select id="sd-${g.i}"><option value="">—</option>
+        ${STANDARDS.map(s=>`<option value="${s.v}">${tx(s.n)} — ${tx(s.d)}</option>`).join('')}</select></div>
+      <div class="field"><label>${tx(T.evL)}</label><textarea id="e-${g.i}" rows="3"></textarea>
+        <div id="qc-${g.i}"></div></div>
+      <div class="field"><label>${tx(T.srcL)}</label><input id="s-${g.i}"></div>
+      <div class="field" id="b-${g.i}"></div>
+      <div id="cx-${g.i}"></div>
+    </div>
+  </details>`).join('');
+  NINE.forEach(g=>{
+    $('#v-'+g.i).addEventListener('change',e=>{S.rows[g.i].verdict=e.target.value;renderRow(g.i);render();save();});
+    $('#sd-'+g.i).addEventListener('change',e=>{S.rows[g.i].standard=e.target.value;renderRow(g.i);save();});
+    $('#e-'+g.i).addEventListener('input',e=>{S.rows[g.i].evidence=e.target.value;renderRow(g.i);save();});
+    $('#s-'+g.i).addEventListener('input',e=>{S.rows[g.i].source=e.target.value;save();});
+  });
+}
+function renderRow(i){
+  const r=S.rows[i];
+  const st=$('#st-'+i);if(!st)return;
+  st.innerHTML = r.verdict==='supports'?`<span class="pill p">${tx(T.supports)}</span>`
+    : r.verdict==='against'?`<span class="pill v">${tx(T.against)}</span>`
+    : r.verdict==='nothing'?`<span class="pill">${tx(T.nothing)}</span>`:'';
+
+  const nk=$('#nk-'+i);
+  if(r.verdict==='nothing'){
+    nk.innerHTML=`<div class="card ochre"><h3>${tx(T.nkT)}</h3><div class="radios">
+      ${[['notloaded',T.nk1],['other',T.nk2],['design',T.nk3]].map(([v,txt])=>
+        `<label><input type="radio" name="nk${i}" value="${v}" ${r.nothingKind===v?'checked':''}> <span>${tx(txt)}</span></label>`).join('')}
+      </div><p class="sub" style="margin-bottom:0">${tx(T.nkFoot)}</p></div>`;
+    $$('input[name=nk'+i+']').forEach(el=>el.addEventListener('change',e=>{
+      S.rows[i].nothingKind=e.target.value;save();render();}));
+  } else nk.innerHTML='';
+
+  const qc=$('#qc-'+i),sd=r.standard,ev=r.evidence||'';
+  if(!sd||!ev.trim())qc.innerHTML='';
+  else if(sd==='exact'||sd==='court'){
+    if(inPaper(ev)){
+      const src=r.fromSource;
+      qc.innerHTML=`<div class="hint good"><b>${tx(T.found)}</b> ${src?tx(T.foundSrc):tx(T.foundH)}</div>`;
+    } else {
+      qc.innerHTML=`<div class="flag"><b>${tx(T.notFound)}</b> ${tx(T.notFoundH)}
+        <div class="chk" style="margin:10px 0 0"><input type="checkbox" id="src-${i}">
+        <label for="src-${i}" style="font-weight:600">${tx(T.fromSource)}</label></div>
+        <div class="sub" style="margin-left:27px">${tx(T.fromSourceH)}</div></div>`;
+      const cb=$('#src-'+i);
+      if(cb)cb.addEventListener('change',e=>{
+        if(e.target.checked){S.extra=S.extra||[];S.extra.push(r.evidence);S.rows[i].fromSource=true;}
+        renderRow(i);render();save();});
+    }
+  }
+  else if(sd==='phrase')
+    qc.innerHTML=`<div class="hint"><b>${tx(T.noted)}</b> ${tx(T.phraseH)}</div>`;
+  else qc.innerHTML='';
+
+  const bx=$('#b-'+i),on=onRivals();
+  if(r.verdict==='supports'||r.verdict==='against'){
+    bx.innerHTML=`<label>${tx(T.beatsL)}</label><div class="help">${tx(T.beatsH)}</div>`+
+      on.map(x=>`<div class="chk"><input type="checkbox" id="bk-${i}-${x.k}" ${r.beats[x.k]?'checked':''}>
+        <label for="bk-${i}-${x.k}" style="font-weight:400">${tx(T.yesIt)} <b>${tx(x.n)}</b> ${tx(T.wouldGive)}</label></div>`).join('');
+    on.forEach(x=>$('#bk-'+i+'-'+x.k).addEventListener('change',e=>{
+      S.rows[i].beats[x.k]=e.target.checked;renderRow(i);render();save();}));
+  } else bx.innerHTML='';
+
+  const cx=$('#cx-'+i),bad=on.filter(x=>r.beats[x.k]);
+  if(r.verdict==='supports'&&bad.length){
+    cx.innerHTML=`<div class="flag"><b>${tx(T.cxT)}</b> ${tx(T.cxA)} <b>${bad.map(x=>tx(x.n)).join(', ')}</b> ${tx(T.cxB)}
+      <div style="margin-top:9px"><textarea id="both-${i}" rows="2" placeholder="${tx(T.cxPh)}">${esc(r.both)}</textarea></div></div>`;
+    $('#both-'+i).addEventListener('input',e=>{S.rows[i].both=e.target.value;save();render();});
+  } else { cx.innerHTML=''; }
+}
+
+/* ---------- Morgan ---------- */
+function renderMorgan(){
+  const on=onRivals(),sup=NINE.filter(g=>S.rows[g.i].verdict==='supports');
+  const m=$('#morgan');if(!m)return;
+  if(!sup.length){m.innerHTML=`<div class="card">${tx(T.morganEmpty)}</div>`;$('#tally').innerHTML='';return;}
+  m.innerHTML=sup.map(g=>{
+    const r=S.rows[g.i],mm=S.morgan[g.i],beaten=on.filter(x=>r.beats[x.k]);
+    return `<div class="card ${beaten.length?'verm':'petrol'}">
+      <h3>${tx(T.rowW)} ${g.i} · ${tx(g.n)}</h3>
+      <p class="sub" style="margin-top:0"><b>${tx(T.nullH)}</b> ${beaten.length?beaten.map(x=>tx(x.n)).join(' · '):tx(T.noneOfYours)}</p>
+      <div class="field" style="margin-bottom:10px"><label>${tx(T.outcomeL)}</label><div class="radios">
+        ${[['beats',T.mo1],['ties',T.mo2],['worse',T.mo3]].map(([v,txt])=>
+          `<label><input type="radio" name="mo${g.i}" value="${v}" ${mm.outcome===v?'checked':''}> <span>${tx(txt)}</span></label>`).join('')}
+      </div></div>
+      <div class="field" style="margin-bottom:0"><label>${tx(T.impL)}</label>
+        <div class="help">${tx(T.impH)}</div>
+        <textarea id="mi-${g.i}" rows="2">${esc(mm.improvement)}</textarea></div></div>`;}).join('');
+  sup.forEach(g=>{
+    $$('input[name=mo'+g.i+']').forEach(el=>el.addEventListener('change',e=>{
+      S.morgan[g.i].outcome=e.target.value;render();save();}));
+    $('#mi-'+g.i).addEventListener('input',e=>{S.morgan[g.i].improvement=e.target.value;save();});
+  });
+  const beats=sup.filter(g=>S.morgan[g.i].outcome==='beats').length;
+  const dec=sup.filter(g=>['ties','worse'].includes(S.morgan[g.i].outcome)).length;
+  $('#tally').innerHTML=`
+    <div class="tallybox"><div class="big">${sup.length}</div><div class="lbl">${tx(T.tSup)}</div></div>
+    <div class="tallybox"><div class="big" style="color:var(--verm)">${dec}</div><div class="lbl">${tx(T.tDec)}</div></div>
+    <div class="tallybox"><div class="big" style="color:var(--petrol)">${beats}</div><div class="lbl">${tx(T.tEv)}</div></div>`;
+}
+
+/* ---------- objections (no categories) ---------- */
+function firstNum(t){const m=(t||'').match(/\d+(?:[.,]\d+)?/);return m?parseFloat(m[0].replace(',','.')):null;}
+function objections(){
+  const O=[],R=S.rows;
+  const add=(id,q)=>O.push({id,q});
+  if(R[5].verdict==='supports')add('o5',tx(T.ob5));
+  if(R[4].verdict==='supports')add('o4',tx(T.ob4));
+  if(R[2].verdict==='supports'){const n=firstNum(R[2].evidence);
+    if(n!==null&&n>0.5&&n<1.5)add('o2',tx(T.ob2).replace('{n}',n));}
+  if(R[7].verdict==='supports'&&!/(19|20)\d\d/.test(R[7].evidence||''))add('o7',tx(T.ob7));
+  if(R[9].verdict==='against')add('o9',tx(T.ob9));
+  if(S.samePop==='places'&&S.verdict==='causal')add('op',tx(T.obPlaces));
+  if(S.samePop==='diff')add('od',tx(T.obDiff));
+  const cf=+S.claimFrom,ct=+S.claimTo,df=+S.dataFrom,dt=+S.dataTo;
+  if(cf&&ct&&df&&dt&&(df>ct||dt<cf))
+    add('oy',tx(T.obYears).replace('{a}',cf).replace('{b}',ct).replace('{c}',df).replace('{d}',dt));
+  else if(cf&&df&&df>cf+3)
+    add('oy2',tx(T.obLate).replace('{a}',cf).replace('{c}',df).replace('{k}',df-cf));
+  if(!norm(S.sec.limits))add('ol',tx(T.obLimits));
+  const sup=NINE.filter(g=>R[g.i].verdict==='supports').length;
+  if(sup>=8)add('oa',tx(T.obAll).replace('{n}',sup));
+  return O;
+}
+function renderObjections(){
+  const O=objections(),el=$('#attacks');if(!el)return;
+  if(!O.length){el.innerHTML=`<div class="card petrol"><h3>${tx(T.noObjT)}</h3>${tx(T.noObjH)}</div>`;return;}
+  el.innerHTML=`<h3 style="letter-spacing:.1em;font-size:12px;color:var(--verm);text-transform:uppercase">${tx(T.objT)}</h3>
+    <p class="sub">${tx(T.objH)}</p>`+
+   O.map(o=>{const a=S.answers[o.id]||{};return `
+    <div class="attack"><div class="q">${o.q}</div>
+      <div class="triage" data-oid="${o.id}">
+        <button data-t2="change" class="${a.pick==='change'?'sel':''}">${tx(T.obChange)}</button>
+        <button data-t2="stand" class="${a.pick==='stand'?'sel':''}">${tx(T.obStand)}</button>
+      </div>
+      <div style="margin-top:10px" ${a.pick?'':'hidden'}>
+        <textarea id="oa-${o.id}" rows="2" placeholder="${a.pick==='change'?tx(T.obChangePh):tx(T.obStandPh)}">${esc(a.text||'')}</textarea>
+        <div class="sub" style="margin-top:6px"><a href="#" data-mis="${o.id}" style="color:var(--grey)">${tx(T.obMisread)}</a></div>
+      </div></div>`;}).join('');
+  $$('.triage').forEach(d=>d.addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;
+    S.answers[d.dataset.oid]=Object.assign({},S.answers[d.dataset.oid],{pick:b.dataset.t2});
+    renderObjections();save();render();}));
+  O.forEach(o=>{
+    const ta=$('#oa-'+o.id);
+    if(ta)ta.addEventListener('input',e=>{S.answers[o.id]=Object.assign({},S.answers[o.id],{text:e.target.value});save();render();});
+    const mis=$('[data-mis="'+o.id+'"]');
+    if(mis)mis.addEventListener('click',ev=>{ev.preventDefault();
+      const why=prompt(tx(T.obMisreadQ));
+      if(why&&why.trim()){S.answers[o.id]=Object.assign({},S.answers[o.id],{pick:'misread',text:why});renderObjections();save();render();}});
+  });
+}
+
+Object.assign(T,{
+lockFirst:['Lock your rivals first (step 4). Naming them after you have seen the evidence is not naming them.','Сначала зафиксируй соперников (шаг 4). Назвать их после того, как увидел доказательства, — это не назвать.'],
+pdfWait:['Reading the PDF…','Читаю PDF…'],
+pdfOk:['Loaded {n} pages. Now select passages below.','Загружено страниц: {n}. Теперь выделяй куски ниже.'],
+pdfFail:['Could not read that PDF here (the reader library needs an internet connection). Open the paper, select all, copy, and paste the text instead.','Не смог прочитать PDF (библиотеке нужен интернет). Открой статью, выдели всё, скопируй и вставь текст.'],
+selectFirst:['Select a passage in the paper first, then press the button.','Сначала выдели кусок в статье, потом жми кнопку.'],
+selectMore:['Too short. Select at least a full sentence.','Слишком коротко. Выдели хотя бы целое предложение.'],
+clear:['clear','убрать'],
+foundPhrases:['Words worth looking for in this paper:','Слова, которые стоит поискать в этой статье:'],
+foundPhrasesH:['Finding them is your job, not the trainer’s - it only counted them.','Найти их - твоя работа, а не тренажёра: он их только посчитал.'],
+glossAsks:['It asks:','Спрашивает:'],
+found:['Found.','Нашлось.'],
+foundH:['This wording is in the paper you loaded.','Эта формулировка есть в загруженной статье.'],
+notFound:['Not in the paper you loaded.','В загруженной статье этого нет.'],
+notFoundH:['You chose a standard that requires the source’s own wording, and this sentence is not in it. Either paste the real sentence, or drop the standard to Nice phrase and write it as your own paraphrase.','Ты выбрал стандарт, который требует слов источника, а этого предложения в нём нет. Либо вставь настоящее, либо опусти стандарт до «красивой фразы» и пиши как свой пересказ.'],
+noted:['Noted.','Принято.'],
+phraseH:['At this standard you may not present this as a quotation anywhere in your write-up. Label it as your paraphrase.','На этом стандарте нельзя выдавать это за цитату нигде в работе. Пометь как свой пересказ.'],
+yesIt:['Yes —','Да —'],
+wouldGive:['would give me this too.','дал бы мне это тоже.'],
+cxT:['These two answers of yours disagree.','Эти два твоих ответа спорят друг с другом.'],
+cxA:['You marked this row as supporting, and you also said','Ты пометил строку как поддерживающую и сам же сказал, что'],
+cxB:['would produce the same observation. If your rival gives you this, it is not evidence. Fix one of the two — or write why both can stand.','даёт то же наблюдение. Если соперник даёт тебе это, доказательством оно не является. Почини одно из двух — или напиши, почему оба стоят.'],
+cxPh:['Why can both stand?','Почему оба могут стоять?'],
+morganEmpty:['No row is marked as supporting yet. Morgan is unbothered.','Ни одна строка пока не помечена как поддерживающая. Моргана это не беспокоит.'],
+rowW:['Row','Строка'],
+nullH:['Null hypothesis:','Нулевая гипотеза:'],
+noneOfYours:['none of your rivals, by your own answer','ни один из твоих соперников, по твоему же ответу'],
+outcomeL:['Outcome','Исход'],
+mo1:['<b>Beats Morgan.</b> This tells me something the rival does not.','<b>Бьёт Моргана.</b> Говорит мне то, чего не говорит соперник.'],
+mo2:['<b>Morgan-quality.</b> Decoration — I will repair it or drop it.','<b>Уровень Моргана.</b> Декорация — чиню или убираю.'],
+mo3:['<b>Worse than purring.</b> Delete the row.','<b>Хуже мурчания.</b> Удаляю строку.'],
+impL:['Name the improvement','Назови улучшение'],
+impH:['It must name something the rival CANNOT produce. Someone uninvolved must be able to see the difference.','Оно обязано называть то, чего соперник дать НЕ МОЖЕТ. Посторонний должен увидеть разницу.'],
+tSup:['rows marked supports','строк «поддерживает»'],
+tDec:['decoration','декорация'],
+tEv:['actual evidence','настоящих доказательств'],
+ob5:['Plausibility makes a story easier to believe. It does not make it more likely to be true. Name one rival that your mechanism actually rules out. If you cannot, this row rules out nothing.','Правдоподобие делает историю легче для веры, но не вероятнее для правды. Назови соперника, которого твой механизм действительно исключает. Не можешь — строка не исключает ничего.'],
+ob4:['Replication: if every study was built the same way, they all carry the same bias, and repeating it is not testing it. Were the designs different — or only the authors?','Воспроизводимость: если все исследования построены одинаково, они несут одну и ту же ошибку, и повторение — не проверка. Дизайны были разные — или только авторы?'],
+ob2:['Your strength row rests on a number near {n}. An effect that small can be produced by moderate unmeasured bias alone. What makes you confident the bias in this design is smaller than that?','Строка силы держится на числе около {n}. Такой маленький эффект создаёт одна умеренная неучтённая ошибка. Почему ты уверен, что ошибка этого дизайна меньше?'],
+ob7:['Cessation: your evidence carries no date. Did the exposure actually stop somewhere and the outcome fall — or are you reasoning about what would happen if it did?','Прекращение: в твоём доказательстве нет даты. Воздействие где-то правда прекратилось и исход упал — или ты рассуждаешь о том, что было бы?'],
+ob9:['Specificity comes from the era of one germ, one disease. Smoking has a dozen outcomes and is still a cause. Does this row deserve any weight against your claim here?','Специфичность родом из эпохи «один возбудитель — одна болезнь». У курения десяток исходов, и оно причина. Заслуживает ли эта строка хоть какого-то веса против твоего утверждения?'],
+obPlaces:['Your evidence compares places. Your verdict is a statement about a cause. An association between places does not transfer to a person — that step needs its own argument.','Твоё доказательство сравнивает места. Твой вердикт — утверждение о причине. Связь между местами на человека не переносится, для этого шага нужен отдельный аргумент.'],
+obDiff:['X and Y were measured in two different groups of people. Say plainly which link in your chain that breaks, and whether your claim survives it.','X и Y измерены у двух разных групп людей. Скажи прямо, какое звено цепочки это ломает и выживает ли твоё утверждение.'],
+obYears:['Your claim is about {a}–{b}. Your data on X cover {c}–{d}. These do not overlap: this study cannot speak to the period your claim is about.','Твоё утверждение о {a}–{b}. Данные о X покрывают {c}–{d}. Они не пересекаются: про твой период это исследование сказать ничего не может.'],
+obLate:['Your claim starts in {a}; your data on X start in {c}, {k} years later. Whatever you conclude, it is not about how this began.','Утверждение начинается в {a}, данные о X — в {c}, на {k} лет позже. Что бы ты ни заключил, это не про то, как оно началось.'],
+obLimits:['You tagged little or nothing under "where the authors say what they cannot know". Either the paper says nothing of the kind — which is itself worth saying in your verdict — or you have not found the passage.','Ты разметил мало или ничего под «где авторы говорят, чего они не могут знать». Либо статья ничего такого не говорит — и это само по себе стоит сказать в вердикте — либо ты не нашёл это место.'],
+obAll:['{n} of nine rows support the claim. Real evidence rarely looks like that. Which row did you fill in because it was on the list?','{n} строк из девяти за утверждение. Настоящие доказательства редко так выглядят. Какую строку ты заполнил просто потому, что она в списке?'],
+noObjT:['No open objections','Открытых возражений нет'],
+noObjH:['Nothing in your pass contradicts itself. That is not the same as being right.','Ничто в твоём проходе не противоречит само себе. Это не то же самое, что быть правым.'],
+objT:['Objections to your pass','Возражения на твой проход'],
+objH:['Each one needs an answer, and every answer must point at something: a row, a step, or your own words.','Каждому нужен ответ, и каждый ответ должен на что-то указывать: на строку, на шаг или на твои собственные слова.'],
+obChange:['I am changing the row','Меняю строку'],
+obStand:['I stand by it — here is why','Оставляю — вот почему'],
+obChangePh:['What are you changing, and in which row? Then go and change it.','Что меняешь и в какой строке? Потом иди и поменяй.'],
+obStandPh:['Point at the row, the step, or your own words.','Укажи на строку, на шаг или на свои слова.'],
+obMisread:['this check misread my answer','эта проверка неправильно прочитала мой ответ'],
+obMisreadQ:['Which of your own words did it misread, and what did you actually write?','Какие именно твои слова она переврала и что ты написал на самом деле?'],
+diagT:['What to practise next time','Что потренировать в следующий раз'],
+diagNone:['Nothing recurred. Your answers disagree with each other nowhere, and every quote you claimed as exact is in the paper.','Ничего не повторилось. Твои ответы нигде не спорят друг с другом, и каждая цитата, заявленная как точная, есть в статье.'],
+dQuote:['{n} times you set the standard to Exact or Court on a sentence that is not in the paper. You are quoting from memory.','{n} раз(а) ты поставил стандарт Exact или Court на предложение, которого в статье нет. Ты цитируешь по памяти.'],
+dQuoteP:['Practise: paste the sentence first, choose the standard second.','Тренируй: сначала вставь предложение, потом выбирай стандарт.'],
+dApply:['You named {r} and then marked {n} as supporting that those same rivals produce. The naming is fine; the applying is not.','Ты назвал {r} и потом пометил {n} как поддерживающие, хотя эти же соперники их производят. Называть умеешь, применять — нет.'],
+dApplyP:['Practise: before you write a verdict, read your own rival aloud and ask whether it gives you this line.','Тренируй: прежде чем писать вердикт, прочитай вслух своего соперника и спроси, даёт ли он тебе эту строку.'],
+dAll:['{n} of the rows you filled say supports. A paper that satisfies almost every guideline is rare.','{n} заполненных строк говорят «поддерживает». Статья, удовлетворяющая почти всем ориентирам, — редкость.'],
+dAllP:['Practise: fill the rows you believe, and mark the rest "says nothing" without apology.','Тренируй: заполняй строки, в которые веришь, а остальные без извинений помечай «ничего не говорит».'],
+dMorgan:['Nothing you marked as supporting survived your own rival.','Ни одна строка, помеченная «поддерживает», не пережила твоего собственного соперника.'],
+dMorganP:['That is a finding, not a failure. Say it in the verdict in those words.','Это находка, а не провал. Так и скажи в вердикте, этими словами.'],
+dLimits:['You never found where the authors say what they cannot know.','Ты так и не нашёл, где авторы говорят, чего они не могут знать.'],
+dLimitsP:['Practise: search the Discussion for "we cannot", "could not", "unable".','Тренируй: ищи в Discussion «we cannot», «could not», «unable».'],
+dTest:['Your test is not a test yet.','Твоя проверка ещё не проверка.'],
+dTestP:['Practise: name what you would measure, in whom, and the result you would accept as deciding it.','Тренируй: назови, что измеряешь, у кого, и какой результат примешь как решающий.'],
+dStand:['{n} objection(s) you stood by in under fifteen words.','Возражений, которые ты оставил, уложившись меньше чем в пятнадцать слов: {n}.'],
+dStandP:['Practise: an answer that points at nothing cannot be checked by anyone, including you.','Тренируй: ответ, который ни на что не указывает, не может проверить никто, включая тебя.'],
+dDesign:['You answered "this design cannot produce it" on {n} rows. That is the strongest thing you can say about a paper.','Ты ответил «этот дизайн не может этого дать» на {n} строк. Это самое сильное, что можно сказать о статье.'],
+dDesignP:['Make sure each one is a limit of the instrument, not of the people who used it — and say so in the verdict.','Убедись, что каждый случай — предел прибора, а не промах тех, кто им пользовался, и скажи это в вердикте.'],
+caseT:['Choose your assigned paper','Выбери заданную статью'],
+caseLegend:['\u25B3 a design worth admiring \u00b7 \u25BD a design worth catching','\u25B3 дизайн, которым стоит восхититься \u00b7 \u25BD дизайн, который стоит поймать'],
+orOwn:['Or work on a paper of your own:','Или работать со своей статьёй:'],
+caseModeH:['These passages were taken from the paper for you, each one labelled with where in the paper it sits. Read them, open the paper if you want to check any of them, then go on to step 1.','Эти куски вынуты из статьи за тебя, у каждого помечено, где он в статье стоит. Прочитай, при желании открой статью и проверь любой из них, потом иди к шагу 1.'],
+provT:['About these quotes:','Про эти цитаты:'],
+fidT:['how exact are these quotes? read this once','насколько точны эти цитаты? прочитай один раз'],
+fromSource:['I took this from the original paper.','Я взял это из оригинальной статьи.'],
+fromSourceH:['Tick this and the quote counts. It is recorded in your submission as taken beyond the passages you were given — which is a point in your favour, not a suspicion.','Поставь галочку, и цитата засчитается. В сдаче она пометится как взятая сверх выданных кусков — это плюс тебе, а не подозрение.'],
+foundSrc:['Counted — and recorded as taken from the original paper, beyond the passages you were given.','Засчитано — и помечено как взятое из оригинальной статьи, сверх выданных кусков.'],
+notInPack:['Not in this pack — open the paper and find it yourself.','В этом паке нет — открой статью и найди сам.'],
+caseGo:['Load','Загрузить'],
+caseNone:['— choose —','— выбери —'],
+vSumT:['Your own tally','Твой собственный счёт'],
+openFlagsAt:['Open flags at hand-in','Открытые флаги при сдаче'],
+untriaged:['{n} objection(s) with no answer. Go back to step 6. An objection you did not answer travels into your submission as unanswered.','Возражений без ответа: {n}. Вернись к шагу 6. Возражение без ответа уедет в сдачу как неотвеченное.'],
+flagsGo:['{n} open flag(s). They go into the submission as they are. Unresolved is an honest state; hidden is not.','Открытых флагов: {n}. Они уйдут в сдачу как есть. Нерешённое — честное состояние, спрятанное — нет.'],
+allClear:['Nothing contradicts itself.','Ничто не противоречит само себе.'],
+noForm:['Copied. No hand-in form is set in this copy of the trainer — send the text to your tutor, or use Download.','Скопировано. В этой копии тренажёра форма сдачи не задана — отправь текст преподавателю или скачай файл.'],
+});
+
+/* ---------- flags ---------- */
+function openFlags(){
+  const f=[],on=onRivals();
+  const cf=+S.claimFrom,ct=+S.claimTo,df=+S.dataFrom,dt=+S.dataTo;
+  if(cf&&ct&&df&&dt&&(df>ct||dt<cf))f.push(L==='en'?'Claim period and data period do not overlap':'Период утверждения и период данных не пересекаются');
+  else if(cf&&df&&df>cf+3)f.push((L==='en'?'Data on X begin ':'Данные о X начинаются на ')+(df-cf)+(L==='en'?' years after the claim does':' лет позже утверждения'));
+  if(S.samePop==='diff')f.push(L==='en'?'X and Y measured in different populations':'X и Y измерены в разных популяциях');
+  if(S.samePop==='places')f.push(L==='en'?'Evidence is about places, not people':'Доказательство о местах, не о людях');
+  if(S.order==='cross')f.push(L==='en'?'Cross-section: the backwards arrow cannot be ruled out here':'Срез: обратную стрелку здесь исключить нельзя');
+  if(S.order==='xfirst'&&!(S.targetAns||'').trim())f.push(L==='en'?'You have not said what decided where X went':'Не сказано, что решило, куда пошёл X');
+  if(!norm(S.sec.limits))f.push(L==='en'?'Nothing tagged under "what the authors cannot know"':'Ничего не размечено под «чего авторы не могут знать»');
+  NINE.forEach(g=>{const r=S.rows[g.i];
+    if((r.standard==='exact'||r.standard==='court')&&r.evidence.trim()&&!inPaper(r.evidence))
+      f.push((L==='en'?'Row ':'Строка ')+g.i+(L==='en'?': quote not in the paper':': цитаты нет в статье'));
+    if(r.verdict==='supports'&&on.some(x=>r.beats[x.k])&&!(r.both||'').trim())
+      f.push((L==='en'?'Row ':'Строка ')+g.i+(L==='en'?': supports, but your rival produces it too':': «поддерживает», но соперник даёт то же'));});
+  const noAns=objections().filter(o=>!(S.answers[o.id]||{}).pick);
+  if(noAns.length)f.push(noAns.length+(L==='en'?' objection(s) with no answer':' возражений без ответа'));
+  return f;
+}
+
+/* ---------- diagnostics ---------- */
+function diagnostics(){
+  const d=[],on=onRivals(),R=S.rows;
+  const badQuotes=NINE.filter(g=>{const r=R[g.i];
+    return (r.standard==='exact'||r.standard==='court')&&r.evidence.trim()&&!inPaper(r.evidence);}).length;
+  if(badQuotes)d.push([tx(T.dQuote).replace('{n}',badQuotes),tx(T.dQuoteP)]);
+  const conceded=NINE.filter(g=>R[g.i].verdict==='supports'&&on.some(x=>R[g.i].beats[x.k])).length;
+  if(conceded&&on.length)d.push([tx(T.dApply)
+    .replace('{r}',on.length+' '+(L==='en'?(on.length===1?'rival':'rivals'):(on.length===1?'соперника':'соперников')))
+    .replace('{n}',conceded+' '+(L==='en'?(conceded===1?'row':'rows'):(conceded===1?'строку':'строк'))),tx(T.dApplyP)]);
+  const filled=NINE.filter(g=>R[g.i].verdict).length;
+  const sup=NINE.filter(g=>R[g.i].verdict==='supports').length;
+  if(filled>=5&&sup>=filled-1&&sup>=5)d.push([tx(T.dAll).replace('{n}',sup),tx(T.dAllP)]);
+  const supRows=NINE.filter(g=>R[g.i].verdict==='supports');
+  if(supRows.length&&!supRows.some(g=>S.morgan[g.i].outcome==='beats'))
+    d.push([tx(T.dMorgan),tx(T.dMorganP)]);
+  if(!norm(S.sec.limits))d.push([tx(T.dLimits),tx(T.dLimitsP)]);
+  const ch=(S.vChange||'').toLowerCase();
+  if(S.verdict&&(!ch.trim()||/more research|further research|нужны дополнительные|дальнейшие исследования/.test(ch)))
+    d.push([tx(T.dTest),tx(T.dTestP)]);
+  const thin=Object.values(S.answers).filter(a=>a.pick==='stand'&&(a.text||'').trim().split(/\s+/).filter(Boolean).length<15).length;
+  if(thin)d.push([tx(T.dStand).replace('{n}',thin),tx(T.dStandP)]);
+  const des=NINE.filter(g=>R[g.i].nothingKind==='design').length;
+  if(des)d.push([tx(T.dDesign).replace('{n}',des),tx(T.dDesignP)]);
+  return d;
+}
+
+/* ---------- render ---------- */
+function render(){
+  const cf=+S.claimFrom,ct=+S.claimTo,df=+S.dataFrom,dt=+S.dataTo;
+  const fp=$('#flag-period');
+  if(fp)fp.innerHTML=(cf&&ct&&df&&dt)
+    ? ((df>ct||dt<cf)?`<div class="flag">${tx(T.obYears).replace('{a}',cf).replace('{b}',ct).replace('{c}',df).replace('{d}',dt)}</div>`
+      :(df>cf+3?`<div class="flag">${tx(T.obLate).replace('{a}',cf).replace('{c}',df).replace('{k}',df-cf)}</div>`
+      :`<div class="hint good"><b>${L==='en'?'Periods line up.':'Периоды сходятся.'}</b></div>`)) : '';
+  const fpop=$('#flag-pop');
+  if(fpop)fpop.innerHTML = S.samePop==='diff'?`<div class="flag">${tx(T.obDiff)}</div>`
+    : S.samePop==='places'?`<div class="flag">${tx(T.obPlaces)}</div>`:'';
+  const fo=$('#flag-order');
+  if(fo&&S.order)fo.innerHTML = S.order==='cross'
+    ? `<div class="flag"><b>${L==='en'?'No order to see.':'Порядка не видно.'}</b> ${L==='en'?'Temporality cannot be met by this design - not because the study is bad, but because of what it is. Your fourth rival stays alive for the whole pass; nothing later can kill it.':'Временная связь в этом дизайне недостижима - не потому, что исследование плохое, а потому, что оно такое. Четвёртый соперник останется живым до конца прохода, и убить его потом нечем.'}</div>`
+    : S.order==='yfirst' ? `<div class="flag"><b>${L==='en'?'Stop.':'Стоп.'}</b> ${L==='en'?'If the outcome was there before the exposure, the claim as written is dead. Go back to step 1.':'Если исход был раньше воздействия, утверждение в нынешнем виде мертво. Вернись к шагу 1.'}</div>`
+    : S.order==='cant' ? `<div class="hint">${L==='en'?'Honest. Record it as a limitation of what you loaded, not of the study.':'Честно. Запиши это как ограничение того, что ты загрузил, а не исследования.'}</div>`
+    : `<div class="hint good">${L==='en'?'Order visible. Now the harder question, below.':'Порядок виден. Теперь вопрос потруднее, ниже.'}</div>`;
+  const tb=$('#targetbox');if(tb)tb.hidden=S.order!=='xfirst';
+  const oq=$('#chk-orderquote');
+  if(oq)oq.innerHTML=(S.orderQuote||'').trim().length>14
+    ? (inPaper(S.orderQuote)?`<div class="hint good"><b>${tx(T.found)}</b></div>`:`<div class="flag"><b>${tx(T.notFound)}</b></div>`):'';
+
+  RIVALS.forEach(r=>{const cb=$('#rv-'+r.k),ta=$('#rt-'+r.k);if(!cb)return;
+    cb.checked=S.rivals[r.k].on;ta.value=S.rivals[r.k].text;
+    cb.disabled=S.rivalsLocked;ta.disabled=S.rivalsLocked;
+    const fb=$('#rf-'+r.k);
+    fb.innerHTML=(S.rivals[r.k].on&&S.rivals[r.k].text.trim()&&!specific(S.rivals[r.k].text))
+      ?`<div class="flag" style="margin:6px 0 0">${L==='en'?'Name it. A mechanism and a direction - not a label.':'Назови. Механизм и направление, а не ярлык.'}</div>`:'';});
+  if(S.rivalsLocked){const lb=$('#lockBtn');if(lb)lb.textContent=L==='en'?'Locked - continue':'Зафиксировано - дальше';
+    const rw=$('#rivalwrap');if(rw)rw.classList.add('locked');}
+
+  const srl=$('#sideRivalList');
+  if(srl)srl.innerHTML=S.rivalsLocked
+    ? onRivals().map(x=>`<div class="rival"><b>${tx(x.n)}</b>${esc(S.rivals[x.k].text)}</div>`).join('')
+    : tx(T.notLocked);
+  const f=openFlags();
+  const sfl=$('#sideFlagList');
+  if(sfl)sfl.innerHTML=f.length?f.map(t=>`<div class="rival" style="border-color:var(--verm)">${t}</div>`).join('')
+    :`<span style="color:var(--ok)">${tx(T.none)}</span>`;
+  const sf=$('#sideFlags');if(sf)sf.className='card '+(f.length?'verm':'');
+
+  const done=[!!norm(S.paper),!!S.xWhat,!!S.pick,!!S.order,S.rivalsLocked,
+    NINE.every(g=>S.rows[g.i].verdict),
+    NINE.filter(g=>S.rows[g.i].verdict==='supports').every(g=>S.morgan[g.i].outcome),
+    !!S.verdict].filter(Boolean).length;
+  const sp=$('#sideProg');if(sp)sp.textContent=(L==='en'?done+' of 8 stages complete.':done+' из 8 этапов пройдено.');
+
+  ['A','B','C'].forEach(k=>{const v=S['q'+k],el=$('#lab-'+k);
+    if(el)el.textContent=v?v:(L==='en'?'Question '+k:'Вопрос '+k);});
+
+  if(S.step===0)renderSlots();
+  if(S.step===6){renderMorgan();renderObjections();}
+  if(S.step===7)renderVSummary();
+  if(S.step===8)renderOut();
+}
+function renderVSummary(){
+  const el=$('#vSummary');if(!el)return;
+  const on=onRivals(),sup=NINE.filter(g=>S.rows[g.i].verdict==='supports');
+  const beats=sup.filter(g=>S.morgan[g.i].outcome==='beats');
+  const ag=NINE.filter(g=>S.rows[g.i].verdict==='against').length;
+  const no=NINE.filter(g=>S.rows[g.i].verdict==='nothing').length;
+  el.innerHTML=`<div class="card petrol"><h3>${tx(T.vSumT)}</h3>
+    <div class="tally" style="margin:0">
+      <div class="tallybox"><div class="big">${sup.length}</div><div class="lbl">${tx(T.supports)}</div></div>
+      <div class="tallybox"><div class="big">${ag}</div><div class="lbl">${tx(T.against)}</div></div>
+      <div class="tallybox"><div class="big">${no}</div><div class="lbl">${tx(T.nothing)}</div></div>
+      <div class="tallybox"><div class="big" style="color:var(--petrol)">${beats.length}</div><div class="lbl">${tx(T.tEv)}</div></div>
+    </div></div>`;
+}
+
+/* ---------- export ---------- */
+function md(){
+  const on=onRivals(),Lx=[],R=S.rows;
+  Lx.push(`# From association to causation — ${S.meName||'(no name)'}`,``);
+  Lx.push(`**Paper:** ${S.mePaper||'—'}`,`**Submitted:** ${new Date().toISOString().slice(0,10)}`,``);
+  Lx.push(`## 0 · What was tagged in the paper`,``);
+  SECTIONS.forEach(s=>Lx.push(`**${s.q[0]}**`,``,(S.sec[s.k]?'> '+S.sec[s.k].replace(/\n+/g,' '):'> (nothing tagged)'),``));
+  Lx.push(`## 1 · The claim`,``,`**X:** ${S.xWhat||'—'} — measured: ${S.xMeas||'—'}`);
+  Lx.push(`**Y:** ${S.yWhat||'—'} — measured: ${S.yMeas||'—'}`);
+  Lx.push(`**Claim period:** ${S.claimFrom||'?'}–${S.claimTo||'?'} · **Data on X:** ${S.dataFrom||'?'}–${S.dataTo||'?'}`);
+  Lx.push(`**Populations:** ${({same:'the same people',diff:'different groups',places:'places, not people'})[S.samePop]||'—'}`,``);
+  Lx.push(`## 2 · The question judged`,``);
+  ['A','B','C'].forEach(k=>{if(S['q'+k])Lx.push(`- ${k}. ${S['q'+k]}${S.pick===k?'  ← **judged here**':''}`);});
+  if(S.pick==='one')Lx.push(`- Treated as a single question.`);
+  Lx.push(``,`## 3 · Order in time`,``,`**${({cross:'Both measured at once — no order visible',xfirst:'X measured before Y',yfirst:'Y measured before X',cant:'Cannot tell from what was loaded'})[S.order]||'—'}**`);
+  if(S.orderQuote)Lx.push(``,`> ${S.orderQuote}`);
+  if(S.targetAns)Lx.push(``,`*What decided where X went:* ${S.targetAns}`);
+  Lx.push(``,`## 4 · Rivals, named before the evidence`,``);
+  on.forEach(x=>Lx.push(`- **${x.n[0]}** — ${S.rivals[x.k].text}`));
+  const ns=NINE.filter(g=>R[g.i].fromSource).length;
+  Lx.push(``,`## 5 · The nine`,``);
+  if(ns)Lx.push(`*${ns} quote(s) taken from the original paper, beyond the passages given.*`,``);
+  Lx.push(`| # | Guideline | Verdict | Standard | Evidence | Source | Rival produces it |`,`|---|---|---|---|---|---|---|`);
+  NINE.forEach(g=>{const r=R[g.i];
+    const b=on.filter(x=>r.beats[x.k]).map(x=>x.n[0]).join('; ');
+    const nk=r.verdict==='nothing'?({notloaded:' (not in what I loaded)',other:' (exists, другая статья)',design:' (THE DESIGN CANNOT PRODUCE IT)'})[r.nothingKind]||'':'';
+    const sd=(STANDARDS.find(s=>s.v===r.standard)||{n:['—']}).n[0];
+    const srcMark=r.fromSource?' **[from the original paper, beyond the pack]**':'';
+    Lx.push(`| ${g.i} | ${g.n[0]} | ${r.verdict||'—'}${nk} | ${sd} | ${(r.evidence||'—').replace(/\|/g,'/').replace(/\n/g,' ')}${srcMark} | ${(r.source||'—').replace(/\|/g,'/')} | ${b||'no'} |`);
+    if(r.verdict==='supports'&&b&&r.both)Lx.push(`| | ↳ why both stand | ${r.both.replace(/\|/g,'/').replace(/\n/g,' ')} | | | | |`);});
+  const sup=NINE.filter(g=>R[g.i].verdict==='supports'),beats=sup.filter(g=>S.morgan[g.i].outcome==='beats');
+  Lx.push(``,`## 6 · Morgan pass`,``,`${sup.length} rows marked supports · **${beats.length} beat the rival** · ${sup.length-beats.length} decoration`,``);
+  sup.forEach(g=>Lx.push(`- Row ${g.i}: **${S.morgan[g.i].outcome||'—'}** — ${S.morgan[g.i].improvement||'(no improvement named)'}`));
+  const O=objections();
+  Lx.push(``,`## 7 · Objections and answers`,``);
+  if(!O.length)Lx.push(`None fired.`);
+  O.forEach(o=>{const a=S.answers[o.id]||{};
+    Lx.push(`- **[${(a.pick||'NO ANSWER').toUpperCase()}]** ${o.q.replace(/<[^>]+>/g,'')}`);
+    if(a.text)Lx.push(`  - ${a.text}`);});
+  Lx.push(``,`## 8 · Verdict`,``,`**${({causal:'Causal',notcausal:'Not causal',undecided:'Cannot be decided yet'})[S.verdict]||'—'}**`,``);
+  Lx.push(`*Decided by:* ${S.vBecause||'—'}`,``,`*The test that would decide it:* ${S.vChange||'—'}`,``);
+  const d=diagnostics();
+  Lx.push(`## 9 · ${T.diagT[0]}`,``);
+  if(!d.length)Lx.push(T.diagNone[0]); else d.forEach(x=>Lx.push(`- **${x[0]}** ${x[1]}`));
+  Lx.push(``,`---`,`${T.openFlagsAt[0]}: ${openFlags().length?openFlags().join(' · '):'none'}`);
+  return Lx.join('\n');
+}
+function renderOut(){
+  const f=openFlags(),O=objections();
+  const noAns=O.filter(o=>!(S.answers[o.id]||{}).pick);
+  const d=diagnostics();
+  $('#completeness').innerHTML =
+    (noAns.length?`<div class="flag">${tx(T.untriaged).replace('{n}',noAns.length)}</div>`:'')+
+    (f.length?`<div class="hint">${tx(T.flagsGo).replace('{n}',f.length)}</div>`:`<div class="hint good"><b>${tx(T.allClear)}</b></div>`)+
+    `<div class="card ochre"><h3>${tx(T.diagT)}</h3>`+
+    (d.length?d.map(x=>`<p style="margin:0 0 10px"><b>${x[0]}</b><br><span class="sub">${x[1]}</span></p>`).join('')
+      :`<p style="margin:0">${tx(T.diagNone)}</p>`)+`</div>`;
+  $('#out').textContent=md();
+}
+
+/* ---------- storage & io ---------- */
+function save(){try{localStorage.setItem('ebm-trainer-2',JSON.stringify(S));}catch(e){}}
+function restore(){
+  $$('[data-k]').forEach(el=>{const k=el.dataset.k;if(S[k]===undefined)return;
+    if(el.type==='radio')el.checked=(el.value===S[k]);else el.value=S[k];});
+  const mn=$('#meName'),mp=$('#mePaper');
+  if(mn)mn.value=S.meName||'';if(mp)mp.value=S.mePaper||'';
+  NINE.forEach(g=>{const r=S.rows[g.i],v=$('#v-'+g.i);
+    if(v){v.value=r.verdict;$('#sd-'+g.i).value=r.standard;$('#e-'+g.i).value=r.evidence;
+      $('#s-'+g.i).value=r.source;renderRow(g.i);}});
+  if(S.paper){$('#tagZone').hidden=false;renderPane();renderSlots();hintsFromPaper();}
+}
+function dl(name,text,type){
+  const b=new Blob([text],{type:type||'text/plain;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+function slug(){return (S.meName||'anon').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'anon';}
+
+/* ---------- assigned cases ---------- */
+let CASEDATA=(typeof EMBEDDED!=='undefined')?EMBEDDED:{index:{cases:[]},packs:{}};
+function buildCaseBox(){
+  const box=$('#caseBox');if(!box)return;
+  const cs=CASEDATA.index.cases||[];
+  if(!cs.length){box.innerHTML='';return;}
+  box.innerHTML=`<label style="font-weight:600;display:block;margin-bottom:5px">${tx(T.caseT)}</label>
+    <div class="calc" style="grid-template-columns:1fr auto">
+      <select id="caseSel"><option value="">${tx(T.caseNone)}</option>
+      ${cs.map(c=>`<option value="${c.id}">${c.tier==='weak'?'\u25BD':'\u25B3'} ${esc(c.title)}</option>`).join('')}
+      </select><button class="btn sm" id="caseGo">${tx(T.caseGo)}</button></div>
+    <div class="sub" style="margin-top:6px">${tx(T.caseLegend)}</div>`;
+  $('#caseGo').addEventListener('click',()=>loadCase($('#caseSel').value));
+}
+function loadCase(id){
+  const c=CASEDATA.packs[id];if(!c)return;
+  S.mePaper=c.citation;$('#mePaper').value=c.citation;
+  S.claim=c.claim||'';S.caseProv=c.provenance||'';S.caseFid=c.fidelity||null;S.caseId=id;
+  S.caseQuotes={};let all=[];
+  SECTIONS.forEach(s=>{const v=(c.sections||{})[s.k];
+    if(Array.isArray(v)&&v.length){S.caseQuotes[s.k]=v;
+      S.sec[s.k]=v.map(q=>q.t).join('\n\n');all=all.concat(v.map(q=>q.t));}
+    else if(typeof v==='string'&&v){S.sec[s.k]=v;all.push(v);}});
+  if(all.length){S.paper=all.join('\n\n');S.ranges={};}
+  $('#pdfStatus').innerHTML=`<b>${esc(c.title)}</b><br>${esc(c.citation)}<br>
+    <a href="${esc(c.url)}" target="_blank" rel="noopener">${L==='en'?'open the paper':'открыть статью'}</a>
+    ${c.status&&!/^no retraction/i.test(c.status)?`<br><span style="color:var(--verm)">\u26A0 ${esc(c.status)}</span>`:''}
+    <br><span class="sub">${esc(c.theOneThing||'')}</span>`;
+  if(S.paper){$('#tagZone').hidden=false;renderPane();renderSlots();hintsFromPaper();}
+  save();render();
+  $('#tagZone').scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function refreshCases(){
+  try{
+    const r=await fetch('cases/index.json',{cache:'no-store'});if(!r.ok)throw 0;
+    const ix=await r.json();if(!ix.cases||!ix.cases.length)throw 0;
+    const packs={};
+    await Promise.all(ix.cases.map(async c=>{
+      const rr=await fetch(c.file,{cache:'no-store'});if(rr.ok)packs[c.id]=await rr.json();}));
+    if(Object.keys(packs).length){CASEDATA={index:ix,packs};buildCaseBox();}
+  }catch(e){}
+}
+
+/* ---------- wire ---------- */
+function bind(){
+  $$('[data-k]').forEach(el=>{const k=el.dataset.k,ev=(el.type==='radio')?'change':'input';
+    el.addEventListener(ev,()=>{if(el.type==='radio'){if(el.checked)S[k]=el.value;}else S[k]=el.value;render();save();});});
+  $('#meName').addEventListener('input',e=>{S.meName=e.target.value;save();});
+  $('#mePaper').addEventListener('input',e=>{S.mePaper=e.target.value;save();});
+  $$('[data-hint]').forEach(b=>b.addEventListener('click',()=>{const h=$('#hint-'+b.dataset.hint);h.hidden=!h.hidden;}));
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b)go(+b.dataset.go);});
+  $('#lockBtn').addEventListener('click',()=>{
+    const on=onRivals();
+    if(!on.length){alert(L==='en'?'Tick at least one rival.':'Отметь хотя бы одного соперника.');return;}
+    const thin=on.filter(r=>!specific(S.rivals[r.k].text));
+    if(thin.length){alert((L==='en'?'Name these specifically before locking:\n\n':'Назови это конкретно, прежде чем фиксировать:\n\n')
+      +thin.map(r=>'· '+tx(r.n)).join('\n'));return;}
+    S.rivalsLocked=true;save();go(5);});
+  $('#lEN').addEventListener('click',()=>{L='en';S.lang='en';save();applyLang();go(S.step);});
+  $('#lRU').addEventListener('click',()=>{L='ru';S.lang='ru';save();applyLang();go(S.step);});
+  $('#calcGo').addEventListener('click',()=>{
+    const a=parseFloat($('#calcA').value),b=parseFloat($('#calcB').value);
+    $('#calcOut').innerHTML=(isFinite(a)&&isFinite(b)&&b!==0)
+      ?`<div class="hint"><b>${(a/b).toFixed(2)}</b> — ${L==='en'?'now say that number in your sentence, not the two you started with.':'теперь произнеси в своей фразе это число, а не те два, с которых начал.'}</div>`
+      :`<div class="flag">${L==='en'?'Two numbers, and b not zero.':'Два числа, и b не ноль.'}</div>`;});
+  $('#medGo').addEventListener('click',()=>{
+    const p=parseFloat($('#medPct').value);
+    $('#medOut').innerHTML=isFinite(p)&&p>=0&&p<=100
+      ?`<div class="hint"><b>${(100-p).toFixed(1)}%</b> ${L==='en'?'of the association does not run through that pathway. Name what it is doing: a second pathway, a mismeasured link, or no effect at all.':'связи не идёт этим путём. Назови, что оно делает: второй путь, плохо измеренное звено или отсутствие эффекта.'}</div>`
+      :`<div class="flag">${L==='en'?'A percentage between 0 and 100.':'Процент от 0 до 100.'}</div>`;});
+  $('#btnDl').addEventListener('click',()=>dl('causation-'+slug()+'.md',md(),'text/markdown;charset=utf-8'));
+  [$('#btnSave'),$('#btnSave2')].forEach(b=>b&&b.addEventListener('click',()=>dl('progress-'+slug()+'.json',JSON.stringify(S,null,1),'application/json')));
+  $('#fileIn').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();r.onload=()=>{try{Object.assign(S,JSON.parse(r.result));save();location.reload();}
+      catch(err){alert(L==='en'?'That file is not a saved pass.':'Это не сохранённый проход.');}};r.readAsText(f);});
+  $('#btnCopy').addEventListener('click',async()=>{
+    const t=md();
+    try{await navigator.clipboard.writeText(t);}catch(e){
+      const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');}catch(e2){}ta.remove();}
+    if(FORM_URL)window.open(FORM_URL,'_blank','noopener');else alert(tx(T.noForm));});
+  $('#setupNote').innerHTML=FORM_URL?'':' <b>Tutor:</b> set FORM_URL at the top of the script to wire the hand-in button to your form.';
+}
+
+try{const saved=localStorage.getItem('ebm-trainer-2');if(saved)Object.assign(S,JSON.parse(saved));}catch(e){}
+L=S.lang||'en';
+bind();applyLang();refreshCases();go(S.step||0);
+</script>
+</body>
+</html>
