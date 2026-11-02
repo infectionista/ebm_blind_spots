@@ -1057,13 +1057,14 @@ flagsGo:['{n} open flag(s). They go into the submission as they are. Unresolved 
 allClear:['Nothing contradicts itself.','Ничто не противоречит само себе.'],
 noForm:['Copied. No hand-in form is set in this copy of the trainer — send the text to your tutor, or use Download.','Скопировано. В этой копии тренажёра форма сдачи не задана — отправьте текст преподавателю или скачайте файл.'],
 exLoad:['load exemplary reply','загрузить образцовый ответ'],
+sendSave:['save the .md file','сохранить файл .md'],
 btnSend:['Hand in','Сдать работу'],
 codePh:['Group code','Код группы'],
 sendBusy:['Sending…','Отправляется…'],
 sendNoCode:['Enter the group code first — your tutor gave it to the class.','Сначала введите код группы — его давал преподаватель.'],
 sendOk:['Handed in — your tutor has the file.','Сдано — файл у преподавателя.'],
 sendErrCode:['The code does not match. Check it with your tutor.','Код не подходит. Сверьте его с преподавателем.'],
-sendErr:['Could not send — check the connection and try again, or use the copy / download buttons.','Отправить не вышло — проверьте связь и попробуйте ещё раз или воспользуйтесь кнопками копирования и скачивания.'],
+sendErr:['Could not send — the connection, or the address your tutor set. Nothing is lost:','Отправить не вышло — связь или адрес, который задал преподаватель. Ничего не потеряно:'],
 });
 
 /* ---------- flags ---------- */
@@ -1513,7 +1514,12 @@ function bind(){
     const sb=$('#sendBox');if(sb)sb.style.display='inline-flex';
     const gc=$('#groupCode');
     if(gc){gc.value=S.gcode||'';gc.addEventListener('input',()=>{S.gcode=gc.value.trim();save();});}
-    const stat=(m,bad)=>{const st=$('#sendStat');if(!st)return;st.style.display='';st.textContent=m;st.style.color=bad?'var(--verm)':'var(--petrol)';};
+    const stat=(m,bad,offer)=>{const st=$('#sendStat');if(!st)return;
+      st.style.display='';st.style.color=bad?'var(--verm)':'var(--petrol)';
+      st.innerHTML=esc(m)+(offer?' <a href="#" id="sendDl" style="color:inherit;text-decoration:underline">'+esc(tx(T.sendSave))+'</a>':'');
+      const d=$('#sendDl');
+      if(d)d.addEventListener('click',ev=>{ev.preventDefault();
+        dl('causation-'+slug()+'.md',md(),'text/markdown;charset=utf-8');});};
     $('#btnSend').addEventListener('click',async()=>{
       const code=(S.gcode||'').trim();
       if(!code){stat(tx(T.sendNoCode),true);return;}
@@ -1523,8 +1529,8 @@ function bind(){
         const j=await r.json();
         if(j.ok)stat(tx(T.sendOk),false);
         else if(/code/i.test(j.error||''))stat(tx(T.sendErrCode),true);
-        else stat(tx(T.sendErr),true);
-      }catch(e){stat(tx(T.sendErr),true);}
+        else stat(tx(T.sendErr),true,true);
+      }catch(e){stat(tx(T.sendErr),true,true);}
       b.disabled=false;});
   }
   $('#setupNote').innerHTML=(FORM_URL||SUBMIT_URL)?'':' <b>Tutor:</b> set SUBMIT_URL (Apps Script) or FORM_URL at the top of the script to wire the hand-in.';
