@@ -48,7 +48,9 @@ h2{font-size:22px;margin:0 0 6px}
 .lede{color:var(--grey);margin:0 0 20px;max-width:62ch}
 .field{margin-bottom:18px}
 .field > label{display:block;font-weight:600;margin-bottom:5px}
-.field .help{color:var(--grey);font-size:13px;margin-bottom:6px}
+.field .exload{display:inline-block;margin-top:5px;font-size:11.5px;color:var(--petrol);text-decoration:underline;cursor:pointer}
+.exload:hover{opacity:.7}
+.help{color:var(--grey);font-size:13px;margin-bottom:6px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:620px){.row2{grid-template-columns:1fr}}
 .card{border:1px solid var(--line);border-radius:8px;background:var(--cream-l);padding:16px;margin-bottom:16px}
@@ -386,7 +388,7 @@ details.tool[open]>summary::before{content:"\2212 ";}
    tutor's Drive; students type the group code chosen in the script.
    FORM_URL: URL of a Google Form. Empty = Copy only copies.
 =================================================================== */
-const SUBMIT_URL = "https://script.google.com/macros/s/AKfycbwR1rwN1TAaYjPKWjcjDuobwx9uQvuasjbgY8qzCYwTz5RJsMq-ln0raDbXFp3at4hd6A/exec";
+const SUBMIT_URL = "https://script.google.com/macros/s/AKfycbxOXoQjLU0WPqN_leEvU0TmFpJUS0Fi9q6EQjKgoWN3aIDqiMm6zWHtfChHuzgjQ5u93g/exec";
 const FORM_URL = "";
 /* =================================================================== */
 
@@ -1054,6 +1056,7 @@ untriaged:['{n} objection(s) with no answer. Go back to step 6. An objection you
 flagsGo:['{n} open flag(s). They go into the submission as they are. Unresolved is an honest state; hidden is not.','Открытых флагов: {n}. Они уйдут в сдачу как есть. Нерешённое — честное состояние, спрятанное — нет.'],
 allClear:['Nothing contradicts itself.','Ничто не противоречит само себе.'],
 noForm:['Copied. No hand-in form is set in this copy of the trainer — send the text to your tutor, or use Download.','Скопировано. В этой копии тренажёра форма сдачи не задана — отправьте текст преподавателю или скачайте файл.'],
+exLoad:['load exemplary reply','загрузить образцовый ответ'],
 btnSend:['Hand in','Сдать работу'],
 codePh:['Group code','Код группы'],
 sendBusy:['Sending…','Отправляется…'],
@@ -1167,6 +1170,7 @@ function render(){
   if(S.step===6){renderMorgan();renderObjections();}
   if(S.step===7)renderVSummary();
   if(S.step===8)renderOut();
+  injectEx();
 }
 function renderVSummary(){
   const el=$('#vSummary');if(!el)return;
@@ -1316,6 +1320,156 @@ function caseLoadFailed(){
   const m=$('#caseMsg');
   if(m){m.textContent=tx(T.caseFail);m.style.color='var(--verm)';}
 }
+
+/* ---------- exemplary pass: Hadland 2019, opioid marketing ----------
+   A worked reply for every field, so a student can walk all nine steps
+   on one paper. Quotes stay in the language of the paper; the reasoning
+   is translated. */
+const EX={
+ mePaper:['Hadland SE et al., JAMA Netw Open 2019;2(1):e186007','Hadland SE et al., JAMA Netw Open 2019;2(1):e186007'],
+
+ 'sec.concl':['"In this study, across US counties, marketing of opioid products to physicians was associated with increased opioid prescribing and, subsequently, with elevated mortality from overdoses." (Abstract - Conclusions and Relevance)','"In this study, across US counties, marketing of opioid products to physicians was associated with increased opioid prescribing and, subsequently, with elevated mortality from overdoses." (Abstract - Conclusions and Relevance)'],
+ 'sec.design':['"All US counties were included, with data on overdoses from August 1, 2014, to December 31, 2016, linked to marketing data from August 1, 2013, to December 31, 2015, using a 1-year lag." (Abstract - Design, Setting, and Participants). County-year cross-sectional, negative binomial, 9398 county-years.','"All US counties were included, with data on overdoses from August 1, 2014, to December 31, 2016, linked to marketing data from August 1, 2013, to December 31, 2015, using a 1-year lag." (Abstract - Design). Кросс-секционный анализ на уровне округ-год, негативная биномиальная регрессия, 9398 округо-лет.'],
+ 'sec.numbers':['Adjusted rate ratios per 1 SD of marketing: 1.09 (95% CI 1.05-1.12) for dollars, 1.18 (95% CI 1.14-1.21) for number of payments, 1.12 (95% CI 1.08-1.16) for number of physicians paid. 434 754 payments worth $39.7 million to 67 507 physicians across 2208 counties. Prescribing mediated 3%, 11% and 26% of the association respectively (Table 4).','Скорректированные отношения частот на одно SD маркетинга: 1,09 (95% ДИ 1,05-1,12) для денег, 1,18 (1,14-1,21) для числа выплат, 1,12 (1,08-1,16) для числа охваченных врачей. 434 754 платежа на $39,7 млн, 67 507 врачей, 2208 округов. Через выписки опосредовано 3%, 11% и 26% связи соответственно (Table 4).'],
+ 'sec.limits':['"we cannot exclude reverse causation" (Limitations). And: "counties with high opioid prescribing rates and already experiencing elevated mortality from overdoses are subsequently targeted by pharmaceutical company marketing" (Discussion). And: "the data sources used do not allow for the differentiation between opioids that are prescribed and those that are illicitly acquired" (Limitations).','"we cannot exclude reverse causation" (Limitations). И: "counties with high opioid prescribing rates and already experiencing elevated mortality from overdoses are subsequently targeted by pharmaceutical company marketing" (Discussion). И: "the data sources used do not allow for the differentiation between opioids that are prescribed and those that are illicitly acquired" (Limitations).'],
+
+ xWhat:['Pharmaceutical marketing of opioid products to physicians','Маркетинг опиоидных препаратов, направленный на врачей'],
+ yWhat:['Death from opioid overdose','Смерть от передозировки опиоидов'],
+ xMeas:['Open Payments records, August 2013 to December 2015, counted at county level per 1000 population in three ways: dollars, number of payments, number of physicians paid. Not what any one doctor was told, and not what any one patient was given.','Записи Open Payments с августа 2013 по декабрь 2015, посчитанные на уровне округа на 1000 населения тремя способами: деньги, число выплат, число охваченных врачей. Не то, что сказали конкретному врачу, и не то, что получил конкретный пациент.'],
+ yMeas:['Death certificates in CDC WONDER, ICD-10 X40-X44, X60-X64, X85, Y10-Y14 with T40.2-T40.4, as county rates for 2014-2016. By 2016 much of that code range is illicit fentanyl, and the authors write that their data cannot separate prescribed opioids from illicitly acquired ones.','Свидетельства о смерти из CDC WONDER, ICD-10 X40-X44, X60-X64, X85, Y10-Y14 вместе с T40.2-T40.4, как окружные показатели за 2014-2016. К 2016 году значительная часть этого диапазона кодов - нелегальный фентанил, и авторы пишут, что их данные не позволяют отделить выписанные опиоиды от добытых незаконно.'],
+
+ qA:['Marketing makes doctors prescribe more opioids','Маркетинг заставляет врачей выписывать больше опиоидов'],
+ qB:['Marketing put more opioids into circulation and so drove the rise in overdose deaths, 1996-2010','Маркетинг вывел в оборот больше опиоидов и этим вызвал рост смертности от передозировок в 1996-2010'],
+ qC:['Marketing causes the overdose deaths of today','Маркетинг является причиной сегодняшних смертей от передозировок'],
+
+ orderQuote:['"We introduced a 1-year lag between mortality rates and marketing to address the possibility of reverse causality by ensuring that marketing of opioids to physicians preceded observed mortality rates." (Methods - Statistical Analysis)','"We introduced a 1-year lag between mortality rates and marketing to address the possibility of reverse causality by ensuring that marketing of opioids to physicians preceded observed mortality rates." (Methods - Statistical Analysis)'],
+ targetAns:['Nothing random. Representatives went where prescribing was already high and where people were already dying - the authors say so themselves in the Discussion. A lag built into the analysis puts marketing before death in the table. It does not put it before death in the world.','Ничего случайного. Представители шли туда, где уже много выписывали и где уже умирали, - авторы сами пишут это в Discussion. Лаг, заложенный в анализ, ставит маркетинг раньше смертей в таблице. Раньше смертей в мире он его не ставит.'],
+
+ 'rival.chance':['The intervals are narrow and exclude 1.00 - 1.14 to 1.21 for number of payments across 9398 county-years. Random error is not what produces this. Chance is the one rival I can dismiss.','Интервалы узкие и не включают 1,00 - от 1,14 до 1,21 для числа выплат на 9398 округо-лет. Случайная ошибка этого не даёт. Случайность - единственный соперник, которого я снимаю.'],
+ 'rival.bias':['The outcome counts every opioid overdose death, and by 2016 much of that is illicit fentanyl the marketing never touched; the authors say their data cannot separate the two. Marketing is counted per 1000 residents, not per prescriber. Both push the measure away from the thing it claims to measure.','Исход считает все смерти от передозировки опиоидов, а к 2016 году это во многом нелегальный фентанил, которого маркетинг не касался; авторы пишут, что их данные не позволяют отделить одно от другого. Маркетинг считается на 1000 жителей, а не на врача. И то и другое уводит измеренное от того, что заявлено.'],
+ 'rival.third':['Baseline prescribing volume. Counties already saturated with opioids both attracted more marketing and already had more overdose deaths, which ties the two together without any arrow between them. It pushes the ratio up.','Исходный объём выписок. Округа, уже насыщенные опиоидами, и притягивали больше маркетинга, и уже имели больше смертей от передозировок - это связывает одно с другим без всякой стрелки между ними. Двигает отношение вверх.'],
+ 'rival.back':['Targeting. Hadland 2019, Discussion: counties with high prescribing rates and already experiencing elevated mortality are subsequently targeted by marketing. The outcome chose where the exposure went.','Таргетинг. Hadland 2019, Discussion: округа с высоким уровнем выписок и уже повышенной смертностью становятся мишенью маркетинга потом. Исход выбрал, куда пойдёт воздействие.'],
+
+ 'row.1':{v:'nothing',nk:'design',sd:'exact',
+  e:['The marketing data begin in August 2013. Prescribing had already plateaued in 2010-2012. These county-years cannot say anything about 1996-2010, which is the claim I am judging. The one-year lag is a device inside the design, not order in the world.','Данные о маркетинге начинаются в августе 2013. Выписки вышли на плато уже в 2010-2012. Эти округо-годы ничего не могут сказать про 1996-2010, а именно это утверждение я сужу. Лаг в один год - приём внутри дизайна, а не порядок в мире.'],
+  s:['Hadland 2019, Methods; Guy GP, MMWR 2017;66:697-704','Hadland 2019, Methods; Guy GP, MMWR 2017;66:697-704']},
+ 'row.2':{v:'nothing',sd:'exact',
+  e:['1.09 to 1.18 per SD. Below 1.5 is the range moderate unmeasured confounding produces on its own. Snow’s water companies were 8-9x, DES 7 of 8 against 0 of 32, toxic shock odds ratio 18. This is not big enough to carry the weight being put on it.','1,09-1,18 на одно SD. Ниже 1,5 - диапазон, который умеренный неучтённый конфаундинг даёт сам. У Сноу водные компании 8-9x, у DES 7 из 8 против 0 из 32, при СТШ ОШ 18. Это недостаточно велико для той нагрузки, которую на него кладут.'],
+  s:['Hadland 2019, Table 2','Hadland 2019, Table 2']},
+ 'row.3':{v:'nothing',sd:'exact',
+  e:['Three gradients, all one way: +0.7% per extra meal; at county level the number of payments gives 1.18 while dollars give only 1.09; mediation runs 26% through physicians reached but 3% through money. Reach beats budget. But targeting predicts exactly that gradient - the rep goes back where prescribing is already high - so the gradient discriminates nothing.','Три градиента, все в одну сторону: +0,7% за каждый дополнительный обед; на уровне округов число выплат даёт 1,18, а деньги только 1,09; в медиации число охваченных врачей 26%, деньги 3%. Охват бьёт бюджет. Но ровно такой градиент предсказывает таргетинг - представитель возвращается туда, где уже много выписывают, - поэтому градиент ничего не различает.'],
+  s:['Hadland 2018, JAMA Intern Med 178:861-863; Hadland 2019, Table 4','Hadland 2018, JAMA Intern Med 178:861-863; Hadland 2019, Table 4']},
+ 'row.4':{v:'nothing',sd:'attributed',
+  e:['The two Hadland papers and the studies that followed use the same exposure - Open Payments - and the same family of designs. What has been repeated is the design, not the finding. Repeating a design repeats its blind spot.','Обе статьи Хадланда и последовавшие работы используют одну и ту же экспозицию - Open Payments - и одно семейство дизайнов. Повторили дизайн, а не находку. Повторение дизайна повторяет и его слепое пятно.'],
+  s:['Open Payments literature, 2018-2021','Литература на Open Payments, 2018-2021']},
+ 'row.5':{v:'nothing',sd:'phrase',
+  e:['The mechanism is commercial, not biological: detailing changes prescribing, shown across many drug classes. Easy to believe, and it excludes nothing - targeting is just as plausible.','Механизм коммерческий, а не биологический: детейлинг меняет выписки, это показано на многих классах препаратов. Легко поверить, и это ничего не исключает - таргетинг правдоподобен ровно так же.'],
+  s:['detailing literature, general','литература по детейлингу, в целом']},
+ 'row.6':{v:'against',sd:'exact',
+  e:['Not closed. The physician paper adjusts for 2014 prescribing - a level, not a trajectory, and only Part D. The county paper compares places, not people. Illicit fentanyl supply arrived in the same years, and Ruhm 2019 finds economic decline explains less than a tenth of the rise and points to availability, which cuts both ways.','Не закрыты. Статья по врачам корректирует на выписки 2014 года - это уровень, а не траектория, и только Part D. Окружная статья сравнивает места, а не людей. В те же годы пришли поставки нелегального фентанила, а Рум (2019) показывает, что экономический спад объясняет меньше десятой части роста, и указывает на доступность - а это режет в обе стороны.'],
+  s:['Hadland 2018, Discussion; Ruhm CJ, J Health Econ 2019;64:25-42','Hadland 2018, Discussion; Ruhm CJ, J Health Econ 2019;64:25-42']},
+ 'row.7':{v:'against',sd:'exact',
+  e:['Prescribing plateaued in 2010-2012 and fell 13% by 2015 while overdose deaths went on rising; in 2017 the synthetic opioid death rate rose 45% in one year while the prescription opioid rate stayed flat. Where cessation was measured directly it was small: banning representative access cut opioid volume 4.7%, all four policies together 8.8%.','Выписки вышли на плато в 2010-2012 и упали на 13% к 2015, а смертность продолжала расти; в 2017 году смертность от синтетических опиоидов выросла на 45% за год, а от рецептурных не изменилась. Там, где прекращение измерили напрямую, эффект мал: запрет доступа представителей снизил объём опиоидов на 4,7%, все четыре политики вместе - на 8,8%.'],
+  s:['Guy GP, MMWR 2017;66:697-704; Scholl L, MMWR 2019;67(5152):1419-1427; Eisenberg MD, Health Aff 2020;39:1002-1010','Guy GP, MMWR 2017;66:697-704; Scholl L, MMWR 2019;67(5152):1419-1427; Eisenberg MD, Health Aff 2020;39:1002-1010']},
+ 'row.8':{v:'supports',sd:'attributed',
+  e:['Triplicate-programme states blocked OxyContin’s early entry and its spread there was more than 50% lower. Before 1996 those states had HIGHER overdose mortality; after launch the relationship reversed, and the gap has held for twenty years. That is an external change in exposure, not another association - targeting cannot produce a reversal.','Штаты с triplicate-программами заблокировали ранний вход OxyContin, и распространение там было более чем на 50% ниже. До 1996 года в этих штатах смертность от передозировок была ВЫШЕ; после запуска связь перевернулась, и разрыв держится двадцать лет. Это внешнее изменение экспозиции, а не ещё одна ассоциация, - таргетинг перевёртыша не даёт.'],
+  s:['Alpert A, Evans WN, Lieber EMJ, Powell D. Q J Econ 2022;137(2):1139-1179','Alpert A, Evans WN, Lieber EMJ, Powell D. Q J Econ 2022;137(2):1139-1179']},
+ 'row.9':{v:'nothing',sd:'phrase',
+  e:['Marketing is tied to prescribing across many drug classes, and overdose deaths have many causes. This row is an inheritance from one germ, one disease - failing it is not an argument against causation here.','Маркетинг связан с выписками многих классов препаратов, а у передозировок много причин. Эта строка - наследство эпохи «один микроб - одна болезнь», и её провал здесь не аргумент против причинности.'],
+  s:['—','—']},
+
+ 'morgan.8':{o:'beats',
+  i:['The rival says representatives went where the problem already was. Targeting cannot make the pre-1996 ordering reverse after launch and stay reversed for twenty years. To improve it: match triplicate and non-triplicate states on pre-1996 prescribing volume and see whether the divergence survives.','Соперник говорит, что представители шли туда, где беда уже была. Таргетинг не может заставить дозапусковый порядок 1996 года перевернуться после запуска и остаться перевёрнутым двадцать лет. Как усилить: уравнять triplicate- и не-triplicate-штаты по объёму выписок до 1996 года и посмотреть, выживет ли расхождение.']},
+
+ 'obj.op':{p:'stand',
+  t:['The county level is a real limit, and I am not claiming these data identify individuals. The verdict rests on the triplicate comparison, which is also between places but with an external shove to the exposure rather than an association. The ecological objection bites the Hadland association, which I did not count as support.','Окружной уровень - настоящее ограничение, и я не утверждаю, что эти данные опознают людей. Вердикт держится на сравнении triplicate-штатов, которое тоже между местами, но там экспозицию толкнуло внешнее событие, а не ассоциация. Экологическое возражение бьёт по связи Хадланда, которую я и не засчитала в поддержку.']},
+ 'obj.oy':{p:'change',
+  t:['Correct, and I am taking it. The marketing data begin in August 2013 and cannot speak to 1996-2010. They measure a different claim - that contact changes prescribing. I am not resting the 1996-2010 verdict on them.','Верно, и я это принимаю. Данные о маркетинге начинаются в августе 2013 и про 1996-2010 сказать не могут. Они измеряют другое утверждение - что контакт меняет выписки. Вердикт о 1996-2010 я на них не строю.']},
+
+ vBecause:['Not the association in these two papers - it is too weak, and targeting predicts it. What decides it is the external change in exposure: triplicate states blocked early OxyContin entry, its spread there was over 50% lower, and the pre-1996 ordering of overdose mortality reversed after launch and held for twenty years. I am judging claim B, the rise of 1996-2010, and not the deaths of today.','Не связь в этих двух статьях - она слишком слаба, и таргетинг её предсказывает. Решает внешнее изменение экспозиции: triplicate-штаты заблокировали ранний вход OxyContin, распространение там было более чем на 50% ниже, а дозапусковый порядок смертности 1996 года перевернулся после запуска и держится двадцать лет. Я сужу утверждение B, рост 1996-2010, а не сегодняшние смерти.'],
+ vChange:['Match triplicate and non-triplicate states on pre-1996 prescribing volume and demography. If the post-1996 divergence disappears once those are matched, the verdict falls. The 2013-2015 marketing data cannot decide it either way.','Уравнять triplicate- и не-triplicate-штаты по объёму выписок до 1996 года и по демографии. Если после уравнивания расхождение после 1996 года исчезает, вердикт падает. Данные о маркетинге 2013-2015 решить это не могут ни в ту, ни в другую сторону.']
+};
+
+const EXWHERE=[
+ ['#mePaper','mePaper'],
+ ['textarea[data-sec="concl"]','sec.concl'],
+ ['textarea[data-sec="design"]','sec.design'],
+ ['textarea[data-sec="numbers"]','sec.numbers'],
+ ['textarea[data-sec="limits"]','sec.limits'],
+ ['[data-k="xWhat"]','xWhat'],['[data-k="yWhat"]','yWhat'],
+ ['[data-k="xMeas"]','xMeas'],['[data-k="yMeas"]','yMeas'],
+ ['#flag-period','periods'],
+ ['#flag-pop','samePop'],
+ ['[data-k="qA"]','qA'],['[data-k="qB"]','qB'],['[data-k="qC"]','qC'],
+ ['@radios:pick','pick'],
+ ['@radios:order','order'],
+ ['[data-k="orderQuote"]','orderQuote'],
+ ['[data-k="targetAns"]','targetAns'],
+ ['#rt-chance','rival.chance'],['#rt-bias','rival.bias'],
+ ['#rt-third','rival.third'],['#rt-back','rival.back'],
+ ['@radios:verdict','verdict'],
+ ['[data-k="vBecause"]','vBecause'],['[data-k="vChange"]','vChange']
+];
+
+function exFire(el,evs){evs.forEach(n=>el.dispatchEvent(new Event(n,{bubbles:true})));}
+function exVal(el,v){if(!el)return;el.value=v;exFire(el,['input','change']);}
+function exRadio(sel,v){const el=document.querySelector(sel+'[value="'+v+'"]');
+  if(el&&!el.checked){el.checked=true;exFire(el,['change']);}}
+function exChk(el,on){if(el&&el.checked!==on){el.checked=on;exFire(el,['change']);}}
+
+function exApply(tok){
+  const E=EX[tok],i=LI();
+  if(tok==='periods'){
+    exVal($('[data-k="claimFrom"]'),1996);exVal($('[data-k="claimTo"]'),2010);
+    exVal($('[data-k="dataFrom"]'),2013);exVal($('[data-k="dataTo"]'),2015);return;}
+  if(tok==='samePop'){exRadio('[data-k="samePop"]','places');return;}
+  if(tok==='pick'){exRadio('[data-k="pick"]','B');return;}
+  if(tok==='order'){exRadio('[data-k="order"]','xfirst');return;}
+  if(tok==='verdict'){exRadio('[data-k="verdict"]','causal');return;}
+  if(!E)return;
+  if(tok==='mePaper'){exVal($('#mePaper'),E[i]);return;}
+  if(tok.startsWith('sec.')){exVal($('textarea[data-sec="'+tok.slice(4)+'"]'),E[i]);return;}
+  if(tok.startsWith('rival.')){const k=tok.slice(6);
+    exChk($('#rv-'+k),true);exVal($('#rt-'+k),E[i]);return;}
+  if(tok.startsWith('row.')){const n=tok.slice(4);
+    exVal($('#v-'+n),E.v);
+    if(E.nk)exRadio('input[name="nk'+n+'"]',E.nk);
+    exVal($('#sd-'+n),E.sd);exVal($('#e-'+n),E.e[i]);exVal($('#s-'+n),E.s[i]);
+    (E.beats||[]).forEach(k=>exChk($('#bk-'+n+'-'+k),true));return;}
+  if(tok.startsWith('morgan.')){const n=tok.slice(7);
+    exRadio('input[name="mo'+n+'"]',E.o);exVal($('#mi-'+n),E.i[i]);return;}
+  if(tok.startsWith('obj.')){const id=tok.slice(4);
+    const b=document.querySelector('.triage[data-oid="'+id+'"] button[data-t2="'+E.p+'"]');
+    if(b){b.click();const ta=$('#oa-'+id);if(ta)exVal(ta,E.t[i]);}return;}
+  exVal($('[data-k="'+tok+'"]'),E[i]);
+}
+
+function exPut(host,tok){
+  if(!host)return;
+  const prev=host.nextElementSibling;
+  if(prev&&prev.classList&&prev.classList.contains('exload')&&prev.dataset.ex===tok){
+    prev.textContent=tx(T.exLoad);return;}
+  const a=document.createElement('a');
+  a.href='#';a.className='exload';a.dataset.ex=tok;a.textContent=tx(T.exLoad);
+  host.insertAdjacentElement('afterend',a);
+}
+function injectEx(){
+  EXWHERE.forEach(([sel,tok])=>{
+    let host;
+    if(sel.startsWith('@radios:')){const f=$('[data-k="'+sel.slice(8)+'"]');host=f&&f.closest('.radios');}
+    else host=$(sel);
+    exPut(host,tok);});
+  NINE.forEach(g=>{exPut($('#v-'+g.i),'row.'+g.i);exPut($('#e-'+g.i),'row.'+g.i);});
+  NINE.forEach(g=>{if(EX['morgan.'+g.i])exPut($('#mi-'+g.i),'morgan.'+g.i);});
+  $$('.triage').forEach(d=>{const id=d.dataset.oid;if(EX['obj.'+id])exPut(d,'obj.'+id);});
+}
+document.addEventListener('click',e=>{
+  const a=e.target.closest&&e.target.closest('.exload');
+  if(!a)return;
+  e.preventDefault();
+  exApply(a.dataset.ex);
+  save();render();
+});
 
 /* ---------- wire ---------- */
 function bind(){
