@@ -375,7 +375,8 @@ details.tool[open]>summary::before{content:"\2212 ";}
   <div class="card verm" id="sideRivals"><h3 data-t="sRivals"></h3><div id="sideRivalList" class="sub"></div></div>
   <div class="card" id="sideFlags"><h3 data-t="sFlags"></h3><div id="sideFlagList" class="sub"></div></div>
   <div class="card"><h3 data-t="sProg"></h3><div id="sideProg" class="sub"></div>
-    <button class="btn ghost sm" id="btnSave2" style="margin-top:10px" data-t="btnSave"></button></div>
+    <button class="btn ghost sm" id="btnSave2" style="margin-top:10px" data-t="btnSave"></button>
+    <button class="btn ghost sm" id="btnReset" style="margin-top:8px" data-t="btnReset"></button></div>
 </aside>
 </div>
 <div class="foot"><span data-t="foot"></span><span id="setupNote"></span></div>
@@ -499,6 +500,8 @@ h8a:['Your pass, written up','Ваш проход, собранный'],
 btnCopy:['Copy and open the hand-in form','Скопировать и открыть форму сдачи'],
 btnDl:['Download as .md','Скачать .md'],
 btnSave:['Save progress','Сохранить прогресс'],
+btnReset:['Start over','Начать заново'],
+resetAsk:['Start over? This clears the whole pass — your passages, the rivals you locked, the nine rows and the verdict. Anything already handed in or downloaded is not touched.','Начать заново? Это очистит весь проход — ваши куски, закреплённых соперников, девять строк и вердикт. Уже сданное или скачанное не затрагивается.'],
 btnLoad:['Load progress','Загрузить прогресс'],
 handinNote:['The form opens in a new tab. Paste into the long field, add your name, press send.','Форма откроется в новой вкладке. Вставьте в длинное поле, добавьте имя, отправьте.'],
 sRivals:['Your rivals','Ваши соперники'],
@@ -1533,6 +1536,13 @@ function bind(){
       }catch(e){stat(tx(T.sendErr),true,true);}
       b.disabled=false;});
   }
+  const br=$('#btnReset');
+  if(br)br.addEventListener('click',()=>{
+    if(!confirm(tx(T.resetAsk)))return;
+    /* Keep what is not work: the language and the group code the tutor gave
+       the class. Everything else goes, the rivals lock included. */
+    try{localStorage.setItem('ebm-trainer-2',JSON.stringify({lang:S.lang,gcode:S.gcode||''}));}catch(e){}
+    location.reload();});
   $('#setupNote').innerHTML=(FORM_URL||SUBMIT_URL)?'':' <b>Tutor:</b> set SUBMIT_URL (Apps Script) or FORM_URL at the top of the script to wire the hand-in.';
 }
 
