@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Measures of Occurrence</title>
+<style>
+/* Measures of Occurrence — EBM Through Blind Spots.
+   Station trainer: scene left, idea card right, big-ideas log below. Course palette. */
+:root {
+  color-scheme: light;
+  --paper:   #F8EACF;
+  --panel:   #FFFDF6;
+  --panel-2: #F5E7C8;
+  --line:    #D9C9A6;
+  --fg:      #2A2622;
+  --fg-dim:  #8C8478;
+  --petrol:      #0B5359;
+  --petrol-l:    #157079;
+  --petrol-soft: #DCEAE8;
+  --verm:        #B4573A;
+  --verm-soft:   #F6DED3;
+  --ochre:       #C08A3E;
+  --ochre-soft:  #F3E4C6;
+  --ok:          #2F6B4F;
+  --ok-soft:     #DCEBDD;
+  --gray-letter: #CFC5AE;
+  --ui:   -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, 'DejaVu Sans Mono', monospace;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--paper); color: var(--fg); font-family: var(--ui); font-size: 15px; line-height: 1.55; margin: 0; }
+.wrap {
+  max-width: 1180px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: max(26px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(44px, env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; gap: 20px;
+}
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--petrol); }
+h1 { font-size: clamp(27px, 5.4vw, 42px); font-weight: 800; letter-spacing: -.02em; line-height: 1.1; margin: 8px 0 0; text-wrap: balance; }
+h1 .hi { color: var(--verm); }
+.lede { margin: 9px 0 0; color: var(--fg-dim); max-width: 70ch; }
+.lede a { color: var(--petrol); font-weight: 600; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 16px; }
+.seg { display: flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--panel); }
+.seg button { font: 600 13px/1 var(--ui); color: var(--fg-dim); background: var(--panel); border: 0; padding: 10px 14px; cursor: pointer; border-right: 1px solid var(--line); }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--petrol); color: #fff; }
+.seg button:hover:not([aria-pressed="true"]) { background: var(--panel-2); color: var(--fg); }
+.seg .tick { color: var(--ok); font-weight: 700; }
+.seg button[aria-pressed="true"] .tick { color: #fff; }
+.ghost { font: 600 13px/1 var(--ui); color: var(--fg-dim); background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 10px 14px; cursor: pointer; }
+.ghost:hover { color: var(--petrol); border-color: var(--petrol); }
+:is(button, [tabindex], input, summary, a):focus-visible { outline: 2px solid var(--petrol); outline-offset: 2px; }
+
+.stagenote { margin: 16px 0 0; padding: 12px 16px; border-left: 3px solid var(--verm); background: var(--panel); border-radius: 0 10px 10px 0; border-top: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--fg-dim); font-size: 14px; max-width: 80ch; }
+.stagenote b { color: var(--fg); font-weight: 600; }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; min-width: 0; }
+.card > h2 { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--petrol); margin: 0 0 12px; }
+.card > h2 .count { color: var(--fg-dim); letter-spacing: .04em; font-weight: 500; }
+
+.stagegrid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 820px) { .stagegrid { grid-template-columns: 1fr; } }
+.scene svg { width: 100%; height: auto; display: block; user-select: none; -webkit-user-select: none; }
+.scenebtns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; align-items: center; }
+
+.act { font: 600 14px/1.2 var(--ui); color: #fff; background: var(--petrol); border: 0; border-radius: 9px; padding: 11px 16px; cursor: pointer; }
+.act:hover { background: var(--petrol-l); }
+.act:disabled { background: var(--gray-letter); cursor: default; }
+.act.alt { background: var(--panel); color: var(--petrol); border: 1px solid var(--petrol); }
+.act.alt:hover { background: var(--petrol-soft); }
+.act.alt:disabled { color: var(--fg-dim); border-color: var(--line); background: var(--panel); }
+.act.good:disabled { background: var(--ok); color: #fff; }
+.act.rose { background: var(--verm); }
+.act.rose:hover { background: #9a4a31; }
+
+.meter { font: 500 13px/1.3 var(--ui); color: var(--fg-dim); background: var(--panel-2); border-radius: 8px; padding: 9px 12px; }
+.meter b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.toast { margin-top: 12px; font-size: 13.5px; color: var(--verm); min-height: 1.3em; }
+.toast.good { color: var(--ok); }
+
+.donebar { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: var(--ok-soft); color: var(--ok); font-size: 14px; font-weight: 500; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.donebar .act { background: var(--ok); }
+.donebar .act:hover { background: #255841; }
+
+.rx h3 { margin: 0 0 8px; font-size: 16px; font-weight: 700; letter-spacing: -.01em; text-wrap: balance; }
+.rx .eq { font-family: var(--mono); font-size: 13px; line-height: 1.6; background: var(--panel-2); border-radius: 8px; padding: 10px 12px; margin: 10px 0; overflow-x: auto; white-space: nowrap; }
+.rx p { margin: 8px 0; font-size: 14px; }
+.rx .sub { color: var(--fg-dim); font-size: 13.5px; }
+.rx table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 10px 0; }
+.rx td, .rx th { padding: 6px 8px; border-top: 1px solid var(--line); text-align: left; vertical-align: top; }
+.rx tr:first-child :is(td, th) { border-top: 0; }
+.rx th { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--petrol); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.chip { font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+.chip.pet { background: var(--petrol-soft); color: var(--petrol); }
+.chip.rose { background: var(--verm-soft); color: var(--verm); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.plain { background: var(--panel-2); color: var(--fg-dim); }
+
+details.fine { margin-top: 12px; font-size: 13.5px; color: var(--fg-dim); border: 1px dashed var(--line); border-radius: 8px; padding: 8px 12px; }
+details.fine summary { cursor: pointer; font-weight: 600; color: var(--petrol); }
+details.fine p { margin: 8px 0 2px; }
+
+/* calculation fields */
+.calc { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 14px; }
+.calc .f { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; background: var(--panel-2); border-radius: 8px; padding: 8px 10px; }
+.calc .f label { font-size: 13.5px; flex: 1 1 200px; }
+.calc .f input { font: 500 14px/1.2 var(--mono); width: 132px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); color: var(--fg); }
+.calc .f input.ok { border-color: var(--ok); background: var(--ok-soft); }
+.calc .f input.bad { border-color: var(--verm); background: var(--verm-soft); }
+.calc .f .mark { font-weight: 700; min-width: 1.2em; text-align: center; }
+.calc .f .mark.ok { color: var(--ok); } .calc .f .mark.bad { color: var(--verm); }
+.range { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 12px; }
+.range input[type="range"] { flex: 1 1 160px; accent-color: var(--petrol); }
+.range .val { font-family: var(--mono); font-size: 13px; background: var(--panel-2); border-radius: 7px; padding: 6px 9px; min-width: 7.5em; text-align: center; }
+.stmt { font-size: 15px; font-weight: 600; margin: 4px 0 12px; padding: 12px 14px; border-left: 3px solid var(--ochre); background: var(--panel-2); border-radius: 0 8px 8px 0; }
+
+.logtable { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.logtable td { padding: 8px 10px 8px 0; border-top: 1px solid var(--line); vertical-align: top; }
+.logtable tr:first-child td { border-top: 0; }
+.logtable .nm { font-weight: 600; }
+.logtable tr.off { opacity: .38; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--gray-letter); margin-right: 8px; }
+tr.on .dot { background: var(--verm); }
+.logdone { margin: 12px 0 0; font-weight: 600; color: var(--petrol); }
+
+.q { border-top: 1px solid var(--line); padding: 14px 0; }
+.q:first-of-type { border-top: 0; }
+.q .qt { font-weight: 600; margin: 0 0 8px; }
+.q label { display: flex; gap: 9px; align-items: baseline; padding: 5px 0; cursor: pointer; font-size: 14px; }
+.q input[type="radio"] { accent-color: var(--petrol); }
+.q .why { font-size: 13.5px; margin: 6px 0 0 24px; }
+.q.right .why { color: var(--ok); }
+.q.wrong .why { color: var(--verm); }
+.scoreband { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: var(--petrol-soft); color: var(--petrol); font-weight: 700; }
+
+.foot { color: var(--fg-dim); font-size: 12.5px; line-height: 1.7; }
+.foot .cur { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.foot a { color: var(--petrol); font-weight: 600; }
+
+.lab { font-family: var(--ui); font-size: 11px; fill: var(--fg-dim); font-weight: 600; }
+.lab.big { font-size: 13px; fill: var(--fg); font-weight: 700; }
+.lab.mono { font-family: var(--mono); font-weight: 600; }
+.pickable { cursor: pointer; }
+.floater { font-family: var(--mono); font-size: 13px; font-weight: 700; fill: var(--verm); transform-box: fill-box; animation: floatup 1s ease-out forwards; }
+@keyframes floatup { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-26px); } }
+.pop { transform-box: fill-box; transform-origin: center; animation: pop .35s ease-out; }
+@keyframes pop { 0% { transform: scale(.4); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+.level { transition: height .4s ease, y .4s ease; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">EBM Through Blind Spots · Counting</div>
+    <h1>Measures of <span class="hi">Occurrence</span></h1>
+    <p class="lede">How much disease is there? Before any paper can compare two groups, it has to count one.
+      Five stations on the numbers that describe a single population &mdash; counts, prevalence, incidence, person-time and
+      the reservoir that connects them &mdash; worked on infections and addictions, then a quiz. The sister trainer,
+      <a href="https://ebm-blind-spots.vercel.app/measures-of-association.html">Measures of Association</a>, starts where this one ends.</p>
+    <div class="controls">
+      <div class="seg" id="segStages" aria-label="Stations"></div>
+      <button class="ghost" id="btnReset" type="button">Start over</button>
+    </div>
+    <p class="stagenote" id="stageNote"></p>
+  </header>
+
+  <main id="stageHost"></main>
+
+  <section class="card" id="logCard">
+    <h2>Big ideas collected <span class="count" id="logCount">0 / 5</span></h2>
+    <table class="logtable" id="logTable"></table>
+    <p class="logdone" id="logDone" hidden>Five ideas &mdash; enough to tell a count from a risk, a photograph from a film, and a success story from an epidemic that is &ldquo;getting worse&rdquo;.</p>
+  </section>
+
+  <footer class="foot">
+    <div class="cur">
+      <span class="chip pet">U2.K1 · incidence &amp; prevalence</span>
+      <span class="chip pet">U2.A1 · the case definition</span>
+      <span class="chip pet">U1.A1 · rare-event arithmetic</span>
+    </div>
+    Class notes for this material:
+    <a href="https://ebm-blind-spots.vercel.app/class-notes-02a-counting-1.pdf">Session II, part 1 &mdash; Counting</a> ·
+    <a href="https://ebm-blind-spots.vercel.app/class-notes-02b-counting-2.pdf">Session II, part 2 &mdash; Case definitions</a><br>
+    Next trainer: <a href="https://ebm-blind-spots.vercel.app/measures-of-association.html">Measures of Association</a> ·
+    Course map: <a href="https://ebm-blind-spots.vercel.app/goals.html">the learning goals, as a map</a> ·
+    Sources: UNAIDS Fact Sheet 2025 · Poll&aacute;n et al., Lancet 2020 (ENE-COVID) · Mevorach et al., NEJM 2021 · Sordo et al., BMJ 2017 · CDC Vital Signs 2020 (hepatitis C) · CDC MMWR 2024 (Lyme).
+  </footer>
+
+</div>
+
+<script>
+'use strict';
+
+/* ---------------- helpers ---------------- */
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+const SVGTAGS = new Set(['svg','g','path','line','circle','rect','text','polyline','polygon','tspan','ellipse']);
+const $ = s => document.querySelector(s);
+
+function h(tag, attrs = {}, ...kids) {
+  const el = SVGTAGS.has(tag) ? document.createElementNS(SVGNS, tag) : document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v === null || v === undefined || v === false) continue;
+    if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (k === 'html') el.innerHTML = v;
+    else el.setAttribute(k, v);
+  }
+  for (const kid of kids.flat(9)) {
+    if (kid === null || kid === undefined || kid === false) continue;
+    el.append(kid.nodeType ? kid : document.createTextNode(kid));
+  }
+  return el;
+}
+function fx(x, y, txt) {
+  const svg = $('#scene');
+  if (!svg) return;
+  const t = h('text', { x, y, class: 'floater' }, txt);
+  svg.append(t);
+  setTimeout(() => t.remove(), 1100);
+}
+
+/* numbers typed by students: "3/8", "37.5%", "0.375", "0,375" */
+function parseNum(str) {
+  if (str === null || str === undefined) return NaN;
+  let s = String(str).trim().replace(/\s+/g, '').replace(',', '.');
+  if (!s) return NaN;
+  let pct = false;
+  if (s.endsWith('%')) { pct = true; s = s.slice(0, -1); }
+  let v;
+  if (s.includes('/')) {
+    const [a, b] = s.split('/');
+    v = parseFloat(a) / parseFloat(b);
+  } else v = parseFloat(s);
+  if (!isFinite(v)) return NaN;
+  return pct ? v / 100 : v;
+}
+/* a proportion may be typed as 0.375, 37.5 or 37.5% */
+function nearProp(str, target, tol) {
+  const v = parseNum(str);
+  if (!isFinite(v)) return false;
+  return Math.abs(v - target) <= tol || Math.abs(v / 100 - target) <= tol;
+}
+function nearNum(str, target, tol) {
+  const v = parseNum(str);
+  return isFinite(v) && Math.abs(v - target) <= tol;
+}
+
+/* a labelled input bound to S[sub].vals[key]; status from S[sub].ok[key] */
+function field(sub, key, label, opts = {}) {
+  const st = S[sub];
+  const status = st.ok[key];
+  return h('div', { class: 'f' },
+    h('label', { for: sub + '-' + key }, label),
+    h('span', { style: 'display:flex;gap:8px;align-items:center' },
+      h('input', { id: sub + '-' + key, type: 'text', inputmode: 'decimal', autocomplete: 'off',
+        placeholder: opts.ph || '', value: st.vals[key] || '',
+        class: status === true ? 'ok' : status === false ? 'bad' : null,
+        disabled: opts.lock && status === true ? 'disabled' : null,
+        oninput: (ev) => { st.vals[key] = ev.target.value; },
+        onkeydown: (ev) => { if (ev.key === 'Enter' && opts.onenter) { ev.preventDefault(); opts.onenter(); } } }),
+      h('span', { class: 'mark ' + (status === true ? 'ok' : status === false ? 'bad' : ''), 'aria-hidden': 'true' },
+        status === true ? '✓' : status === false ? '✗' : '')));
+}
+
+/* ---------------- state ---------------- */
+
+const STAGE_META = [
+  { n: 1, label: 'Count, share or rate?' },
+  { n: 2, label: 'The photograph' },
+  { n: 3, label: 'The film' },
+  { n: 4, label: 'Person-time' },
+  { n: 5, label: 'The reservoir' },
+  { n: 6, label: 'Quiz' },
+];
+
+const NOTES = {
+  1: '<b>Station 1 · Count, share or rate?</b> Six real sentences from the course. Each carries a number; decide what kind of number it is. A count has no denominator. A proportion divides by a group. A rate divides by time as well. The distinction is the first thing an abstract hides.',
+  2: '<b>Station 2 · The photograph.</b> Ten people, one year. Move the camera to mid-July and count what the photograph shows: how many people are present, how many of them have the disease at that moment. That ratio is point prevalence. Then do the same arithmetic on 61,075 Spaniards.',
+  3: '<b>Station 3 · The film.</b> Same ten people, now watched for the whole year. Count who could become a case, and who did. New cases among people at risk, over a stated period &mdash; cumulative incidence, which is what a clinician means by &ldquo;risk&rdquo;. Then convert a famous risk into the units surveillance uses.',
+  4: '<b>Station 4 · Person-time.</b> Two of the ten were not there the whole year, and the people who fell ill stopped being at risk when they did. Add up the months each person actually spent at risk, and divide the cases by that. This is the incidence rate &mdash; the unit every mortality paper in the addiction literature uses.',
+  5: '<b>Station 5 · The reservoir.</b> Prevalence is a level in a tub: incidence pours in, death and cure drain out. Set the two taps and watch the level. Then answer the question that fools ministers: can new infections fall by two-thirds while the number of people living with HIV reaches an all-time high?',
+  6: '<b>Quiz.</b> Six questions. Full marks means you can read the first table of any epidemiology paper without being told what the numbers are.',
+};
+
+let S;
+function freshState() {
+  return {
+    stage: 1,
+    done: { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false },
+    logged: new Set(),
+    s1: { idx: 0, score: 0, answered: null },
+    s2: { month: 1, vals: {}, ok: {}, msg: '', part: 0 },
+    s3: { vals: {}, ok: {}, msg: '', part: 0 },
+    s4: { vals: {}, ok: {}, msg: '', reveal: false, part: 0, mcq: null },
+    s5: { inc: 30, dur: 4, q: 0, msg: '' },
+    quiz: { picked: {}, submitted: false },
+  };
+}
+S = freshState();
+
+const LOG = [
+  { id: 'denom', name: 'No denominator, no risk',          note: '41 million is a count. It says nothing about anyone’s chances until you divide it by something.' },
+  { id: 'photo', name: 'Prevalence is a photograph',        note: 'everyone who has it now ÷ everyone present now — whenever they caught it' },
+  { id: 'film',  name: 'Incidence is a film with a cast list', note: 'new cases ÷ people who could still become cases, over a stated period' },
+  { id: 'ptime', name: 'Rates keep the leavers',            note: 'person-time counts the months each person actually spent at risk — leaving early is not erased' },
+  { id: 'tub',   name: 'Prevalence ≈ incidence × duration', note: 'a treatment that works raises prevalence; only incidence tells you whether spread is slowing' },
+];
+function logIdea(id) { S.logged.add(id); }
+
+/* ================= the ten people (shared by stations 2–4) ================= */
+
+/* months are 0–12; events happen at month boundaries. illTo = recovery; leaves = moved away; dies = other cause */
+const PEOPLE = [
+  { id: 'P1' },
+  { id: 'P2', illFrom: 0 },
+  { id: 'P3', illFrom: 3 },
+  { id: 'P4', illFrom: 5, illTo: 8 },
+  { id: 'P5' },
+  { id: 'P6', leaves: 6 },
+  { id: 'P7', illFrom: 9 },
+  { id: 'P8' },
+  { id: 'P9', dies: 4 },
+  { id: 'P10' },
+];
+const MONTHS = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const X0 = 70, X1 = 588, PX = (X1 - X0) / 12;
+const xOf = m => X0 + m * PX;
+const yOf = i => 46 + i * 26;
+
+function endOf(p) { return p.leaves ?? p.dies ?? 12; }
+function presentAt(p, t) { return t < endOf(p); }
+function illAt(p, t) { return p.illFrom !== undefined && t >= p.illFrom && t < (p.illTo ?? 12); }
+function atRiskMonths(p) { if (p.illFrom === 0) return 0; return Math.min(endOf(p), p.illFrom ?? 12); }
+
+function drawCohort(opts = {}) {
+  const svg = h('svg', { id: 'scene', viewBox: '0 0 660 330', role: 'img', 'aria-label': 'Ten people followed for one year' });
+  /* month grid */
+  for (let m = 0; m <= 12; m++) {
+    svg.append(h('line', { x1: xOf(m), y1: 32, x2: xOf(m), y2: 306, stroke: 'var(--line)', 'stroke-width': m % 3 === 0 ? 1.2 : .6 }));
+    if (m < 12) svg.append(h('text', { x: xOf(m) + PX / 2, y: 24, class: 'lab', 'text-anchor': 'middle' }, MONTHS[m]));
+  }
+  PEOPLE.forEach((p, i) => {
+    const y = yOf(i), end = endOf(p);
+    svg.append(h('text', { x: 28, y: y + 4, class: 'lab big', 'text-anchor': 'middle' }, p.id));
+    /* healthy line */
+    svg.append(h('line', { x1: xOf(0), y1: y, x2: xOf(end), y2: y, stroke: '#CBBFA2', 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    /* at-risk highlight */
+    if (opts.atRisk) {
+      const ar = atRiskMonths(p);
+      if (ar > 0) svg.append(h('line', { x1: xOf(0), y1: y, x2: xOf(ar), y2: y, stroke: 'var(--petrol)', 'stroke-width': 5, 'stroke-linecap': 'butt', opacity: .85 }));
+      if (opts.showMonths) svg.append(h('text', { x: xOf(12) + 10, y: y + 4, class: 'lab mono', fill: 'var(--petrol)' }, ar + ' mo'));
+    }
+    /* illness */
+    if (p.illFrom !== undefined) {
+      const to = Math.min(p.illTo ?? 12, end);
+      svg.append(h('line', { x1: xOf(p.illFrom), y1: y, x2: xOf(to), y2: y, stroke: 'var(--verm)', 'stroke-width': 6, 'stroke-linecap': 'butt' }));
+      if (p.illFrom > 0) svg.append(h('circle', { cx: xOf(p.illFrom), cy: y, r: opts.newCases ? 7 : 4.5, fill: 'var(--verm)', stroke: '#fff', 'stroke-width': 1.5, class: opts.newCases ? 'pop' : null }));
+      if (p.illTo !== undefined) svg.append(h('text', { x: xOf(p.illTo) + 4, y: y - 7, class: 'lab' }, 'recovered'));
+    }
+    if (p.illFrom === 0) svg.append(h('text', { x: xOf(0) + 4, y: y - 7, class: 'lab' }, 'already ill in January'));
+    if (p.leaves) svg.append(h('text', { x: xOf(p.leaves) + 5, y: y + 4, class: 'lab' }, '→ moved away'));
+    if (p.dies) svg.append(h('text', { x: xOf(p.dies) + 5, y: y + 4, class: 'lab' }, '✕ died of something else'));
+  });
+  /* camera */
+  if (opts.camera !== undefined) {
+    const t = opts.camera - 0.5, x = xOf(t);
+    svg.append(h('line', { x1: x, y1: 14, x2: x, y2: 312, stroke: 'var(--petrol)', 'stroke-width': 2, 'stroke-dasharray': '6 4' }));
+    svg.append(h('text', { x, y: 324, class: 'lab big', 'text-anchor': 'middle', fill: 'var(--petrol)' }, 'photo: mid-' + MONTH_NAMES[opts.camera - 1]));
+    PEOPLE.forEach((p, i) => {
+      if (!presentAt(p, t)) return;
+      const y = yOf(i);
+      svg.append(h('circle', { cx: x, cy: y, r: 8, fill: illAt(p, t) ? 'var(--verm)' : 'var(--panel)', stroke: illAt(p, t) ? 'var(--verm)' : 'var(--petrol)', 'stroke-width': 2 }));
+    });
+  } else {
+    svg.append(h('text', { x: 350, y: 324, class: 'lab', 'text-anchor': 'middle' },
+      opts.caption || 'grey = well · red = ill · a red dot = the month the disease began'));
+  }
+  return svg;
+}
+
+/* ================= station 1 · count, share or rate ================= */
+
+const ITEMS1 = [
+  { s: '“About 41 million people were living with HIV in 2024.”', a: 'count',
+    why: 'A count. Forty-one million people — nobody has divided by anything. It tells you the size of a stock, not anyone’s chance of being in it.',
+    wrong: { prop: 'There is no denominator here. A proportion needs “out of how many”.', rate: 'No time, no denominator. A rate needs both.' } },
+  { s: '“In Spain, 5.0% of the population carried SARS-CoV-2 antibodies in May 2020.”', a: 'prop',
+    why: 'A proportion — cases divided by people present, at one moment. This is point prevalence, straight from a cross-sectional survey (ENE-COVID, 61,075 participants).',
+    wrong: { count: 'The percent sign gives it away: something has been divided by the population.', rate: 'No time in the denominator — one moment, one photograph. A proportion, not a rate.' } },
+  { s: '“Acute hepatitis C: 1.2 reported cases per 100,000 people per year (USA, 2018).”', a: 'rate',
+    why: 'A rate. New cases divided by people AND time — “per 100,000 per year”. Up from 0.3 in 2009: a real rise, carried by injecting during the opioid crisis.',
+    wrong: { count: '“Per 100,000 per year” is two denominators. A count has none.', prop: 'A proportion stops at “per 100,000”. The “per year” makes it a rate.' } },
+  { s: '“About 80% of synthetic-opioid deaths in 2016 involved another substance or alcohol.”', a: 'prop',
+    why: 'A proportion — but note the denominator: deaths, not people at risk. It is a share, not a risk of anything. Shares of deaths cannot be added: the same death may sit in two categories.',
+    wrong: { count: 'Eighty percent of something is a division, not a tally.', rate: 'No time at all in the denominator. The denominator is other deaths.' } },
+  { s: '“Fatal overdoses near Insite fell from 253.8 to 165.1 per 100,000 person-years.”', a: 'rate',
+    why: 'A rate — deaths per person-years. Person-time is how surveillance compares a neighbourhood across two periods of different length (Marshall, Lancet 2011).',
+    wrong: { count: 'Deaths were counted, then divided by person-years. The division makes it a rate.', prop: '“Person-years” means time is in the denominator. That is a rate, not a share.' } },
+  { s: '“Myocarditis after dose 2: about 1 case in 6,637 young men within 30 days.”', a: 'prop',
+    why: 'A proportion: cases among people exposed, over a fixed window. This is a risk — cumulative incidence over 30 days. The same number reads 15.1 per 100,000 (Mevorach, NEJM 2021).',
+    wrong: { count: '“One in 6,637” is a division — one case per 6,637 people.', rate: 'Close: a fixed 30-day window makes it a risk, not a rate. A rate would be “per person-month”.' } },
+];
+const KINDS1 = [['count', 'Count'], ['prop', 'Proportion'], ['rate', 'Rate']];
+
+function answer1(k) {
+  if (S.s1.answered !== null) return;
+  S.s1.answered = k;
+  if (k === ITEMS1[S.s1.idx].a) S.s1.score++;
+  render();
+}
+function next1() {
+  if (S.s1.idx < ITEMS1.length - 1) { S.s1.idx++; S.s1.answered = null; }
+  else { S.done[1] = true; logIdea('denom'); }
+  render();
+}
+
+function renderStage1() {
+  const it = ITEMS1[S.s1.idx];
+  const answered = S.s1.answered !== null;
+  const right = answered && S.s1.answered === it.a;
+  const doneBar = S.done[1] ? h('div', { class: 'donebar' },
+    h('span', {}, `Six sentences sorted — ${S.s1.score} / 6 first try. The rule to carry: before believing a number, find its denominator. If there is none, it is a count.`),
+    h('button', { class: 'act', type: 'button', onclick: () => go(2) }, 'Next: the photograph →')) : null;
+  return h('section', { class: 'stagegrid' },
+    h('div', { class: 'card' },
+      h('h2', {}, 'Sentence ', h('span', { class: 'count' }, `${S.s1.idx + 1} / ${ITEMS1.length} · score ${S.s1.score}`)),
+      h('p', { class: 'stmt' }, it.s),
+      h('div', { class: 'scenebtns' },
+        ...KINDS1.map(([k, label]) => h('button', {
+          class: 'act' + (answered ? (k === it.a ? ' good' : ' alt') : ' alt'), type: 'button',
+          disabled: answered ? 'disabled' : null, onclick: () => answer1(k) }, label))),
+      h('p', { class: 'toast' + (right ? ' good' : '') },
+        answered ? (right ? '✓ ' + it.why : '✗ ' + (it.wrong[S.s1.answered] || '') + ' ' + it.why) : ''),
+      answered && !S.done[1] ? h('div', { class: 'scenebtns' },
+        h('button', { class: 'act', type: 'button', onclick: next1 }, S.s1.idx === ITEMS1.length - 1 ? 'Finish →' : 'Next sentence →')) : null,
+      doneBar),
+    h('aside', { class: 'card rx' },
+      h('h3', {}, 'Three kinds of number'),
+      h('table', {},
+        h('tr', {}, h('th', {}, 'Kind'), h('th', {}, 'Denominator'), h('th', {}, 'Example')),
+        h('tr', {}, h('td', {}, 'Count'), h('td', {}, 'none'), h('td', {}, '41 million people living with HIV')),
+        h('tr', {}, h('td', {}, 'Proportion'), h('td', {}, 'a group of people'), h('td', {}, '5.0% seropositive · 1 in 6,637')),
+        h('tr', {}, h('td', {}, 'Rate'), h('td', {}, 'people × time'), h('td', {}, '1.2 per 100,000 per year · 11.3 per 1,000 person-years'))),
+      h('p', {}, 'A proportion is bounded: it lives between 0 and 1. A rate is not — 36 deaths per 1,000 person-years is possible and so is 3,600. The units tell you which one you are holding.'),
+      h('p', { class: 'sub' }, 'Not every proportion is a risk. “80% of deaths involved another substance” divides deaths by deaths. It is a share of the outcome, not a chance of the outcome. Headlines add such shares together constantly; you cannot.'),
+      h('details', { class: 'fine' }, h('summary', {}, 'Why the course insists on this'),
+        h('p', {}, 'Week I ended with 21,720 people in a trial and an expected 0.3 cases of myocarditis. That calculation was nothing but a proportion (1 in 6,637) multiplied by a count (young men in the arm). Every blind spot in this course is found by asking what was divided by what.'))
+    ));
+}
+
+/* ================= station 2 · the photograph ================= */
+
+function check2() {
+  const st = S.s2;
+  if (st.part === 0) {
+    if (st.month !== 7) { st.msg = 'bad:Move the camera to mid-July first — the slider under the picture.'; render(); return; }
+    const t = 6.5;
+    const present = PEOPLE.filter(p => presentAt(p, t)).length;    /* 8 */
+    const ill = PEOPLE.filter(p => presentAt(p, t) && illAt(p, t)).length; /* 3 */
+    st.ok.present = nearNum(st.vals.present, present, 0);
+    st.ok.ill = nearNum(st.vals.ill, ill, 0);
+    st.ok.prev = nearProp(st.vals.prev, ill / present, 0.006);
+    if (st.ok.present && st.ok.ill && st.ok.prev) {
+      st.part = 1; st.msg = 'good:3 of 8 — 37.5%. P6 and P9 are not in the photograph: one moved away in June, one died in April. P4 is ill in July and will recover in August; the photograph does not know that.';
+    } else {
+      const hints = [];
+      if (!st.ok.present) hints.push(parseNum(st.vals.present) === 10 ? 'Ten people started the year, but two are gone by July — P6 moved away, P9 died of something else. A photograph only shows who is in the frame.' : 'Count the circles on the camera line: every person still in the frame in July.');
+      if (!st.ok.ill) hints.push(parseNum(st.vals.ill) === 4 ? 'P7 falls ill in October — not yet in the picture.' : 'Red circles on the camera line: P2 (ill since January), P3 (since March), P4 (since May, recovers in August).');
+      if (!st.ok.prev && st.ok.present && st.ok.ill) hints.push('Prevalence = ill ÷ present. Type it as 3/8, 0.375 or 37.5%.');
+      st.msg = 'bad:' + hints.join(' ');
+    }
+  } else {
+    /* ENE-COVID */
+    st.ok.spain = nearProp(st.vals.spain, 3050 / 61075, 0.002);
+    if (st.ok.spain) { st.part = 2; S.done[2] = true; logIdea('photo'); st.msg = 'good:5.0%. Same arithmetic, 61,075 people: positives ÷ tested, at one moment. A photograph of a whole country, taken between 27 April and 11 May 2020.'; }
+    else st.msg = 'bad:Positives ÷ people tested: 3,050 ÷ 61,075. Type it as a decimal or a percentage.';
+  }
+  render();
+}
+
+function renderStage2() {
+  const st = S.s2;
+  const [kind, msg] = st.msg ? st.msg.split(/:(.*)/s) : ['', ''];
+  const doneBar = S.done[2] ? h('div', { class: 'donebar' },
+    h('span', {}, 'Prevalence has no memory. It does not care when anyone fell ill or whether they will recover — only who has it in the frame, now.'),
+    h('button', { class: 'act', type: 'button', onclick: () => go(3) }, 'Next: the film →')) : null;
+  return h('section', { class: 'stagegrid' },
+    h('div', { class: 'card scene' },
+      drawCohort({ camera: st.month }),
+      h('div', { class: 'range' },
+        h('label', { for: 'cam' }, 'Camera'),
+        h('input', { id: 'cam', type: 'range', min: '1', max: '12', step: '1', value: String(st.month), 'aria-label': 'Month of the photograph',
+          oninput: (ev) => { st.month = parseInt(ev.target.value, 10); $('#scene').replaceWith(drawCohort({ camera: st.month })); $('#camVal').textContent = 'mid-' + MONTH_NAMES[st.month - 1]; } }),
+        h('span', { class: 'val', id: 'camVal' }, 'mid-' + MONTH_NAMES[st.month - 1])),
+      st.part === 0 ? h('div', { class: 'calc' },
+        field('s2', 'present', 'People in the frame in mid-July', { ph: 'how many', onenter: check2 }),
+        field('s2', 'ill', 'Of them, ill at that moment', { ph: 'how many', onenter: check2 }),
+        field('s2', 'prev', 'Point prevalence in mid-July', { ph: '3/8 or 37.5%', onenter: check2 })) : null,
+      st.part === 1 ? h('div', { class: 'calc' },
+        h('p', { class: 'stmt' }, 'ENE-COVID, Spain, spring 2020: 61,075 people tested for antibodies in one survey round; about 3,050 were positive. Point prevalence?'),
+        field('s2', 'spain', 'Seroprevalence', { ph: 'decimal or %', onenter: check2 })) : null,
+      st.part < 2 ? h('div', { class: 'scenebtns' }, h('button', { class: 'act', type: 'button', onclick: check2 }, 'Check')) : null,
+      h('p', { class: 'toast' + (kind === 'good' ? ' good' : '') }, msg),
+      doneBar),
+    h('aside', { class: 'card rx' },
+      h('h3', {}, 'Point prevalence'),
+      h('div', { class: 'eq' }, 'prevalence(t) = ill at t ÷ present at t'),
+      h('p', {}, 'A proportion, so it lives between 0 and 1. It has no time in the denominator — the camera clicks once. Cross-sectional surveys produce exactly this number, which is why they can answer “how much?” and never “how fast?”.'),
+      h('p', { class: 'sub' }, 'Two people vanish from the frame before July. Prevalence does not ask why. Incidence will — next station.'),
+      h('details', { class: 'fine' }, h('summary', {}, 'Period prevalence, for completeness'),
+        h('p', {}, 'Sometimes a paper counts everyone who had the disease at any point during a period (“12-month prevalence of opioid use disorder”). That is a longer exposure of the same camera, not a film: it still has people, not person-time, underneath.'))
+    ));
+}
+
+/* ================= station 3 · the film ================= */
+
+function check3() {
+  const st = S.s3;
+  if (st.part === 0) {
+    st.ok.risk0 = nearNum(st.vals.risk0, 9, 0);
+    st.ok.cases = nearNum(st.vals.cases, 3, 0);
+    st.ok.ci = nearProp(st.vals.ci, 3 / 9, 0.006);
+    if (st.ok.risk0 && st.ok.cases && st.ok.ci) {
+      st.part = 1; st.msg = 'good:3 new cases among 9 people at risk — 33%. P2 is in the film but not in the cast list: already ill in January, she could not become a new case.';
+    } else {
+      const hints = [];
+      if (!st.ok.risk0) hints.push(parseNum(st.vals.risk0) === 10 ? 'P2 was already ill in January. You cannot become a case you already are — 10 present, 9 at risk.' : 'Everyone present in January who did not yet have the disease.');
+      if (!st.ok.cases) hints.push('New cases are the red dots: P3 (March), P4 (May), P7 (October). P2 has no dot — she was ill before the film started.');
+      if (!st.ok.ci && st.ok.risk0 && st.ok.cases) hints.push('Cumulative incidence = new cases ÷ at risk at the start: 3/9.');
+      st.msg = 'bad:' + hints.join(' ');
+    }
+  } else {
+    st.ok.per100k = nearNum(st.vals.per100k, 100000 / 6637, 0.15);
+    if (st.ok.per100k) { st.part = 2; S.done[3] = true; logIdea('film'); st.msg = 'good:15.1 per 100,000 — the same risk, in the units a surveillance table prints. One in 6,637 and 15.1 per 100,000 are one finding, not two.'; }
+    else st.msg = 'bad:100,000 ÷ 6,637. The risk is 1/6,637 per person; multiply by 100,000 people.';
+  }
+  render();
+}
+
+function renderStage3() {
+  const st = S.s3;
+  const [kind, msg] = st.msg ? st.msg.split(/:(.*)/s) : ['', ''];
+  const doneBar = S.done[3] ? h('div', { class: 'donebar' },
+    h('span', {}, 'Incidence needs three things: new cases, a cast list of who could become one, and a period. Lose any of the three and the number means nothing.'),
+    h('button', { class: 'act', type: 'button', onclick: () => go(4) }, 'Next: person-time →')) : null;
+  return h('section', { class: 'stagegrid' },
+    h('div', { class: 'card scene' },
+      drawCohort({ newCases: true, caption: 'the whole year on one screen · red dots = new cases' }),
+      st.part === 0 ? h('div', { class: 'calc' },
+        field('s3', 'risk0', 'People at risk in January (could still become a case)', { ph: 'how many', onenter: check3 }),
+        field('s3', 'cases', 'New cases during the year', { ph: 'how many', onenter: check3 }),
+        field('s3', 'ci', 'Cumulative incidence over the year', { ph: '1/3 or 33%', onenter: check3 })) : null,
+      st.part === 1 ? h('div', { class: 'calc' },
+        h('p', { class: 'stmt' }, 'Israel, 2021: among males aged 16–19, myocarditis within 30 days of the second dose occurred in about 1 in 6,637. Surveillance tables print risks per 100,000. Convert.'),
+        field('s3', 'per100k', 'Cases per 100,000 vaccinated', { ph: 'per 100,000', onenter: check3 })) : null,
+      st.part < 2 ? h('div', { class: 'scenebtns' }, h('button', { class: 'act', type: 'button', onclick: check3 }, 'Check')) : null,
+      h('p', { class: 'toast' + (kind === 'good' ? ' good' : '') }, msg),
+      doneBar),
+    h('aside', { class: 'card rx' },
+      h('h3', {}, 'Cumulative incidence (risk)'),
+      h('div', { class: 'eq' }, 'risk = new cases in the period ÷ people at risk at the start'),
+      h('p', {}, 'Also a proportion, also between 0 and 1 — but it carries a period in its name: “one-year risk”, “30-day risk”. Quote the risk without the period and you have quoted nothing.'),
+      h('p', { class: 'sub' }, 'The denominator is the cast list: people who could still become a case. Prevalent cases are off the list. So are people immune for life, and — in a cohort of injecting drug users — people already infected with hepatitis C.'),
+      h('p', { class: 'sub' }, 'The honest flaw: 3/9 assumes all nine were watched all year. P6 left in June, P9 died in April. Had P9 fallen ill in November, nobody would know. Station 4 repairs this.'),
+      h('details', { class: 'fine' }, h('summary', {}, 'Attack rate'),
+        h('p', {}, 'In an outbreak the one-period cumulative incidence is called the attack rate — a “rate” by tradition only. It is a proportion: ill ÷ exposed. The 2011 German E. coli restaurant cohort was computed exactly this way, dish by dish.'))
+    ));
+}
+
+/* ================= station 4 · person-time ================= */
+
+const PT_HINTS = {
+  120: 'That is 10 people × 12 months. But P2 was never at risk, and the people who fell ill, moved away or died stopped contributing when they did.',
+  108: 'You dropped P2 — good — but kept everyone else for 12 months. P3 stops contributing in March, P4 in May, P7 in October, P6 in June, P9 in April.',
+  89:  'You stopped at illness but kept the leavers for the whole year. P6 contributes 6 months, P9 contributes 4 — they were not there after that.',
+  87:  'You handled the leavers and the cases — but P2 is still in. Already ill in January: zero months at risk.',
+  75:  '',
+};
+function check4() {
+  const st = S.s4;
+  if (st.part === 0) {
+    const total = PEOPLE.reduce((s, p) => s + atRiskMonths(p), 0); /* 75 */
+    st.ok.pm = nearNum(st.vals.pm, total, 0);
+    st.ok.rate = nearNum(st.vals.rate, 100 * 3 / total, 0.05);
+    if (st.ok.pm && st.ok.rate) {
+      st.part = 1; st.reveal = true;
+      st.msg = 'good:3 cases ÷ 75 person-months = 4 per 100 person-months (48 per 100 person-years — a tiny cohort gives wild units). Every month anyone spent at risk is in the denominator, including P6’s six and P9’s four.';
+    } else {
+      const v = parseNum(st.vals.pm);
+      const hint = PT_HINTS[v];
+      const hints = [];
+      if (!st.ok.pm) hints.push(hint !== undefined && hint ? hint : 'Add the months each person spent well AND present: P1 12 · P2 0 · P3 3 · P4 5 · P5 12 · P6 6 · P7 9 · P8 12 · P9 4 · P10 12. Toggle “show time at risk” to see the segments.');
+      if (st.ok.pm && !st.ok.rate) hints.push('Rate = 3 cases ÷ 75 person-months = 0.04 per person-month → 4 per 100 person-months.');
+      st.msg = 'bad:' + hints.join(' ');
+    }
+    render();
+  }
+}
+function mcq4(i) {
+  const st = S.s4;
+  if (st.part !== 1) return;
+  st.mcq = i;
+  if (i === 1) { st.part = 2; S.done[4] = true; logIdea('ptime'); st.msg = 'good:Exactly. 11.3 deaths for every 1,000 years that patients, all together, spent in treatment — whether 1,000 people stayed a year or 250 people stayed four. That is what lets Sordo compare time in treatment with time out of it.'; }
+  else st.msg = 'bad:' + (i === 0 ? 'A percentage of patients would be a risk — it needs a fixed follow-up for everyone. Patients in these cohorts were watched for 1 to 14 years; a rate is the only honest common currency.' : 'Per 1,000 patients ignores how long each stayed. Someone followed for a decade and someone followed for a month would weigh the same.');
+  render();
+}
+
+function renderStage4() {
+  const st = S.s4;
+  const [kind, msg] = st.msg ? st.msg.split(/:(.*)/s) : ['', ''];
+  const doneBar = S.done[4] ? h('div', { class: 'donebar' },
+    h('span', {}, 'Rates keep the leavers. When follow-up is uneven — and in addiction cohorts it always is — person-time is the denominator that does not lie about who was watched.'),
+    h('button', { class: 'act', type: 'button', onclick: () => go(5) }, 'Next: the reservoir →')) : null;
+  const MC = ['11.3% of patients died during the study', '11.3 deaths for every 1,000 years that patients, taken together, spent in treatment', '11.3 deaths per 1,000 patients, however long each stayed'];
+  return h('section', { class: 'stagegrid' },
+    h('div', { class: 'card scene' },
+      drawCohort({ atRisk: st.reveal, showMonths: st.part >= 1, caption: st.reveal ? 'teal = months at risk · red = ill (no longer at risk of a first episode)' : 'at risk = well, present, and not yet a case' }),
+      h('div', { class: 'scenebtns' },
+        h('button', { class: 'act alt', type: 'button', onclick: () => { st.reveal = !st.reveal; render(); } }, st.reveal ? 'Hide time at risk' : 'Show time at risk'),
+        h('span', { class: 'meter' }, 'new cases: ', h('b', {}, '3'))),
+      st.part === 0 ? h('div', { class: 'calc' },
+        field('s4', 'pm', 'Total person-months at risk (all ten people)', { ph: 'person-months', onenter: check4 }),
+        field('s4', 'rate', 'Incidence rate per 100 person-months', { ph: 'per 100 p-m', onenter: check4 }),
+        h('div', { class: 'scenebtns' }, h('button', { class: 'act', type: 'button', onclick: check4 }, 'Check'))) : null,
+      st.part >= 1 ? h('div', { class: 'calc' },
+        h('p', { class: 'stmt' }, 'Sordo et al., BMJ 2017, pooling 19 cohorts: all-cause mortality was 11.3 per 1,000 person-years in methadone treatment and 36.1 out of it. What does “11.3 per 1,000 person-years” mean?'),
+        h('div', { class: 'scenebtns', style: 'flex-direction:column;align-items:stretch' },
+          ...MC.map((t, i) => h('button', { class: 'act' + (st.part === 2 ? (i === 1 ? ' good' : ' alt') : ' alt'), type: 'button', style: 'text-align:left',
+            disabled: st.part === 2 ? 'disabled' : null, onclick: () => mcq4(i) }, t)))) : null,
+      h('p', { class: 'toast' + (kind === 'good' ? ' good' : '') }, msg),
+      doneBar),
+    h('aside', { class: 'card rx' },
+      h('h3', {}, 'Incidence rate (incidence density)'),
+      h('div', { class: 'eq' }, 'rate = new cases ÷ Σ time each person spent at risk'),
+      h('p', {}, 'Not a proportion: the denominator is person-time, so the number can exceed 1 and must carry its unit — per 100 person-months, per 1,000 person-years. Change the unit and the number changes with it; the risk underneath does not.'),
+      h('p', { class: 'sub' }, 'A person stops contributing the moment they become a case, leave, or die of something else. Nothing is thrown away: six months of P6 are six months of evidence that nothing happened.'),
+      h('p', { class: 'sub' }, 'Why the addiction literature lives in rates: cohorts of people who inject drugs lose a third of participants within two years, and those who leave are not a random third. A risk pretends they were watched; a rate admits how long they were.'),
+      h('details', { class: 'fine' }, h('summary', {}, 'Risk from rate'),
+        h('p', {}, 'For a short period and a small rate, risk ≈ rate × time: 11.3 per 1,000 person-years ≈ 1.1% per year. The approximation breaks when the rate is large or the period long — then risk = 1 − e^(−rate × time).'))
+    ));
+}
+
+/* ================= station 5 · the reservoir ================= */
+
+const Q5 = [
+  { ask: 'Antiretroviral therapy arrives. Average survival with HIV doubles; at the same time new infections fall by one third. Prevalence…',
+    opts: ['falls, because fewer people are infected each year', 'rises by about a third', 'stays the same — the two cancel'],
+    a: 1, why: 'P ≈ I × D: (2/3) × 2 = 1.33. Fewer people pour in, but each stays in the tub twice as long. The level rises — and that rise is the treatment working.' },
+  { ask: 'Two infections, same incidence. One lasts a week (influenza), one for life (HIV). On a survey day, which shows the higher prevalence?',
+    opts: ['Influenza — far more people catch it', 'HIV — each case stays in the count for decades', 'Equal — prevalence tracks incidence'],
+    a: 1, why: 'Duration is the multiplier. A week-long illness drains out almost as fast as it pours in; a lifelong one accumulates.' },
+  { ask: '“More people than ever are living with HIV.” Which measure tells you whether the epidemic is still spreading?',
+    opts: ['Prevalence — the headline number', 'Incidence — new infections per year', 'Deaths — if they rise, it is spreading'],
+    a: 1, why: 'Only incidence measures spread. Prevalence is the tub level; deaths are the drain. UNAIDS: new infections down about 65% from the mid-1990s peak, deaths down about 73% from 2004, people living with HIV at a record 41 million — all three true at once.' },
+];
+function answer5(i) {
+  const st = S.s5; const q = Q5[st.q];
+  if (!q) return;
+  if (i !== q.a) { st.msg = 'bad:' + (i === 0 && st.q === 0 ? 'Fewer in, yes — but look at the drain. If people stop dying, the level rises even as the tap is turned down. ' : '') + 'Try the sliders: set the scenario and read the level.'; render(); return; }
+  st.msg = 'good:' + q.why;
+  st.q++;
+  if (st.q >= Q5.length) { S.done[5] = true; logIdea('tub'); }
+  render();
+}
+
+function renderTub() {
+  const st = S.s5;
+  const P = st.inc * st.dur;                 /* prevalent cases */
+  const maxP = 800;                         /* the tub is full at 800; anything above fills it */
+  const tubX = 230, tubY = 40, tubW = 200, tubH = 230;
+  const lvl = Math.max(6, tubH * Math.min(P, maxP) / maxP);
+  const svg = h('svg', { id: 'scene', viewBox: '0 0 660 300', role: 'img', 'aria-label': 'A tub: incidence flows in, death and cure drain out, prevalence is the level' });
+  /* inflow pipe */
+  svg.append(h('rect', { x: 60, y: 46, width: 170, height: 14, rx: 4, fill: 'var(--petrol)', opacity: .25 }));
+  svg.append(h('rect', { x: 60, y: 46, width: Math.max(10, 170 * st.inc / 100), height: 14, rx: 4, fill: 'var(--petrol)' }));
+  svg.append(h('text', { x: 60, y: 36, class: 'lab big' }, 'INCIDENCE · the tap'));
+  svg.append(h('text', { x: 60, y: 78, class: 'lab' }, st.inc + ' new cases per year'));
+  /* tub */
+  svg.append(h('rect', { x: tubX, y: tubY, width: tubW, height: tubH, rx: 10, fill: 'var(--panel-2)', stroke: 'var(--fg)', 'stroke-width': 2 }));
+  svg.append(h('rect', { class: 'level', x: tubX + 3, y: tubY + tubH - lvl - 3, width: tubW - 6, height: lvl, rx: 7, fill: 'var(--verm)', opacity: .8 }));
+  svg.append(h('text', { x: tubX + tubW / 2, y: tubY - 14, class: 'lab big', 'text-anchor': 'middle' }, 'PREVALENCE (the level)'));
+  svg.append(h('text', { x: tubX + tubW / 2, y: tubY + tubH / 2 + 5, class: 'lab big', 'text-anchor': 'middle', 'font-size': '22px', fill: P > 1000 ? '#fff' : 'var(--fg)' }, P + ' cases'));
+  /* drain */
+  svg.append(h('rect', { x: tubX + tubW, y: tubY + tubH - 24, width: 170, height: 14, rx: 4, fill: 'var(--ochre)', opacity: .25 }));
+  svg.append(h('rect', { x: tubX + tubW, y: tubY + tubH - 24, width: Math.max(10, 170 * (1 / st.dur) / 1), height: 14, rx: 4, fill: 'var(--ochre)' }));
+  svg.append(h('text', { x: tubX + tubW + 4, y: tubY + tubH - 32, class: 'lab big' }, 'DRAIN · death, cure'));
+  svg.append(h('text', { x: tubX + tubW + 4, y: tubY + tubH + 6, class: 'lab' }, 'average duration ' + st.dur + (st.dur === 1 ? ' year' : ' years')));
+  svg.append(h('text', { x: 330, y: 292, class: 'lab mono', 'text-anchor': 'middle' }, `P ≈ I × D = ${st.inc} × ${st.dur} = ${P}`));
+  return svg;
+}
+
+function renderStage5() {
+  const st = S.s5;
+  const q = Q5[st.q];
+  const [kind, msg] = st.msg ? st.msg.split(/:(.*)/s) : ['', ''];
+  const doneBar = S.done[5] ? h('div', { class: 'donebar' },
+    h('span', {}, 'The reservoir, solved. A rising prevalence can be the best news in the report — and incidence is the only number that says whether the epidemic is winning.'),
+    h('button', { class: 'act', type: 'button', onclick: () => go(6) }, 'Take the quiz →')) : null;
+  return h('section', { class: 'stagegrid' },
+    h('div', { class: 'card scene' },
+      renderTub(),
+      h('div', { class: 'range' },
+        h('label', { for: 'inc' }, 'Incidence'),
+        h('input', { id: 'inc', type: 'range', min: '5', max: '100', step: '5', value: String(st.inc), 'aria-label': 'New cases per year',
+          oninput: (ev) => { st.inc = parseInt(ev.target.value, 10); $('#scene').replaceWith(renderTub()); $('#incVal').textContent = st.inc + ' / year'; } }),
+        h('span', { class: 'val', id: 'incVal' }, st.inc + ' / year')),
+      h('div', { class: 'range' },
+        h('label', { for: 'dur' }, 'Duration'),
+        h('input', { id: 'dur', type: 'range', min: '1', max: '20', step: '1', value: String(st.dur), 'aria-label': 'Average duration in years',
+          oninput: (ev) => { st.dur = parseInt(ev.target.value, 10); $('#scene').replaceWith(renderTub()); $('#durVal').textContent = st.dur + (st.dur === 1 ? ' year' : ' years'); } }),
+        h('span', { class: 'val', id: 'durVal' }, st.dur + (st.dur === 1 ? ' year' : ' years'))),
+      q ? h('div', { class: 'calc' },
+        h('p', { class: 'stmt' }, `${st.q + 1} / ${Q5.length} · ${q.ask}`),
+        h('div', { class: 'scenebtns', style: 'flex-direction:column;align-items:stretch' },
+          ...q.opts.map((t, i) => h('button', { class: 'act alt', type: 'button', style: 'text-align:left', onclick: () => answer5(i) }, t)))) : null,
+      h('p', { class: 'toast' + (kind === 'good' ? ' good' : '') }, msg),
+      doneBar),
+    h('aside', { class: 'card rx' },
+      h('h3', {}, 'The steady-state relation'),
+      h('div', { class: 'eq' }, 'prevalence ≈ incidence × average duration'),
+      h('p', {}, 'Exact only when inflow and outflow have settled; a rough guide in a fast-moving epidemic. Good enough to explain the sentence that confuses every newsroom: 41 million people living with HIV is a record, and it is a success.'),
+      h('table', {},
+        h('tr', {}, h('th', {}, 'Before 1996'), h('th', {}, 'After combination therapy')),
+        h('tr', {}, h('td', {}, 'People got ill and died; prevalence and deaths moved together'), h('td', {}, 'Survival on treatment approaches normal; the pool builds up while new infections fall'))),
+      h('p', { class: 'sub' }, 'The same arithmetic runs through addiction: effective opioid-agonist treatment keeps people alive with a chronic condition. The prevalence of opioid use disorder can rise in a city whose incidence is falling — and a minister who reads only prevalence will cut the programme that produced it.'),
+      h('details', { class: 'fine' }, h('summary', {}, 'A drain that is not success'),
+        h('p', {}, 'Prevalence also falls when people die faster. A falling count of people living with hepatitis C can mean cures — or a mortality spike among people who inject. The tub does not label its drain; you must look.'))
+    ));
+}
+
+/* ================= station 6 · quiz ================= */
+
+const QUIZ = [
+  { q: '“The number of people living with HIV is the highest ever recorded.” That number is…',
+    opts: ['Incidence', 'Prevalence', 'A mortality rate'],
+    a: 1, why: 'Everyone who has it now — a stock, a photograph. Prevalence.' },
+  { q: 'New HIV infections have fallen by about two-thirds since the mid-1990s, yet prevalence keeps rising. Possible?',
+    opts: ['No — one of the two reports must be wrong', 'Yes — treatment lengthens duration, so P ≈ I × D rises even as I falls', 'Yes — prevalence is just new cases counted twice'],
+    a: 1, why: 'Prevalence ≈ incidence × duration. Antiretroviral therapy multiplied the duration; the tub fills while the tap is turned down.' },
+  { q: 'A cohort of 200 people who inject drugs is followed for hepatitis C. Many leave after a few months; 40 seroconvert. Which measure uses the time of the people who left?',
+    opts: ['Cumulative incidence, 40/200', 'The incidence rate per 100 person-years', 'Point prevalence at the final visit'],
+    a: 1, why: 'Only person-time keeps the months each person was actually watched. 40/200 pretends everyone stayed; the rate does not.' },
+  { q: 'Case-fatality 2% and a mortality rate of 10 per 100,000 per year can describe the same disease because…',
+    opts: ['They have different denominators: cases versus the whole population over time', 'One of them is always wrong', 'Case-fatality is a rate and mortality is a count'],
+    a: 0, why: 'Case-fatality divides deaths by cases — a proportion among the ill. Mortality divides deaths by population-time. Both are true; they answer different questions.' },
+  { q: 'Reported Lyme disease in the USA rose 68.5% in 2022, almost entirely in states that had just changed the case definition. What moved?',
+    opts: ['True incidence — more ticks', 'The numerator the surveillance system could count', 'The population denominator'],
+    a: 1, why: 'Where the rule changed, +72.9%; where it did not, +10.0%. Reported incidence = true incidence × how hard you look. The instrument moved, not the ticks.' },
+  { q: 'Which of these is a rate?',
+    opts: ['12% of patients died within a year', '12 deaths per 1,000 person-years', '12 deaths were recorded'],
+    a: 1, why: 'Person-years in the denominator. The first is a one-year risk (a proportion); the third is a count.' },
+];
+
+function renderStage6() {
+  const q = S.quiz;
+  const items = QUIZ.map((it, qi) => {
+    const picked = q.picked[qi];
+    const cls = q.submitted ? (picked === it.a ? 'q right' : 'q wrong') : 'q';
+    return h('div', { class: cls },
+      h('p', { class: 'qt' }, `${qi + 1}. ${it.q}`),
+      ...it.opts.map((op, oi) => h('label', {},
+        h('input', { type: 'radio', name: 'q' + qi, checked: picked === oi ? 'checked' : null,
+          disabled: q.submitted ? 'disabled' : null,
+          onchange: () => { S.quiz.picked[qi] = oi; render(); } }),
+        h('span', {}, op))),
+      q.submitted ? h('p', { class: 'why' }, (picked === it.a ? '✓ ' : `✗ Correct: “${it.opts[it.a]}”. `) + it.why) : null);
+  });
+  const allPicked = Object.keys(q.picked).length === QUIZ.length;
+  let band = null;
+  if (q.submitted) {
+    const score = QUIZ.reduce((s, it, qi) => s + (q.picked[qi] === it.a ? 1 : 0), 0);
+    band = h('div', { class: 'scoreband' },
+      score === QUIZ.length ? `${score} / ${QUIZ.length} — you can now read Table 1. Next: Measures of Association, where two of these numbers meet.`
+        : `${score} / ${QUIZ.length}. Walk the stations again; the ten people will wait.`);
+  }
+  return h('section', { class: 'stagegrid', style: 'grid-template-columns:1fr' },
+    h('div', { class: 'card' },
+      h('h2', {}, 'Quiz · counts, photographs and films'),
+      ...items,
+      h('div', { class: 'scenebtns' },
+        q.submitted
+          ? h('button', { class: 'act alt', type: 'button', onclick: () => { S.quiz = { picked: {}, submitted: false }; render(); } }, 'Try again')
+          : h('button', { class: 'act', type: 'button', disabled: allPicked ? null : 'disabled', onclick: () => {
+              S.quiz.submitted = true;
+              if (QUIZ.every((it, qi) => S.quiz.picked[qi] === it.a)) S.done[6] = true;
+              render();
+            } }, 'Check my answers'),
+        h('span', { class: 'meter' }, 'Covers ', h('b', {}, 'U2.K1 · U2.A1 · U1.A1')),
+        q.submitted && S.done[6] ? h('a', { class: 'act', href: 'https://ebm-blind-spots.vercel.app/measures-of-association.html', style: 'text-decoration:none' }, 'Measures of Association →') : null),
+      band));
+}
+
+/* ================= shell ================= */
+
+function go(n) { S.stage = n; render(); window.scrollTo({ top: 0 }); }
+
+function renderSeg() {
+  $('#segStages').replaceChildren(...STAGE_META.map(m =>
+    h('button', { type: 'button', 'aria-pressed': String(S.stage === m.n), onclick: () => go(m.n) },
+      m.n === 6 ? `${m.label} ` : `${m.n} · ${m.label} `, S.done[m.n] ? h('span', { class: 'tick' }, ' ✓') : null)));
+}
+function renderLog() {
+  $('#logTable').replaceChildren(...LOG.map(r => h('tr', { class: S.logged.has(r.id) ? 'on' : 'off' },
+    h('td', { class: 'nm' }, h('span', { class: 'dot' }), r.name),
+    h('td', { style: 'color:var(--fg-dim)' }, r.note))));
+  $('#logCount').textContent = `${S.logged.size} / ${LOG.length}`;
+  $('#logDone').hidden = S.logged.size < LOG.length;
+}
+
+const STAGE_RENDER = { 1: renderStage1, 2: renderStage2, 3: renderStage3, 4: renderStage4, 5: renderStage5, 6: renderStage6 };
+function render() {
+  renderSeg();
+  $('#stageNote').innerHTML = NOTES[S.stage];
+  $('#stageHost').replaceChildren(STAGE_RENDER[S.stage]());
+  renderLog();
+}
+$('#btnReset').addEventListener('click', () => { S = freshState(); render(); });
+
+window.__S = () => S;
+render();
+</script>
+</body>
+</html>
