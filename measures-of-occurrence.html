@@ -284,11 +284,11 @@ const STAGE_META = [
 ];
 
 const NOTES = {
-  1: '<b>Station 1 · Count, share or rate?</b> Six real sentences from the course. Each carries a number; decide what kind of number it is. A count has no denominator. A proportion divides by a group. A rate divides by time as well. The distinction is the first thing an abstract hides.',
-  2: '<b>Station 2 · The photograph.</b> Ten people, one year. Move the camera to mid-July and count what the photograph shows: how many people are present, how many of them have the disease at that moment. That ratio is point prevalence. Then do the same arithmetic on 61,075 Spaniards.',
-  3: '<b>Station 3 · The film.</b> Same ten people, now watched for the whole year. Count who could become a case, and who did. New cases among people at risk, over a stated period &mdash; cumulative incidence, which is what a clinician means by &ldquo;risk&rdquo;. Then convert a famous risk into the units surveillance uses.',
-  4: '<b>Station 4 · Person-time.</b> Two of the ten were not there the whole year, and the people who fell ill stopped being at risk when they did. Add up the months each person actually spent at risk, and divide the cases by that. This is the incidence rate &mdash; the unit every mortality paper in the addiction literature uses.',
-  5: '<b>Station 5 · The reservoir.</b> Prevalence is a level in a tub: incidence pours in, death and cure drain out. Set the two taps and watch the level. Then answer the question that fools ministers: can new infections fall by two-thirds while the number of people living with HIV reaches an all-time high?',
+  1: '<b>Station 1 · Count, share or rate?</b> Six real sentences from the course, each with a number in it. Decide what kind of number it is. A <b>count</b> has nothing underneath it. A <b>proportion</b> divides by a group of people. A <b>rate</b> divides by people and by time. Abstracts rarely tell you which one they are giving you.',
+  2: '<b>Station 2 · The photograph.</b> Ten people, one year. The camera takes a picture at one moment. For each question, move the camera to the month asked, then count what the picture shows: how many people are in the frame, and how many of them have the disease right now. Ill &divide; present = point prevalence. Three photographs, then one real survey.',
+  3: '<b>Station 3 · The film.</b> Same ten people, now the whole year at once. Count who could become a case, and who did. New cases &divide; people at risk, over a stated period = cumulative incidence &mdash; what a clinician calls &ldquo;risk&rdquo;. Then two questions to think about, and one conversion into the units surveillance uses.',
+  4: '<b>Station 4 · Person-time.</b> Two of the ten were not there the whole year, and people who fell ill stopped being at risk when they did. Add up the months each person really spent at risk, then divide the cases by that total. This is the incidence rate &mdash; the unit used by every mortality paper on opioid treatment.',
+  5: '<b>Station 5 · The reservoir.</b> Prevalence is the water level in a tub: incidence pours in, death and cure drain out. Move the two sliders and watch the level. Then the question that fools ministers: can new infections fall by two-thirds while the number of people living with HIV reaches a record high?',
   6: '<b>Quiz.</b> Six questions. Full marks means you can read the first table of any epidemiology paper without being told what the numbers are.',
 };
 
@@ -299,8 +299,8 @@ function freshState() {
     done: { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false },
     logged: new Set(),
     s1: { idx: 0, score: 0, answered: null },
-    s2: { month: 1, vals: {}, ok: {}, msg: '', part: 0 },
-    s3: { vals: {}, ok: {}, msg: '', part: 0 },
+    s2: { month: 1, vals: {}, ok: {}, msg: '', part: 0, q: 0, solved: false },
+    s3: { vals: {}, ok: {}, msg: '', part: 0, mcq: null },
     s4: { vals: {}, ok: {}, msg: '', reveal: false, part: 0, mcq: null },
     s5: { inc: 30, dur: 4, q: 0, msg: '' },
     quiz: { picked: {}, submitted: false },
@@ -311,8 +311,8 @@ S = freshState();
 const LOG = [
   { id: 'denom', name: 'No denominator, no risk',          note: '41 million is a count. It says nothing about anyone’s chances until you divide it by something.' },
   { id: 'photo', name: 'Prevalence is a photograph',        note: 'everyone who has it now ÷ everyone present now — whenever they caught it' },
-  { id: 'film',  name: 'Incidence is a film with a cast list', note: 'new cases ÷ people who could still become cases, over a stated period' },
-  { id: 'ptime', name: 'Rates keep the leavers',            note: 'person-time counts the months each person actually spent at risk — leaving early is not erased' },
+  { id: 'film',  name: 'Incidence is a film',               note: 'new cases ÷ people who could still become cases, over a stated period — always say the period' },
+  { id: 'ptime', name: 'Rates count the time people were really watched', note: 'add up every person’s months at risk — people who left early still count for the months they stayed' },
   { id: 'tub',   name: 'Prevalence ≈ incidence × duration', note: 'a treatment that works raises prevalence; only incidence tells you whether spread is slowing' },
 ];
 function logIdea(id) { S.logged.add(id); }
@@ -366,7 +366,7 @@ function drawCohort(opts = {}) {
       const to = Math.min(p.illTo ?? 12, end);
       svg.append(h('line', { x1: xOf(p.illFrom), y1: y, x2: xOf(to), y2: y, stroke: 'var(--verm)', 'stroke-width': 6, 'stroke-linecap': 'butt' }));
       if (p.illFrom > 0) svg.append(h('circle', { cx: xOf(p.illFrom), cy: y, r: opts.newCases ? 7 : 4.5, fill: 'var(--verm)', stroke: '#fff', 'stroke-width': 1.5, class: opts.newCases ? 'pop' : null }));
-      if (p.illTo !== undefined) svg.append(h('text', { x: xOf(p.illTo) + 4, y: y - 7, class: 'lab' }, 'recovered'));
+      if (p.illTo !== undefined) svg.append(h('text', { x: xOf(p.illTo) - 3, y: y - 7, class: 'lab', 'text-anchor': 'end' }, 'recovered in ' + MONTH_NAMES[p.illTo]));
     }
     if (p.illFrom === 0) svg.append(h('text', { x: xOf(0) + 4, y: y - 7, class: 'lab' }, 'already ill in January'));
     if (p.leaves) svg.append(h('text', { x: xOf(p.leaves) + 5, y: y + 4, class: 'lab' }, '→ moved away'));
@@ -393,7 +393,7 @@ function drawCohort(opts = {}) {
 
 const ITEMS1 = [
   { s: '“About 41 million people were living with HIV in 2024.”', a: 'count',
-    why: 'A count. Forty-one million people — nobody has divided by anything. It tells you the size of a stock, not anyone’s chance of being in it.',
+    why: 'A count: 41 million people, nothing divided by anything. It tells you how many — not how likely.',
     wrong: { prop: 'There is no denominator here. A proportion needs “out of how many”.', rate: 'No time, no denominator. A rate needs both.' } },
   { s: '“In Spain, 5.0% of the population carried SARS-CoV-2 antibodies in May 2020.”', a: 'prop',
     why: 'A proportion — cases divided by people present, at one moment. This is point prevalence, straight from a cross-sectional survey (ENE-COVID, 61,075 participants).',
@@ -402,7 +402,7 @@ const ITEMS1 = [
     why: 'A rate. New cases divided by people AND time — “per 100,000 per year”. Up from 0.3 in 2009: a real rise, carried by injecting during the opioid crisis.',
     wrong: { count: '“Per 100,000 per year” is two denominators. A count has none.', prop: 'A proportion stops at “per 100,000”. The “per year” makes it a rate.' } },
   { s: '“About 80% of synthetic-opioid deaths in 2016 involved another substance or alcohol.”', a: 'prop',
-    why: 'A proportion — but note the denominator: deaths, not people at risk. It is a share, not a risk of anything. Shares of deaths cannot be added: the same death may sit in two categories.',
+    why: 'A proportion — but look at the denominator: deaths, not people at risk. It is a share, not a risk. And such shares cannot be added up: one death can appear in several of them.',
     wrong: { count: 'Eighty percent of something is a division, not a tally.', rate: 'No time at all in the denominator. The denominator is other deaths.' } },
   { s: '“Fatal overdoses near Insite fell from 253.8 to 165.1 per 100,000 person-years.”', a: 'rate',
     why: 'A rate — deaths per person-years. Person-time is how surveillance compares a neighbourhood across two periods of different length (Marshall, Lancet 2011).',
@@ -452,48 +452,67 @@ function renderStage1() {
         h('tr', {}, h('td', {}, 'Count'), h('td', {}, 'none'), h('td', {}, '41 million people living with HIV')),
         h('tr', {}, h('td', {}, 'Proportion'), h('td', {}, 'a group of people'), h('td', {}, '5.0% seropositive · 1 in 6,637')),
         h('tr', {}, h('td', {}, 'Rate'), h('td', {}, 'people × time'), h('td', {}, '1.2 per 100,000 per year · 11.3 per 1,000 person-years'))),
-      h('p', {}, 'A proportion is bounded: it lives between 0 and 1. A rate is not — 36 deaths per 1,000 person-years is possible and so is 3,600. The units tell you which one you are holding.'),
-      h('p', { class: 'sub' }, 'Not every proportion is a risk. “80% of deaths involved another substance” divides deaths by deaths. It is a share of the outcome, not a chance of the outcome. Headlines add such shares together constantly; you cannot.'),
+      h('p', {}, 'A proportion is always between 0 and 1 (0% and 100%). A rate has no ceiling: 36 deaths per 1,000 person-years is possible, and so is 3,600. Look at the units to tell them apart.'),
+      h('p', { class: 'sub' }, 'Not every proportion is a risk. “80% of deaths involved another substance” divides deaths by deaths: a share of the outcome, not anyone’s chance of the outcome. Such shares cannot be added up — the same death can sit in two of them.'),
       h('details', { class: 'fine' }, h('summary', {}, 'Why the course insists on this'),
-        h('p', {}, 'Week I ended with 21,720 people in a trial and an expected 0.3 cases of myocarditis. That calculation was nothing but a proportion (1 in 6,637) multiplied by a count (young men in the arm). Every blind spot in this course is found by asking what was divided by what.'))
+        h('p', {}, 'In Week I we asked how many cases of myocarditis the vaccine trial could have expected to see. The answer — about 0.3 of a case — came from multiplying a proportion (the risk, 1 in 6,637) by a count (the number of young men in the trial). Most blind spots in this course are found with the same question: what was divided by what?'))
     ));
 }
 
 /* ================= station 2 · the photograph ================= */
 
+/* three photographs: camera month, then what the picture shows */
+const PHOTOS = [
+  { month: 3, ok: '1 of 10 — 10%. In March only P2 has the disease. The three people who will fall ill later are not ill yet, so they are not in this count.' },
+  { month: 6, ok: '3 of 9 — 33%. P9 died in April of something else, so nine people are in the frame. P2, P3 and P4 are ill.' },
+  { month: 9, ok: '2 of 8 — 25%. Prevalence went DOWN: P4 recovered in August, and P7 is not ill yet. P6 moved away in June, so eight are in the frame.' },
+];
+function photoCounts(month) {
+  const t = month - 0.5;
+  const present = PEOPLE.filter(p => presentAt(p, t)).length;
+  const ill = PEOPLE.filter(p => presentAt(p, t) && illAt(p, t)).length;
+  return { present, ill };
+}
+
 function check2() {
   const st = S.s2;
   if (st.part === 0) {
-    if (st.month !== 7) { st.msg = 'bad:Move the camera to mid-July first — the slider under the picture.'; render(); return; }
-    const t = 6.5;
-    const present = PEOPLE.filter(p => presentAt(p, t)).length;    /* 8 */
-    const ill = PEOPLE.filter(p => presentAt(p, t) && illAt(p, t)).length; /* 3 */
+    const ph = PHOTOS[st.q];
+    if (st.month !== ph.month) { st.msg = 'bad:Move the camera to mid-' + MONTH_NAMES[ph.month - 1] + ' first — the slider under the picture.'; render(); return; }
+    const { present, ill } = photoCounts(ph.month);
     st.ok.present = nearNum(st.vals.present, present, 0);
     st.ok.ill = nearNum(st.vals.ill, ill, 0);
     st.ok.prev = nearProp(st.vals.prev, ill / present, 0.006);
     if (st.ok.present && st.ok.ill && st.ok.prev) {
-      st.part = 1; st.msg = 'good:3 of 8 — 37.5%. P6 and P9 are not in the photograph: one moved away in June, one died in April. P4 is ill in July and will recover in August; the photograph does not know that.';
+      st.solved = true; st.msg = 'good:' + ph.ok;
     } else {
       const hints = [];
-      if (!st.ok.present) hints.push(parseNum(st.vals.present) === 10 ? 'Ten people started the year, but two are gone by July — P6 moved away, P9 died of something else. A photograph only shows who is in the frame.' : 'Count the circles on the camera line: every person still in the frame in July.');
-      if (!st.ok.ill) hints.push(parseNum(st.vals.ill) === 4 ? 'P7 falls ill in October — not yet in the picture.' : 'Red circles on the camera line: P2 (ill since January), P3 (since March), P4 (since May, recovers in August).');
-      if (!st.ok.prev && st.ok.present && st.ok.ill) hints.push('Prevalence = ill ÷ present. Type it as 3/8, 0.375 or 37.5%.');
+      const vp = parseNum(st.vals.present), vi = parseNum(st.vals.ill);
+      if (!st.ok.present) hints.push(vp === 10 && present < 10 ? 'Ten people started the year, but not all of them are still in the frame: look for “moved away” and “died of something else” to the left of the camera line.' : 'Count the circles on the camera line — every person still in the frame that month, ill or well.');
+      if (!st.ok.ill) hints.push(vi > ill ? 'Only people who are ill AT THAT MOMENT count: red circles on the camera line. Someone who falls ill later, or has already recovered, is not ill in this picture.' : 'Count the red circles on the camera line.');
+      if (!st.ok.prev && st.ok.present && st.ok.ill) hints.push('Prevalence = ill ÷ present. Type it as a fraction, a decimal or a percentage.');
       st.msg = 'bad:' + hints.join(' ');
     }
-  } else {
-    /* ENE-COVID */
+  } else if (st.part === 1) {
     st.ok.spain = nearProp(st.vals.spain, 3050 / 61075, 0.002);
     if (st.ok.spain) { st.part = 2; S.done[2] = true; logIdea('photo'); st.msg = 'good:5.0%. Same arithmetic, 61,075 people: positives ÷ tested, at one moment. A photograph of a whole country, taken between 27 April and 11 May 2020.'; }
-    else st.msg = 'bad:Positives ÷ people tested: 3,050 ÷ 61,075. Type it as a decimal or a percentage.';
+    else st.msg = 'bad:Positives ÷ people tested: 3,050 ÷ 61,075. Type a decimal or a percentage.';
   }
+  render();
+}
+function nextPhoto() {
+  const st = S.s2;
+  st.q++; st.vals = {}; st.ok = {}; st.solved = false; st.msg = '';
+  if (st.q >= PHOTOS.length) st.part = 1;
   render();
 }
 
 function renderStage2() {
   const st = S.s2;
   const [kind, msg] = st.msg ? st.msg.split(/:(.*)/s) : ['', ''];
+  const ph = PHOTOS[st.q];
   const doneBar = S.done[2] ? h('div', { class: 'donebar' },
-    h('span', {}, 'Prevalence has no memory. It does not care when anyone fell ill or whether they will recover — only who has it in the frame, now.'),
+    h('span', {}, 'Prevalence has no memory. It does not care when anyone fell ill or whether they will recover — only who has the disease in the frame, right now.'),
     h('button', { class: 'act', type: 'button', onclick: () => go(3) }, 'Next: the film →')) : null;
   return h('section', { class: 'stagegrid' },
     h('div', { class: 'card scene' },
@@ -504,22 +523,27 @@ function renderStage2() {
           oninput: (ev) => { st.month = parseInt(ev.target.value, 10); $('#scene').replaceWith(drawCohort({ camera: st.month })); $('#camVal').textContent = 'mid-' + MONTH_NAMES[st.month - 1]; } }),
         h('span', { class: 'val', id: 'camVal' }, 'mid-' + MONTH_NAMES[st.month - 1])),
       st.part === 0 ? h('div', { class: 'calc' },
-        field('s2', 'present', 'People in the frame in mid-July', { ph: 'how many', onenter: check2 }),
+        h('p', { class: 'stmt' }, `Photograph ${st.q + 1} of ${PHOTOS.length} · set the camera to mid-${MONTH_NAMES[ph.month - 1]} and read the picture.`),
+        field('s2', 'present', 'People in the frame', { ph: 'how many', onenter: check2 }),
         field('s2', 'ill', 'Of them, ill at that moment', { ph: 'how many', onenter: check2 }),
-        field('s2', 'prev', 'Point prevalence in mid-July', { ph: '3/8 or 37.5%', onenter: check2 })) : null,
+        field('s2', 'prev', 'Point prevalence = ill ÷ present', { ph: 'fraction, decimal or %', onenter: check2 }),
+        h('div', { class: 'scenebtns' },
+          st.solved
+            ? h('button', { class: 'act', type: 'button', onclick: nextPhoto }, st.q === PHOTOS.length - 1 ? 'Now a real survey →' : 'Next photograph →')
+            : h('button', { class: 'act', type: 'button', onclick: check2 }, 'Check'))) : null,
       st.part === 1 ? h('div', { class: 'calc' },
         h('p', { class: 'stmt' }, 'ENE-COVID, Spain, spring 2020: 61,075 people tested for antibodies in one survey round; about 3,050 were positive. Point prevalence?'),
-        field('s2', 'spain', 'Seroprevalence', { ph: 'decimal or %', onenter: check2 })) : null,
-      st.part < 2 ? h('div', { class: 'scenebtns' }, h('button', { class: 'act', type: 'button', onclick: check2 }, 'Check')) : null,
+        field('s2', 'spain', 'Seroprevalence = positives ÷ tested', { ph: 'decimal or %', onenter: check2 }),
+        h('div', { class: 'scenebtns' }, h('button', { class: 'act', type: 'button', onclick: check2 }, 'Check'))) : null,
       h('p', { class: 'toast' + (kind === 'good' ? ' good' : '') }, msg),
       doneBar),
     h('aside', { class: 'card rx' },
       h('h3', {}, 'Point prevalence'),
       h('div', { class: 'eq' }, 'prevalence(t) = ill at t ÷ present at t'),
-      h('p', {}, 'A proportion, so it lives between 0 and 1. It has no time in the denominator — the camera clicks once. Cross-sectional surveys produce exactly this number, which is why they can answer “how much?” and never “how fast?”.'),
-      h('p', { class: 'sub' }, 'Two people vanish from the frame before July. Prevalence does not ask why. Incidence will — next station.'),
+      h('p', {}, 'A proportion, between 0 and 1. There is no time in the denominator: the camera clicks once. Cross-sectional surveys produce exactly this number — they can answer “how much?” but not “how fast?”.'),
+      h('p', { class: 'sub' }, 'Two things change the picture from month to month: people leave the frame (they move away or die of something else), and people enter or leave the disease. Prevalence does not ask why. Incidence will — next station.'),
       h('details', { class: 'fine' }, h('summary', {}, 'Period prevalence, for completeness'),
-        h('p', {}, 'Sometimes a paper counts everyone who had the disease at any point during a period (“12-month prevalence of opioid use disorder”). That is a longer exposure of the same camera, not a film: it still has people, not person-time, underneath.'))
+        h('p', {}, 'Sometimes a paper counts everyone who had the disease at any point during a period (“12-month prevalence of opioid use disorder”). That is a longer exposure of the same camera, not a film: it still divides by people, not by person-time.'))
     ));
 }
 
@@ -532,19 +556,31 @@ function check3() {
     st.ok.cases = nearNum(st.vals.cases, 3, 0);
     st.ok.ci = nearProp(st.vals.ci, 3 / 9, 0.006);
     if (st.ok.risk0 && st.ok.cases && st.ok.ci) {
-      st.part = 1; st.msg = 'good:3 new cases among 9 people at risk — 33%. P2 is in the film but not in the cast list: already ill in January, she could not become a new case.';
+      st.part = 1; st.msg = 'good:3 new cases among 9 people at risk — 33% over the year. P2 is in the film but not in the count: she was already ill in January, so she could not become a new case.';
     } else {
       const hints = [];
-      if (!st.ok.risk0) hints.push(parseNum(st.vals.risk0) === 10 ? 'P2 was already ill in January. You cannot become a case you already are — 10 present, 9 at risk.' : 'Everyone present in January who did not yet have the disease.');
+      if (!st.ok.risk0) hints.push(parseNum(st.vals.risk0) === 10 ? 'P2 was already ill in January. You cannot become a case you already are — 10 people present, 9 at risk.' : 'At risk = present in January AND not yet ill.');
       if (!st.ok.cases) hints.push('New cases are the red dots: P3 (March), P4 (May), P7 (October). P2 has no dot — she was ill before the film started.');
-      if (!st.ok.ci && st.ok.risk0 && st.ok.cases) hints.push('Cumulative incidence = new cases ÷ at risk at the start: 3/9.');
+      if (!st.ok.ci && st.ok.risk0 && st.ok.cases) hints.push('Cumulative incidence = new cases ÷ people at risk at the start: 3 ÷ 9.');
       st.msg = 'bad:' + hints.join(' ');
     }
-  } else {
+  } else if (st.part === 1) {
+    st.ok.ci6 = nearProp(st.vals.ci6, 2 / 9, 0.006);
+    if (st.ok.ci6) { st.part = 2; st.msg = 'good:2 of 9 — 22%. Same people, same disease, shorter film: P7 falls ill in October, after the camera stopped. The number changed because the period changed. That is why a risk always comes with its period.'; }
+    else st.msg = 'bad:Count the red dots that happen in January–June (P3 in March, P4 in May), still over the 9 people at risk in January.';
+  } else if (st.part === 3) {
     st.ok.per100k = nearNum(st.vals.per100k, 100000 / 6637, 0.15);
-    if (st.ok.per100k) { st.part = 2; S.done[3] = true; logIdea('film'); st.msg = 'good:15.1 per 100,000 — the same risk, in the units a surveillance table prints. One in 6,637 and 15.1 per 100,000 are one finding, not two.'; }
-    else st.msg = 'bad:100,000 ÷ 6,637. The risk is 1/6,637 per person; multiply by 100,000 people.';
+    if (st.ok.per100k) { st.part = 4; S.done[3] = true; logIdea('film'); st.msg = 'good:15.1 per 100,000 — the same risk in the units a surveillance table prints. One in 6,637 and 15.1 per 100,000 are one finding, not two.'; }
+    else st.msg = 'bad:The risk is 1 ÷ 6,637 per person. For 100,000 people: 100,000 ÷ 6,637.';
   }
+  render();
+}
+function mcq3(i) {
+  const st = S.s3;
+  if (st.part !== 2) return;
+  st.mcq = i;
+  if (i === 1) { st.part = 3; st.msg = 'good:Yes. 3 ÷ 9 treats P6 and P9 as if they had been watched — and stayed well — until December. Nobody knows that. If either had fallen ill after leaving, the count would be wrong and too low. Dropping them instead (3 ÷ 7) throws away real months in which nothing happened. Station 4 solves this properly.'; }
+  else st.msg = 'bad:' + (i === 0 ? 'They were well when they left — but the year went on without us watching. What the number assumes about those months is the problem.' : 'Removing them (3 ÷ 7) throws away the months they WERE watched and well — real information. Think about what 3 ÷ 9 silently assumes instead.');
   render();
 }
 
@@ -552,29 +588,41 @@ function renderStage3() {
   const st = S.s3;
   const [kind, msg] = st.msg ? st.msg.split(/:(.*)/s) : ['', ''];
   const doneBar = S.done[3] ? h('div', { class: 'donebar' },
-    h('span', {}, 'Incidence needs three things: new cases, a cast list of who could become one, and a period. Lose any of the three and the number means nothing.'),
+    h('span', {}, 'Incidence needs three things: new cases, the people who could become one, and a period. Lose any of the three and the number means nothing.'),
     h('button', { class: 'act', type: 'button', onclick: () => go(4) }, 'Next: person-time →')) : null;
+  const MC = ['Nothing — they were well when they left, so 3 ÷ 9 is exact', 'It counts them as watched and well until December, which nobody knows — if either had fallen ill later, 3 ÷ 9 would be too low', 'They should simply be removed: the right answer is 3 ÷ 7'];
   return h('section', { class: 'stagegrid' },
     h('div', { class: 'card scene' },
       drawCohort({ newCases: true, caption: 'the whole year on one screen · red dots = new cases' }),
       st.part === 0 ? h('div', { class: 'calc' },
-        field('s3', 'risk0', 'People at risk in January (could still become a case)', { ph: 'how many', onenter: check3 }),
-        field('s3', 'cases', 'New cases during the year', { ph: 'how many', onenter: check3 }),
-        field('s3', 'ci', 'Cumulative incidence over the year', { ph: '1/3 or 33%', onenter: check3 })) : null,
+        h('p', { class: 'stmt' }, 'The film runs from January to December.'),
+        field('s3', 'risk0', 'People at risk in January (present and not yet ill)', { ph: 'how many', onenter: check3 }),
+        field('s3', 'cases', 'New cases during the year (red dots)', { ph: 'how many', onenter: check3 }),
+        field('s3', 'ci', 'Cumulative incidence over the year = new cases ÷ at risk', { ph: 'fraction, decimal or %', onenter: check3 }),
+        h('div', { class: 'scenebtns' }, h('button', { class: 'act', type: 'button', onclick: check3 }, 'Check'))) : null,
       st.part === 1 ? h('div', { class: 'calc' },
-        h('p', { class: 'stmt' }, 'Israel, 2021: among males aged 16–19, myocarditis within 30 days of the second dose occurred in about 1 in 6,637. Surveillance tables print risks per 100,000. Convert.'),
-        field('s3', 'per100k', 'Cases per 100,000 vaccinated', { ph: 'per 100,000', onenter: check3 })) : null,
-      st.part < 2 ? h('div', { class: 'scenebtns' }, h('button', { class: 'act', type: 'button', onclick: check3 }, 'Check')) : null,
+        h('p', { class: 'stmt' }, 'Think: the same study, but the money runs out and the film stops at the end of June. Cumulative incidence over those six months?'),
+        field('s3', 'ci6', 'Six-month cumulative incidence', { ph: 'fraction, decimal or %', onenter: check3 }),
+        h('div', { class: 'scenebtns' }, h('button', { class: 'act', type: 'button', onclick: check3 }, 'Check'))) : null,
+      st.part >= 2 && st.part <= 3 ? h('div', { class: 'calc' },
+        h('p', { class: 'stmt' }, 'Think: P6 moved away in June and P9 died of something else in April. 3 ÷ 9 keeps both in the denominator. What does that do to the number?'),
+        h('div', { class: 'scenebtns', style: 'flex-direction:column;align-items:stretch' },
+          ...MC.map((t, i) => h('button', { class: 'act' + (st.part === 3 ? (i === 1 ? ' good' : ' alt') : ' alt'), type: 'button', style: 'text-align:left',
+            disabled: st.part === 3 ? 'disabled' : null, onclick: () => mcq3(i) }, t)))) : null,
+      st.part === 3 ? h('div', { class: 'calc' },
+        h('p', { class: 'stmt' }, 'Israel, 2021: among males aged 16–19, myocarditis within 30 days of the second dose occurred in about 1 in 6,637. Surveillance tables print risks per 100,000 people. Convert.'),
+        field('s3', 'per100k', 'Cases per 100,000 vaccinated = 100,000 ÷ 6,637', { ph: 'per 100,000', onenter: check3 }),
+        h('div', { class: 'scenebtns' }, h('button', { class: 'act', type: 'button', onclick: check3 }, 'Check'))) : null,
       h('p', { class: 'toast' + (kind === 'good' ? ' good' : '') }, msg),
       doneBar),
     h('aside', { class: 'card rx' },
       h('h3', {}, 'Cumulative incidence (risk)'),
-      h('div', { class: 'eq' }, 'risk = new cases in the period ÷ people at risk at the start'),
-      h('p', {}, 'Also a proportion, also between 0 and 1 — but it carries a period in its name: “one-year risk”, “30-day risk”. Quote the risk without the period and you have quoted nothing.'),
-      h('p', { class: 'sub' }, 'The denominator is the cast list: people who could still become a case. Prevalent cases are off the list. So are people immune for life, and — in a cohort of injecting drug users — people already infected with hepatitis C.'),
-      h('p', { class: 'sub' }, 'The honest flaw: 3/9 assumes all nine were watched all year. P6 left in June, P9 died in April. Had P9 fallen ill in November, nobody would know. Station 4 repairs this.'),
+      h('div', { class: 'eq' }, 'risk = new cases ÷ people at risk at the start'),
+      h('p', {}, 'Also a proportion between 0 and 1 — but it always comes with a period: “one-year risk”, “30-day risk”. A risk without its period means nothing.'),
+      h('p', { class: 'sub' }, 'The denominator is everyone who could still become a case. People who already have the disease are not in it. Neither are people who are immune for life — or, in a cohort of people who inject drugs, those already infected with hepatitis C.'),
+      h('p', { class: 'sub' }, 'The weak point: this formula assumes everyone at risk was watched for the whole period. In real cohorts people leave. Station 4 fixes this.'),
       h('details', { class: 'fine' }, h('summary', {}, 'Attack rate'),
-        h('p', {}, 'In an outbreak the one-period cumulative incidence is called the attack rate — a “rate” by tradition only. It is a proportion: ill ÷ exposed. The 2011 German E. coli restaurant cohort was computed exactly this way, dish by dish.'))
+        h('p', {}, 'In an outbreak the cumulative incidence over the outbreak is called the attack rate — a “rate” by tradition only. It is a proportion: ill ÷ exposed. The 2011 German E. coli restaurant cohort was computed exactly this way, dish by dish.'))
     ));
 }
 
@@ -582,6 +630,8 @@ function renderStage3() {
 
 const PT_HINTS = {
   120: 'That is 10 people × 12 months. But P2 was never at risk, and the people who fell ill, moved away or died stopped contributing when they did.',
+  27:  'You added only the five people something happened to (3 + 5 + 9 + 6 + 4). The four who stayed well all year — P1, P5, P8, P10 — contributed 12 months each. Their time counts too: 48 more.',
+  48:  'That is the four people who stayed well all year (4 × 12). The other five also spent time at risk before something happened to them: P3 3, P4 5, P7 9, P6 6, P9 4.',
   108: 'You dropped P2 — good — but kept everyone else for 12 months. P3 stops contributing in March, P4 in May, P7 in October, P6 in June, P9 in April.',
   89:  'You stopped at illness but kept the leavers for the whole year. P6 contributes 6 months, P9 contributes 4 — they were not there after that.',
   87:  'You handled the leavers and the cases — but P2 is still in. Already ill in January: zero months at risk.',
@@ -595,13 +645,13 @@ function check4() {
     st.ok.rate = nearNum(st.vals.rate, 100 * 3 / total, 0.05);
     if (st.ok.pm && st.ok.rate) {
       st.part = 1; st.reveal = true;
-      st.msg = 'good:3 cases ÷ 75 person-months = 4 per 100 person-months (48 per 100 person-years — a tiny cohort gives wild units). Every month anyone spent at risk is in the denominator, including P6’s six and P9’s four.';
+      st.msg = 'good:3 cases ÷ 75 person-months = 0.04 per person-month = 4 per 100 person-months. Every month anyone spent at risk is in the denominator, including P6’s six and P9’s four.';
     } else {
       const v = parseNum(st.vals.pm);
       const hint = PT_HINTS[v];
       const hints = [];
       if (!st.ok.pm) hints.push(hint !== undefined && hint ? hint : 'Add the months each person spent well AND present: P1 12 · P2 0 · P3 3 · P4 5 · P5 12 · P6 6 · P7 9 · P8 12 · P9 4 · P10 12. Toggle “show time at risk” to see the segments.');
-      if (st.ok.pm && !st.ok.rate) hints.push('Rate = 3 cases ÷ 75 person-months = 0.04 per person-month → 4 per 100 person-months.');
+      if (st.ok.pm && !st.ok.rate) hints.push('Rate = cases ÷ person-months = 3 ÷ 75 = 0.04 per person-month. Multiply by 100 to express it per 100 person-months: 4.');
       st.msg = 'bad:' + hints.join(' ');
     }
     render();
@@ -620,7 +670,7 @@ function renderStage4() {
   const st = S.s4;
   const [kind, msg] = st.msg ? st.msg.split(/:(.*)/s) : ['', ''];
   const doneBar = S.done[4] ? h('div', { class: 'donebar' },
-    h('span', {}, 'Rates keep the leavers. When follow-up is uneven — and in addiction cohorts it always is — person-time is the denominator that does not lie about who was watched.'),
+    h('span', {}, 'Rates count the time people were really watched. When follow-up is uneven — and in addiction cohorts it always is — person-time is the honest denominator.'),
     h('button', { class: 'act', type: 'button', onclick: () => go(5) }, 'Next: the reservoir →')) : null;
   const MC = ['11.3% of patients died during the study', '11.3 deaths for every 1,000 years that patients, taken together, spent in treatment', '11.3 deaths per 1,000 patients, however long each stayed'];
   return h('section', { class: 'stagegrid' },
@@ -630,8 +680,8 @@ function renderStage4() {
         h('button', { class: 'act alt', type: 'button', onclick: () => { st.reveal = !st.reveal; render(); } }, st.reveal ? 'Hide time at risk' : 'Show time at risk'),
         h('span', { class: 'meter' }, 'new cases: ', h('b', {}, '3'))),
       st.part === 0 ? h('div', { class: 'calc' },
-        field('s4', 'pm', 'Total person-months at risk (all ten people)', { ph: 'person-months', onenter: check4 }),
-        field('s4', 'rate', 'Incidence rate per 100 person-months', { ph: 'per 100 p-m', onenter: check4 }),
+        field('s4', 'pm', 'Total person-months at risk — add up every person’s months (ten people)', { ph: 'person-months', onenter: check4 }),
+        field('s4', 'rate', 'Incidence rate per 100 person-months = cases ÷ person-months × 100', { ph: 'per 100 person-months', onenter: check4 }),
         h('div', { class: 'scenebtns' }, h('button', { class: 'act', type: 'button', onclick: check4 }, 'Check'))) : null,
       st.part >= 1 ? h('div', { class: 'calc' },
         h('p', { class: 'stmt' }, 'Sordo et al., BMJ 2017, pooling 19 cohorts: all-cause mortality was 11.3 per 1,000 person-years in methadone treatment and 36.1 out of it. What does “11.3 per 1,000 person-years” mean?'),
@@ -642,10 +692,11 @@ function renderStage4() {
       doneBar),
     h('aside', { class: 'card rx' },
       h('h3', {}, 'Incidence rate (incidence density)'),
-      h('div', { class: 'eq' }, 'rate = new cases ÷ Σ time each person spent at risk'),
-      h('p', {}, 'Not a proportion: the denominator is person-time, so the number can exceed 1 and must carry its unit — per 100 person-months, per 1,000 person-years. Change the unit and the number changes with it; the risk underneath does not.'),
-      h('p', { class: 'sub' }, 'A person stops contributing the moment they become a case, leave, or die of something else. Nothing is thrown away: six months of P6 are six months of evidence that nothing happened.'),
-      h('p', { class: 'sub' }, 'Why the addiction literature lives in rates: cohorts of people who inject drugs lose a third of participants within two years, and those who leave are not a random third. A risk pretends they were watched; a rate admits how long they were.'),
+      h('div', { class: 'eq' }, 'rate = new cases ÷ (sum of every person’s time at risk)'),
+      h('div', { class: 'eq' }, 'per 100 person-months: cases ÷ person-months × 100'),
+      h('p', {}, 'Not a proportion: the denominator is person-time. The number can be larger than 1 and must always carry its unit — per 100 person-months, per 1,000 person-years. Change the unit and the number changes; what happened to the people does not.'),
+      h('p', { class: 'sub' }, 'A person stops adding time the moment they become a case, leave, or die of something else. Nothing is thrown away: P6’s six months are six months in which nothing happened — and they count.'),
+      h('p', { class: 'sub' }, 'Why addiction research uses rates: cohorts of people who inject drugs lose about a third of participants within two years, and those who leave are not a random third. A risk pretends everyone was watched; a rate counts how long each person really was.'),
       h('details', { class: 'fine' }, h('summary', {}, 'Risk from rate'),
         h('p', {}, 'For a short period and a small rate, risk ≈ rate × time: 11.3 per 1,000 person-years ≈ 1.1% per year. The approximation breaks when the rate is large or the period long — then risk = 1 − e^(−rate × time).'))
     ));
@@ -746,7 +797,7 @@ const QUIZ = [
     opts: ['Incidence', 'Prevalence', 'A mortality rate'],
     a: 1, why: 'Everyone who has it now — a stock, a photograph. Prevalence.' },
   { q: 'New HIV infections have fallen by about two-thirds since the mid-1990s, yet prevalence keeps rising. Possible?',
-    opts: ['No — one of the two reports must be wrong', 'Yes — treatment lengthens duration, so P ≈ I × D rises even as I falls', 'Yes — prevalence is just new cases counted twice'],
+    opts: ['No — one of the two reports must be wrong', 'Yes — people on treatment live much longer, so prevalence (≈ incidence × duration) rises even while new infections fall', 'Yes — prevalence is just new cases counted twice'],
     a: 1, why: 'Prevalence ≈ incidence × duration. Antiretroviral therapy multiplied the duration; the tub fills while the tap is turned down.' },
   { q: 'A cohort of 200 people who inject drugs is followed for hepatitis C. Many leave after a few months; 40 seroconvert. Which measure uses the time of the people who left?',
     opts: ['Cumulative incidence, 40/200', 'The incidence rate per 100 person-years', 'Point prevalence at the final visit'],
