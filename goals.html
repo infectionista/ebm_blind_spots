@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>EBM Through Blind Spots — Learning Goals</title>
+<style>
+/* Layout: a wall map of the 11-14 science curriculum. One big zoomable
+   force-graph canvas, a legend of unit chips above it, and a detail panel
+   that slides in on selection. Nodes carry resource slots for trainers and
+   readings; so do edges. Light white-and-lilac Meridian theme — same family
+   as Build a Tree, Make and Break, Copy the Code. */
+:root {
+  color-scheme: light;
+  --paper:     #F8EACF;
+  --panel:     #FFFDF6;
+  --panel-2:   #F5E7C8;
+  --line:      #D9C9A6;
+  --fg:        #2A2622;
+  --fg-dim:    #8C8478;
+  --violet:      #0B5359;
+  --violet-soft: #DCEAE8;
+  --mint:        #DDE8DF;
+  --mint-deep:   #2F6B4F;
+  --pink-deep:   #7A2E3E;
+  --orange-deep: #96661F;
+  --ui:   -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--paper); color: var(--fg);
+  font-family: var(--ui); font-size: 15px; line-height: 1.55; margin: 0;
+}
+.wrap {
+  max-width: 1280px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: max(22px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(30px, env(safe-area-inset-bottom, 0px));
+}
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--violet); }
+h1 { font-size: clamp(24px, 4.6vw, 36px); font-weight: 800; letter-spacing: -.02em; line-height: 1.1; margin: 6px 0 0; text-wrap: balance; }
+h1 .hi { color: var(--violet); }
+.lede { margin: 8px 0 0; color: var(--fg-dim); max-width: 78ch; font-size: 14px; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 7px; margin: 14px 0 10px; align-items: center; }
+.uchip {
+  font: 600 12px/1 var(--ui); border-radius: 999px; padding: 7px 12px;
+  border: 1.5px solid; cursor: pointer; background: #fff; white-space: nowrap;
+}
+.uchip.off { opacity: .3; }
+.uchip:focus-visible, .ghost:focus-visible, .lnk:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+.ghost {
+  font: 600 12px/1 var(--ui); color: var(--fg-dim); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 9px; padding: 8px 12px; cursor: pointer;
+}
+.ghost:hover { color: var(--violet); border-color: var(--violet); }
+.ghost[aria-pressed="true"] { background: var(--violet); border-color: var(--violet); color: #fff; }
+.hint { font-size: 12px; color: var(--fg-dim); margin-left: auto; }
+
+.stage { position: relative; }
+#graphCard {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  overflow: hidden; height: min(72vh, 760px); min-height: 440px;
+}
+#graph { width: 100%; height: 100%; display: block; cursor: grab; -webkit-user-select: none; user-select: none; }
+#graph text { -webkit-user-select: none; user-select: none; }
+#graph:active { cursor: grabbing; }
+
+.node { cursor: pointer; }
+.node .shape { stroke-width: 2; }
+.node text.emoji { font-size: 9.5px; font-weight: 700; font-family: var(--mono); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.trailpath { fill: none; stroke: var(--violet); stroke-width: 5; stroke-opacity: .35; stroke-linecap: round; stroke-dasharray: 10 8; }
+.trailnum circle { fill: var(--violet); stroke: #fff; stroke-width: 1.5; }
+.trailnum text { fill: #fff; font: 700 10px var(--ui); text-anchor: middle; }
+.trailnum.done circle { fill: var(--mint-deep); }
+.node.earned .shape { stroke: var(--mint-deep) !important; stroke-width: 3.5 !important; }
+#kidDialog { position: fixed; top: 86px; right: 18px; z-index: 50; background: var(--panel);
+  border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; width: 248px;
+  box-shadow: 0 10px 30px rgba(22,25,37,.14); display: flex; flex-direction: column; gap: 8px; }
+#kidDialog b { font-size: 13px; }
+#kidDialog input { font: 500 14px var(--ui); padding: 8px 10px; border: 1px solid var(--line);
+  border-radius: 8px; background: var(--paper); color: var(--fg); }
+#kidErr { font-size: 12px; color: var(--pink-deep); min-height: 1em; }
+#kidStat { font-size: 12.5px; color: var(--mint-deep); font-weight: 700; }
+/* progress sign-in temporarily hidden (2026-11-06, Oksana's call) —
+   remove this rule to bring it back */
+#kidBtn, #kidStat, #kidDialog { display: none !important; }
+.node text.lbl  { font-family: var(--ui); font-size: 10.5px; font-weight: 600; fill: var(--fg); text-anchor: middle; pointer-events: none;
+                  paint-order: stroke; stroke: var(--paper); stroke-width: 3.5px; stroke-linejoin: round; }
+.node.dim { opacity: .14; }
+.node.sel .shape { stroke-width: 3.5; }
+.badge-link { cursor: pointer; }
+.badge-link .core { fill: var(--violet); stroke: #fff; stroke-width: 1.5; transition: fill .15s; }
+.badge-link:hover .core { fill: #5A1FD6; }
+.badge-link.k-slides .core { fill: var(--mint-deep); stroke: #fff; }
+.badge-link.k-slides .halo { stroke: var(--mint-deep); }
+.badge-link.k-slides:hover .core { fill: #086a5b; }
+.badge-link.k-reading .core { fill: var(--pink-deep); stroke: #fff; }
+.badge-link.k-reading .halo { stroke: var(--pink-deep); }
+.badge-link.k-reading:hover .core { fill: #934669; }
+.badge-link.k-assignment .core { fill: var(--orange-deep); stroke: #fff; }
+.badge-link.k-assignment .halo { stroke: var(--orange-deep); }
+.badge-link.k-assignment:hover .core { fill: #b34a0e; }
+.badge-link.k-notes .core { fill: #51483C; stroke: #fff; }
+.badge-link.k-notes .halo { stroke: #51483C; }
+.badge-link.k-notes:hover .core { fill: #3a332b; }
+.badge-link .halo { fill: none; stroke: var(--violet); stroke-width: 2;
+  transform-box: fill-box; transform-origin: center; animation: haloPulse 2.2s ease-out infinite; }
+@keyframes haloPulse { 0% { transform: scale(.7); opacity: .55; } 70% { transform: scale(1.3); opacity: 0; } 100% { transform: scale(1.3); opacity: 0; } }
+
+.link { fill: none; stroke-linecap: round; }
+.link.unit { stroke-width: 1.6; stroke-opacity: .5; }
+.link.cross { stroke: var(--violet); stroke-width: 1.6; stroke-opacity: .55; stroke-dasharray: 5 5; }
+.link.dim { stroke-opacity: .05; }
+.link.sel { stroke-width: 3.2; stroke-opacity: .95; }
+.linkhit { stroke: transparent; stroke-width: 14px; fill: none; cursor: pointer; }
+
+#panel {
+  position: absolute; top: 14px; right: 14px; width: 330px; max-width: calc(100% - 28px);
+  max-height: calc(100% - 28px); overflow-y: auto;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 14px 16px; box-shadow: 0 10px 30px rgba(22,25,37,.10); display: none;
+}
+#panel.open { display: block; }
+#panel .close { position: absolute; top: 8px; right: 10px; border: 0; background: none; font-size: 18px; color: var(--fg-dim); cursor: pointer; line-height: 1; padding: 4px; }
+#panel .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 24px 8px 0; }
+.chip { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border-radius: 999px; padding: 4px 9px; white-space: nowrap; }
+#panel h3 { margin: 2px 0 6px; font-size: 15px; line-height: 1.35; letter-spacing: -.01em; }
+#panel .goal { font-size: 13.5px; margin: 6px 0; }
+#panel .ev { font-size: 12px; color: var(--fg-dim); margin: 6px 0 0; }
+#panel .why { font-size: 13px; background: var(--panel-2); border-radius: 8px; padding: 8px 10px; margin: 8px 0; }
+#panel .rsec { margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 10px; }
+#panel .rsec h4 { margin: 0 0 6px; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--violet); }
+.lnk {
+  display: block; font: 600 13px/1.3 var(--ui); color: var(--violet); text-decoration: none;
+  background: var(--violet-soft); border: 1px solid var(--violet); border-radius: 9px;
+  padding: 9px 11px; margin: 6px 0;
+}
+.lnk:hover { background: #E7DBFF; }
+.lnk .k { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-dim); display: block; margin-top: 2px; }
+.slot { font-size: 12.5px; color: var(--fg-dim); background: var(--paper); border: 1px dashed var(--line); border-radius: 9px; padding: 9px 11px; }
+
+.shapekey { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-top: 10px; font-size: 12px; color: var(--fg-dim); }
+.shapekey svg { vertical-align: -3px; margin-right: 5px; }
+
+.foot { color: var(--fg-dim); font-size: 12.5px; line-height: 1.7; margin-top: 16px; }
+.foot a { color: var(--violet); font-weight: 600; }
+
+@media (max-width: 760px) {
+  #panel { top: auto; bottom: 10px; left: 10px; right: 10px; width: auto; max-height: 48%; }
+  #graphCard { height: 70vh; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">PHF103 · Faculty of Liberal Arts and Sciences</div>
+  <h1>EBM Through Blind Spots — <span class="hi">the learning goals, as a map</span></h1>
+  <p class="lede">Every learning goal of the course on one connected map. Solid links grow a skill inside one part
+    of the course (Knowledge → Application → Creation); dashed links are bridges between parts. The Roman numeral on a goal
+    is the week that teaches it; weeks VIII and XIV are the controls, where goals are not taught but graded. Click any goal
+    or link to read what it asks and how it is checked — goals marked <b>⚡</b> carry the course trainer or a reading.
+    Pick a trail to follow one course-level outcome across the whole map. Drag to pan, scroll to zoom, drag goals to untangle.</p>
+  <div class="legend" id="legend"></div>
+  <div class="legend" id="trails"><span class="hint" style="margin:0">Trails:</span></div>
+  <div class="legend">
+    <button class="ghost" id="btnCross" aria-pressed="true" type="button">Cross-unit bridges: on</button>
+    <button class="ghost" id="btnReset" type="button">Reset view</button>
+    
+    <button class="ghost" id="kidBtn" type="button">👤 Who&rsquo;s exploring?</button>
+    <span id="kidStat"></span>
+    <span class="hint" id="hint"></span>
+  </div>
+  <div id="kidDialog" hidden>
+    <b>Sign in to collect achievements</b>
+    <input id="kidName" placeholder="Your name" autocomplete="off">
+    <input id="kidCode" placeholder="Secret code" inputmode="numeric" autocomplete="off">
+    <button class="ghost" id="kidGo" type="button">Let&rsquo;s go</button>
+    <button class="ghost" id="kidOut" type="button" hidden>Sign out</button>
+    <span id="kidErr"></span>
+  </div>
+</header>
+
+<div class="stage">
+  <div id="graphCard"><svg id="graph" role="img" aria-label="Interactive map of the course learning goals"></svg></div>
+  <aside id="panel" aria-live="polite">
+    <button class="close" id="panelClose" type="button" aria-label="Close">×</button>
+    <div id="panelBody"></div>
+  </aside>
+</div>
+
+<div class="shapekey" id="shapekey">
+  <span><svg width="16" height="16"><circle cx="8" cy="8" r="6.5" fill="#F1EAFF" stroke="#7733FF" stroke-width="2"/></svg>Knowledge</span>
+  <span><svg width="16" height="16"><rect x="2" y="2" width="12" height="12" rx="3" fill="#F1EAFF" stroke="#7733FF" stroke-width="2"/></svg>Application</span>
+  <span><svg width="18" height="18"><rect x="4.5" y="4.5" width="9" height="9" rx="2" fill="#F1EAFF" stroke="#7733FF" stroke-width="2" transform="rotate(45 9 9)"/></svg>Creation</span>
+  <span><b style="color:var(--violet)">⚡ trainer</b> · <b style="color:var(--mint-deep)">▶ slides</b> · <b style="color:var(--pink-deep)">≡ reading</b> · <b style="color:var(--orange-deep)">✎ assignment</b> · <b style="color:#51483C">§ class notes</b> — click the badge to open</span>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+'use strict';
+
+const DATA = {"units": {"1": {"name": "Foundations · weeks 0–I", "deep": "#3F5873", "soft": "#E3E6E9", "ax": 320, "ay": 250}, "2": {"name": "Instruments · II–IV", "deep": "#0B5359", "soft": "#D8E7E5", "ax": 830, "ay": 170}, "3": {"name": "Limits of instruments · V–VII", "deep": "#B4573A", "soft": "#F3DCD1", "ax": 1340, "ay": 300}, "4": {"name": "Systems that count · IX–XI", "deep": "#96661F", "soft": "#F1E4C6", "ax": 1300, "ay": 790}, "5": {"name": "The force that distorts · XII–XIII", "deep": "#7A2E3E", "soft": "#EFD9DA", "ax": 640, "ay": 860}, "6": {"name": "Controls & essay · VIII, XIV", "deep": "#2A2622", "soft": "#E9E1CF", "ax": 800, "ay": 510}}, "nodes": [{"id": "U1.K1", "unit": 1, "strand": "K", "label": "Blind spot vs error", "formal": "Week 0–I · The concept under record", "emoji": "I", "text": "I can define a blind spot as a limitation that follows from the design of the instrument — present when the study is executed perfectly — and distinguish it from an error of execution, which better conduct could have avoided.", "evidence": "Written definition taken down in session one; the distinction is required wording in both controls.", "links": [{"t": "Deck I · slides 3–12 — the Clancy case, bite marks, diagnostic windows", "u": "https://docs.google.com/presentation/d/1YXBgKhd-cjQBxbAt3_Cg02NE94pPfkI7O23u8p2Em_0/edit#slide=id.g3fa40d5f714_0_5", "k": "slides"}, {"t": "Deck I · slides 30–31 — the definition: blind spot vs error", "u": "https://docs.google.com/presentation/d/1YXBgKhd-cjQBxbAt3_Cg02NE94pPfkI7O23u8p2Em_0/edit#slide=id.g3fa40d5f714_0_130", "k": "slides"}, {"t": "Class notes · Session I — The Blind Spot", "u": "https://ebm-blind-spots.vercel.app/class-notes-01-blind-spot.pdf", "k": "notes"}]}, {"id": "U1.K2", "unit": 1, "strand": "K", "label": "The three translations", "formal": "Week 0–I · Research → media → reader", "emoji": "I", "text": "I can trace a finding through its translations — what the instrument could see, what the paper claims, what media and policy make of it, what the reader assembles — and say what is lost and added at each arrow.", "evidence": "The vaccine-trial example worked through in class; the frame returns in week XI.", "links": [{"t": "Deck I · slides 22–23 — the four translations", "u": "https://docs.google.com/presentation/d/1YXBgKhd-cjQBxbAt3_Cg02NE94pPfkI7O23u8p2Em_0/edit#slide=id.g3fa40d5f714_0_105", "k": "slides"}, {"t": "Deck I · slide 32 — the S0→S3 poster, drawn live", "u": "https://docs.google.com/presentation/d/1YXBgKhd-cjQBxbAt3_Cg02NE94pPfkI7O23u8p2Em_0/edit#slide=id.g3fa40d5f714_0_150", "k": "slides"}]}, {"id": "U1.A1", "unit": 1, "strand": "A", "label": "Rare-event arithmetic", "formal": "Week 0–I · What a sample size can see", "emoji": "I", "text": "I can estimate from sample size and event rate how many rare events a trial could have detected (n × rate), and state what “the trial showed no X” can and cannot mean.", "evidence": "In-class calculation: expected cases below one person.", "links": [{"t": "Deck I · slides 19–21 — the trial and its arithmetic", "u": "https://docs.google.com/presentation/d/1YXBgKhd-cjQBxbAt3_Cg02NE94pPfkI7O23u8p2Em_0/edit#slide=id.g3fa40d5f714_0_236", "k": "slides"}, {"t": "Class notes · Session I — The Blind Spot", "u": "https://ebm-blind-spots.vercel.app/class-notes-01-blind-spot.pdf", "k": "notes"}, {"t": "Class notes · Session II, part 1 — Counting: thalidomide, rare events, HIV", "u": "https://ebm-blind-spots.vercel.app/class-notes-02a-counting-1.pdf", "k": "notes"}]}, {"id": "U1.K3", "unit": 1, "strand": "K", "label": "Why these two objects", "formal": "Week I · Epidemics and addictions as the test bench", "emoji": "I", "text": "I can name the properties that make epidemics and addictions the hardest objects available: boundaries that are assigned rather than observed, measurement under stigma, exposures that resist randomisation, measurement that changes the measured, and a moral reading that arrives before the scientific one.", "evidence": "Five-properties table completed in session one; the essay topics draw on it.", "links": [{"t": "Deck I · slides 13–18 — Shulgin, n ≈ 12, and regulation", "u": "https://docs.google.com/presentation/d/1YXBgKhd-cjQBxbAt3_Cg02NE94pPfkI7O23u8p2Em_0/edit#slide=id.g3fa40d5f714_0_76", "k": "slides"}, {"t": "Deck I · slides 37–45 — why these two: the five properties", "u": "https://docs.google.com/presentation/d/1YXBgKhd-cjQBxbAt3_Cg02NE94pPfkI7O23u8p2Em_0/edit#slide=id.g3fa40d5f714_0_183", "k": "slides"}]}, {"id": "U1.K4", "unit": 1, "strand": "K", "label": "Synthesis inherits the hole", "formal": "Week I · Why a review is not a repair", "emoji": "I", "text": "I can explain why a systematic review of studies that share one design-inherent blind spot does not remove it, but averages over it and narrows the confidence interval around it.", "evidence": "Forest-plot demonstration (Sordo 2017) in session one; applied to the exemplary review before the final control.", "links": [{"t": "Ioannidis 2005 — Why Most Published Research Findings Are False", "u": "https://doi.org/10.1371/journal.pmed.0020124", "k": "reading"}, {"t": "Deck I · slides 33–35 — two forest plots over one hole", "u": "https://docs.google.com/presentation/d/1YXBgKhd-cjQBxbAt3_Cg02NE94pPfkI7O23u8p2Em_0/edit#slide=id.g3fa40d5f714_0_174", "k": "slides"}]}, {"id": "U2.K1", "unit": 2, "strand": "K", "label": "Incidence & prevalence", "formal": "Week II · Counting", "emoji": "II", "text": "I can define incidence and prevalence, relate them in time, and explain why a change in one is not by itself evidence of a change in the other.", "evidence": "In-class exercises, week II.", "links": [{"t": "Deck II · slides 46–50 — counting: incidence and prevalence", "u": "https://docs.google.com/presentation/d/1YXBgKhd-cjQBxbAt3_Cg02NE94pPfkI7O23u8p2Em_0/edit#slide=id.g3fa40d5f714_0_229", "k": "slides"}, {"t": "Class notes · Session II, part 1 — Counting: thalidomide, rare events, HIV", "u": "https://ebm-blind-spots.vercel.app/class-notes-02a-counting-1.pdf", "k": "notes"}]}, {"id": "U2.A1", "unit": 2, "strand": "A", "label": "The case definition", "formal": "Week II · What gets to be a case", "emoji": "II", "text": "I can find the case definition in a Methods section, reconstruct who it leaves out — the unreported, the asymptomatic, the ambiguous death — and say which of the paper’s conclusions survive that exclusion.", "evidence": "Methods-reading exercise in week II; a required step of the five-step read in both controls.", "links": [{"t": "Deck II · slides 51–56 — what counts as a case: the four levers", "u": "https://docs.google.com/presentation/d/1YXBgKhd-cjQBxbAt3_Cg02NE94pPfkI7O23u8p2Em_0/edit#slide=id.g3fb4a802c5a_0_21", "k": "slides"}, {"t": "Class notes · Session II, part 2 — Case definitions, counted deaths, the pyramid", "u": "https://ebm-blind-spots.vercel.app/class-notes-02b-counting-2.pdf", "k": "notes"}]}, {"id": "U2.K2", "unit": 2, "strand": "K", "label": "Counting under stigma", "formal": "Week II · The iceberg of unobserved events", "emoji": "II", "text": "I can explain why counted deaths and self-reports are products of toxicology practice, intent classification and stigma — properties of the counting system, not of the people counted — and predict the direction of the undercount.", "evidence": "Week II seminar; returns as a surveillance question in week IX.", "links": [{"t": "Deck II · slides 58–64 — counting the dead; measuring under stigma", "u": "https://docs.google.com/presentation/d/1YXBgKhd-cjQBxbAt3_Cg02NE94pPfkI7O23u8p2Em_0/edit#slide=id.g3fb4a802c5a_0_62", "k": "slides"}, {"t": "Deck II · slides 66–71 — the size of the gap; the mesh is the case definition", "u": "https://docs.google.com/presentation/d/1YXBgKhd-cjQBxbAt3_Cg02NE94pPfkI7O23u8p2Em_0/edit#slide=id.g3fb4a802c5a_0_103", "k": "slides"}, {"t": "Class notes · Session II, part 2 — Case definitions, counted deaths, the pyramid", "u": "https://ebm-blind-spots.vercel.app/class-notes-02b-counting-2.pdf", "k": "notes"}]}, {"id": "U2.K3", "unit": 2, "strand": "K", "label": "Fields of vision", "formal": "Week III · Foundational designs", "emoji": "III", "text": "For the cross-sectional, case-control, cohort, randomised and ecological designs, I can state what each observes in time, the question it can answer, and the question it structurally cannot.", "evidence": "Design-matching exercise, week III; the “design” step of the control read.", "links": [{"t": "Deck II→III · slides 83–87 — what studies cannot see", "u": "https://docs.google.com/presentation/d/1YXBgKhd-cjQBxbAt3_Cg02NE94pPfkI7O23u8p2Em_0/edit#slide=id.hf2a640accaf4af4_0_25", "k": "slides"}, {"t": "Class notes · Session III — Study designs and their fields of vision (RU)", "u": "https://ebm-blind-spots.vercel.app/class-notes-03-study-designs.pdf", "k": "notes"}]}, {"id": "U2.A2", "unit": 2, "strand": "A", "label": "Pick the instrument", "formal": "Week III · Matching design to question", "emoji": "III", "text": "Given a question about an epidemic or an addiction, I can choose a design that could answer it and name the characteristic blind spot of each cheaper alternative.", "evidence": "Homework after week III.", "links": []}, {"id": "U2.K4", "unit": 2, "strand": "K", "label": "Specialised instruments", "formal": "Week IV · Designs born of these two fields", "emoji": "IV", "text": "I can explain why epidemiology and addiction research built instruments of their own — transmission pairs, contact tracing, phylogenetics; treatment registries, prescription monitoring, wastewater — and which blind spot of the standard designs each was built to close.", "evidence": "Week IV seminar.", "links": []}, {"id": "U3.K1", "unit": 3, "strand": "K", "label": "Confounding & selection", "formal": "Week V · Why the treated differ", "emoji": "V", "text": "I can explain confounding by indication, healthy-user and sick-stopper effects, and selection into treatment: the treated differ from the untreated before any treatment, and not always in ways that can be measured — so adjustment covers only what was measured.", "evidence": "The opioid-agonist-therapy example from session one, now with its names; graded step of both controls.", "links": [{"t": "Deck I · slide 23 — the exercise you did before you had the vocabulary", "u": "https://docs.google.com/presentation/d/1YXBgKhd-cjQBxbAt3_Cg02NE94pPfkI7O23u8p2Em_0/edit#slide=id.g3fa40d5f714_0_117", "k": "slides"}, {"t": "Class notes · Session VII — The causal algorithm at work: opioids", "u": "https://ebm-blind-spots.vercel.app/class-notes-07-causal-algorithm.pdf", "k": "notes"}]}, {"id": "U3.A1", "unit": 3, "strand": "A", "label": "Draw the graph", "formal": "Week V · DAGs as a discipline", "emoji": "V", "text": "I can draw a directed acyclic graph for a claimed effect, mark the backdoor paths and colliders, and say which rival explanations adjustment can close and which it cannot.", "evidence": "DAG exercise, week V.", "links": [{"t": "Hernán & Robins, Causal Inference: What If — free book", "u": "https://miguelhernan.org/whatifbook", "k": "reading"}, {"t": "Deck II→III · slides 75–82 — causal relationships, opened", "u": "https://docs.google.com/presentation/d/1YXBgKhd-cjQBxbAt3_Cg02NE94pPfkI7O23u8p2Em_0/edit#slide=id.hf2a640accaf4af4_0_10", "k": "slides"}, {"t": "Class notes · Session IV — Necessary, sufficient, the four causal models", "u": "https://ebm-blind-spots.vercel.app/class-notes-04-causal-relationships.pdf", "k": "notes"}]}, {"id": "U3.A2", "unit": 3, "strand": "A", "label": "The causal pass", "formal": "Week V · From association to causation", "emoji": "V", "text": "I can take an observed association through the full pass — state the claim, check the order in time, name specific rivals before weighing evidence, read the nine guidelines as evidence against my own rivals — and give a verdict that does not contradict my own table.", "evidence": "The course trainer, completed on an assigned paper; the hand-in goes to the teacher.", "links": [{"t": "From Association to Causation — the course trainer", "u": "https://ebm-blind-spots.vercel.app/", "k": "trainer"}, {"t": "Class notes · Session VI — The nine guidelines and their rivals", "u": "https://ebm-blind-spots.vercel.app/class-notes-06-nine-guidelines.pdf", "k": "notes"}, {"t": "Class notes · Session VII — The causal algorithm at work: opioids", "u": "https://ebm-blind-spots.vercel.app/class-notes-07-causal-algorithm.pdf", "k": "notes"}]}, {"id": "U3.K2", "unit": 3, "strand": "K", "label": "What randomisation buys", "formal": "Week VI · The RCT, exactly", "emoji": "VI", "text": "I can state what randomisation actually achieves — groups that differ only by chance at baseline — and what it does not: blinding, retention, external validity, or the power to see rare events.", "evidence": "Week VI seminar.", "links": []}, {"id": "U3.A3", "unit": 3, "strand": "A", "label": "The ethical limit, tested", "formal": "Week VI · Heroin on trial", "emoji": "VI", "text": "I can use the six heroin-assisted-treatment RCTs to interrogate any claim that an exposure “cannot be randomised”, separating ethical limit from design choice, and explain what a pragmatic trial trades against an explanatory one.", "evidence": "Case discussion, week VI.", "links": []}, {"id": "U3.K3", "unit": 3, "strand": "K", "label": "Blinding & expectancy", "formal": "Week VII · When masks slip", "emoji": "VII", "text": "I can explain what blinding protects against, how expectancy can mimic a treatment effect, why active placebos exist, and how functional unblinding happens.", "evidence": "Week VII seminar; the load-bearing concept of week XIII.", "links": []}, {"id": "U3.A4", "unit": 3, "strand": "A", "label": "External validity", "formal": "Week VII · What travels from trial to clinic", "emoji": "VII", "text": "For a given trial I can say what transports from the research setting to clinic and population and what stays behind: who was enrolled, who was excluded, and what care surrounded them.", "evidence": "Week VII exercise; the “populations” step of the control read.", "links": []}, {"id": "U4.K1", "unit": 4, "strand": "K", "label": "Surveillance reflects the counter", "formal": "Week IX · Who gets counted", "emoji": "IX", "text": "I can explain why an incidence curve is a product of testing capacity, reporting lags and coroner practice — surveillance always reflects the system that does the counting — and read a surveillance curve accordingly.", "evidence": "Week IX seminar.", "links": []}, {"id": "U4.A1", "unit": 4, "strand": "A", "label": "The screening cascade", "formal": "Week IX · Who falls out", "emoji": "IX", "text": "I can follow a screening cascade — tested, diagnosed, linked, treated — count who drops out at each step, and say what the top-line coverage number conceals.", "evidence": "HIV/HCV cascade exercise, week IX.", "links": []}, {"id": "U4.K2", "unit": 4, "strand": "K", "label": "Models are assumptions", "formal": "Week X · Useful, dangerous, and the difference", "emoji": "X", "text": "I can read an epidemic model as assumptions wearing mathematics: name the compartments and key assumptions, explain uncertainty propagation, and say why most COVID-era failures were properties of assumptions rather than of data.", "evidence": "Model-reading exercise, week X.", "links": []}, {"id": "U4.A2", "unit": 4, "strand": "A", "label": "Evidence into policy", "formal": "Week XI · The second translation", "emoji": "XI", "text": "I can trace one body of evidence — methadone, naloxone, needle exchange — through guideline, national protocol and clinic practice, and mark where uptake stalled and what stalled it.", "evidence": "Case work, week XI.", "links": []}, {"id": "U5.K1", "unit": 5, "strand": "K", "label": "Stigma as instrument property", "formal": "Week XII · A measurement problem, not a moral one", "emoji": "XII", "text": "I can treat stigma as a property of the research system — it shapes which questions are funded, who participates, and what is reported — and predict the direction of the bias it leaves in the data.", "evidence": "Week XII seminar.", "links": []}, {"id": "U5.A1", "unit": 5, "strand": "A", "label": "The brain-disease debate", "formal": "Week XII · Science as policy ammunition", "emoji": "XII", "text": "I can lay out the brain-disease-model debate as a live case of evidence used as ammunition: separate the empirical disagreements from the rhetorical ones, and show how clinical language itself changes outcomes.", "evidence": "Structured debate, week XII.", "links": []}, {"id": "U5.K2", "unit": 5, "strand": "K", "label": "The gold standard, strained", "formal": "Week XIII · Psychedelics", "emoji": "XIII", "text": "I can explain why psychedelic trials strain the RCT at its joints — blinding fails by design, expectancy is both intervention and confounder, the field is commercialising — and read such a trial without landing on either “miracle cure” or “dangerous fraud”.", "evidence": "Trial reading, week XIII.", "links": []}, {"id": "U6.A1", "unit": 6, "strand": "A", "label": "Interim control", "formal": "Week VIII · An unseen cohort paper, read cold", "emoji": "VIII", "text": "Given a previously unseen cohort paper, I can produce a written appraisal in one sitting: design → populations → confounding and selection → what the paper sees and what it misses → what the abstract claims against what the data support.", "evidence": "The interim control, week VIII — 30% of the grade. Practised beforehand on Larochelle 2018 and Wakeman 2020.", "links": [{"t": "JBI critical appraisal checklists", "u": "https://jbi.global/critical-appraisal-tools", "k": "assignment"}, {"t": "ROBINS-I and RoB 2", "u": "https://www.riskofbias.info/", "k": "assignment"}, {"t": "Deck I · slides 25–29 — the course map, the controls, the grading", "u": "https://docs.google.com/presentation/d/1YXBgKhd-cjQBxbAt3_Cg02NE94pPfkI7O23u8p2Em_0/edit#slide=id.g3fa40d5f714_0_164", "k": "slides"}]}, {"id": "U6.C1", "unit": 6, "strand": "C", "label": "Final control", "formal": "Week XIV · A different instrument, same read", "emoji": "XIV", "text": "Given an unseen paper of a different methodological character, I can run the same read — now including blind spots that only appear at the level of evidence synthesis — and measure my final work against my own interim.", "evidence": "The final control, week XIV — 30% of the grade. Practised beforehand on the exemplary systematic review (Gariépy 2025).", "links": [{"t": "Sordo 2017 — OST mortality meta-analysis (BMJ, open)", "u": "https://www.bmj.com/content/357/bmj.j1550", "k": "reading"}]}, {"id": "U6.C2", "unit": 6, "strand": "C", "label": "The essay", "formal": "Weeks VIII–XIV · One blind spot, carried all the way", "emoji": "✎", "text": "I can carry one blind spot through an object of my own choice in 1500 words: what is known, what is not, and which instrument decides the difference — in a structured written argument.", "evidence": "Individual essay — 40% of the grade; topic agreed with the teacher.", "links": []}], "edges": [{"s": "U1.K1", "t": "U1.A1", "type": "unit", "reason": "The first blind spot you can compute: what the sample size makes invisible.", "links": []}, {"s": "U1.K1", "t": "U1.K4", "type": "unit", "reason": "A design-inherent hole, met again at the level of synthesis.", "links": []}, {"s": "U1.K2", "t": "U1.K3", "type": "unit", "reason": "The harder the object, the more each translation bends.", "links": []}, {"s": "U2.K1", "t": "U2.A1", "type": "unit", "reason": "Incidence and prevalence are only as good as the case definition behind them.", "links": []}, {"s": "U2.A1", "t": "U2.K2", "type": "unit", "reason": "After who counts as a case: who never reaches the count at all.", "links": []}, {"s": "U2.K3", "t": "U2.A2", "type": "unit", "reason": "Fields of vision known — now choose the instrument for the question.", "links": []}, {"s": "U2.K3", "t": "U2.K4", "type": "unit", "reason": "Where the standard designs stop seeing, the specialised ones begin.", "links": []}, {"s": "U3.K1", "t": "U3.A1", "type": "unit", "reason": "Confounders and colliders named in prose, then drawn as a graph.", "links": []}, {"s": "U3.A1", "t": "U3.A2", "type": "unit", "reason": "The DAG names the rivals; the causal pass makes them fight the evidence.", "links": []}, {"s": "U3.K2", "t": "U3.A3", "type": "unit", "reason": "What randomisation buys — and what it costs to buy it ethically.", "links": []}, {"s": "U3.K3", "t": "U3.A4", "type": "unit", "reason": "A blinded effect still has to travel out of the trial.", "links": []}, {"s": "U3.K2", "t": "U3.K3", "type": "unit", "reason": "Randomisation balances groups; only blinding restrains expectancy.", "links": []}, {"s": "U4.K1", "t": "U4.A1", "type": "unit", "reason": "The surveillance system seen from above, then walked step by step.", "links": []}, {"s": "U4.K1", "t": "U4.K2", "type": "unit", "reason": "Models are fed by surveillance — assumptions on top of a counting system.", "links": []}, {"s": "U4.K2", "t": "U4.A2", "type": "unit", "reason": "Model outputs are what policy quotes; trace what policy does with them.", "links": []}, {"s": "U5.K1", "t": "U5.A1", "type": "unit", "reason": "Stigma in the data, then stigma in the argument about the data.", "links": []}, {"s": "U5.K1", "t": "U5.K2", "type": "unit", "reason": "The same force, now inside the trial itself.", "links": []}, {"s": "U6.A1", "t": "U6.C1", "type": "unit", "reason": "The same read, a harder object — and your interim as the baseline.", "links": []}, {"s": "U6.A1", "t": "U6.C2", "type": "unit", "reason": "The essay grows out of the skills the interim certifies.", "links": []}, {"s": "U1.K1", "t": "U2.A1", "type": "cross", "reason": "The case definition is the first blind spot every paper carries.", "links": []}, {"s": "U1.A1", "t": "U3.K2", "type": "cross", "reason": "Rare-event arithmetic is a limit randomisation cannot lift.", "links": []}, {"s": "U1.K3", "t": "U5.K1", "type": "cross", "reason": "The hardest property of the hardest objects, studied in its own right.", "links": []}, {"s": "U1.K2", "t": "U4.A2", "type": "cross", "reason": "The second translation — from science to policy — in slow motion.", "links": []}, {"s": "U1.K4", "t": "U6.C1", "type": "cross", "reason": "The final control’s exemplar is a systematic review: synthesis-level holes apply.", "links": []}, {"s": "U2.K2", "t": "U4.K1", "type": "cross", "reason": "The iceberg of week II is the surveillance problem of week IX.", "links": []}, {"s": "U2.K3", "t": "U3.K1", "type": "cross", "reason": "Observational designs are exactly where confounding lives.", "links": []}, {"s": "U2.K3", "t": "U6.A1", "type": "cross", "reason": "The control read starts by naming the design.", "links": []}, {"s": "U2.K4", "t": "U4.K1", "type": "cross", "reason": "Wastewater and registries: specialised instruments doing surveillance.", "links": []}, {"s": "U3.K1", "t": "U6.A1", "type": "cross", "reason": "Confounding and selection: the graded heart of the interim read.", "links": []}, {"s": "U3.A2", "t": "U6.C2", "type": "cross", "reason": "The essay is the causal pass, written out in full prose.", "links": [{"t": "From Association to Causation — the course trainer", "u": "https://ebm-blind-spots.vercel.app/", "k": "trainer"}]}, {"s": "U3.K3", "t": "U5.K2", "type": "cross", "reason": "Functional unblinding, met where it is strongest.", "links": []}, {"s": "U3.A4", "t": "U4.A2", "type": "cross", "reason": "What does not transport from trial to clinic does not transport to policy either.", "links": []}, {"s": "U4.K2", "t": "U1.A1", "type": "cross", "reason": "A model is also an instrument with a field of vision set in advance.", "links": []}, {"s": "U5.A1", "t": "U6.C2", "type": "cross", "reason": "A contested model is essay material: evidence and ammunition, told apart.", "links": []}, {"s": "U4.A1", "t": "U6.C1", "type": "cross", "reason": "Cascade arithmetic returns inside the final paper’s population section.", "links": []}], "trails": [{"id": "read", "name": "① The control read", "desc": "The skill both controls grade: design → populations → confounding and selection → what the paper sees and misses → abstract versus data.", "steps": ["U1.K1", "U2.A1", "U2.K3", "U3.K1", "U3.A4", "U6.A1"]}, {"id": "causal", "name": "② From association to causation", "desc": "From an observed association to a verdict that survives your own rivals.", "steps": ["U2.K3", "U3.K1", "U3.A1", "U3.A2", "U6.C2"]}, {"id": "translate", "name": "③ The three translations", "desc": "From what the instrument saw to what the public believes — every arrow loses something.", "steps": ["U1.K2", "U2.K2", "U4.K1", "U4.K2", "U4.A2"]}, {"id": "hardest", "name": "④ The hardest objects", "desc": "Why epidemics and addictions: stigma, unrandomisable exposures, and a field rebuilding itself in real time.", "steps": ["U1.K3", "U2.K2", "U3.A3", "U5.K1", "U5.K2"]}]};
+
+/* ---------- setup ---------- */
+
+const W = 1600, H = 1000;
+const svg = d3.select('#graph').attr('viewBox', [0, 0, W, H]);
+const root = svg.append('g');
+
+const unitOn = {}; Object.keys(DATA.units).forEach(u => unitOn[u] = true);
+let crossOn = true;
+let selected = null; /* {kind:'node'|'edge', id} */
+
+const nodeById = new Map(DATA.nodes.map(n => [n.id, n]));
+DATA.edges.forEach((e, i) => { e.eid = 'e' + i; e.source = e.s; e.target = e.t; });
+
+/* ---------- forces ---------- */
+
+const sim = d3.forceSimulation(DATA.nodes)
+  .force('link', d3.forceLink(DATA.edges).id(d => d.id)
+    .distance(e => e.type === 'unit' ? 74 : 150).strength(e => e.type === 'unit' ? .55 : .12))
+  .force('charge', d3.forceManyBody().strength(-190))
+  .force('x', d3.forceX(d => DATA.units[d.unit].ax).strength(.38))
+  .force('y', d3.forceY(d => DATA.units[d.unit].ay).strength(.38))
+  .force('collide', d3.forceCollide(34))
+  .force('rect', rectCollide());
+
+/* Rectangle collision on each node's full footprint (icon + label below),
+   so long labels can never sit on a neighbour's label or icon. */
+function rectCollide() {
+  const PADX = 8, TOP = 26, BOT = 44;
+  let nodes = [];
+  function force(alpha) {
+    const k = alpha * .8;
+    for (let i = 0; i < nodes.length; i++) {
+      const a = nodes[i], ahw = Math.max(27, (a.lw || 54) / 2) + PADX;
+      for (let j = i + 1; j < nodes.length; j++) {
+        const b = nodes[j], bhw = Math.max(27, (b.lw || 54) / 2) + PADX;
+        const dx = b.x - a.x;
+        const ox = ahw + bhw - Math.abs(dx);
+        if (ox <= 0) continue;
+        const oy = Math.min(a.y + BOT, b.y + BOT) - Math.max(a.y - TOP, b.y - TOP);
+        if (oy <= 0) continue;
+        const aFree = a.fx == null, bFree = b.fx == null;
+        if (!aFree && !bFree) continue;
+        const share = (aFree && bFree) ? .5 : 1;
+        if (ox < oy) {
+          const s = Math.min(ox, 40) * k * share * (dx > 0 || (dx === 0 && i % 2) ? 1 : -1);
+          if (aFree) a.vx -= s;
+          if (bFree) b.vx += s;
+        } else {
+          const dy = b.y - a.y;
+          const s = Math.min(oy, 40) * k * share * (dy > 0 || (dy === 0 && i % 2) ? 1 : -1);
+          if (aFree) a.vy -= s;
+          if (bFree) b.vy += s;
+        }
+      }
+    }
+  }
+  force.initialize = n => nodes = n;
+  return force;
+}
+
+/* ---------- edges ---------- */
+
+const linkG = root.append('g');
+const linkSel = linkG.selectAll('g').data(DATA.edges).join('g');
+const linkLine = linkSel.append('path')
+  .attr('class', e => 'link ' + e.type)
+  .attr('stroke', e => e.type === 'unit' ? DATA.units[nodeById.get(e.s).unit].deep : null);
+const linkHit = linkSel.append('path').attr('class', 'linkhit')
+  .on('click', (ev, e) => { ev.stopPropagation(); select('edge', e.eid); });
+const KIND_GLYPH = { trainer: '⚡', slides: '▶', reading: '≡', assignment: '✎', notes: '§' };
+const kGlyph = l => KIND_GLYPH[l.k] || '⚡';
+const kClass = l => 'badge-link k-' + (l.k || 'trainer');
+
+const edgeBadge = linkSel.filter(e => e.links.length)
+  .append('a')
+  .attr('href', e => e.links[0].u).attr('target', '_blank').attr('rel', 'noopener')
+  .attr('class', e => kClass(e.links[0]))
+  .on('click', (ev, e) => { ev.stopPropagation(); PROG.mark('open', e.s); PROG.mark('open', e.t); });
+edgeBadge.append('title').text(e => 'Open: ' + e.links[0].t +
+  (e.links.length > 1 ? ` (+${e.links.length - 1} more — click the link line)` : ''));
+edgeBadge.append('circle').attr('class', 'core').attr('r', 7.5);
+edgeBadge.append('text').attr('y', 3.2).attr('text-anchor', 'middle')
+  .attr('font-size', '8.5px').attr('fill', '#fff').text(e => kGlyph(e.links[0]));
+
+const trailG = root.append('g');
+
+/* ---------- nodes ---------- */
+
+function shapeFor(g, n, deep, soft) {
+  if (n.strand === 'K') g.append('circle').attr('class', 'shape').attr('r', 14).attr('fill', soft).attr('stroke', deep);
+  else if (n.strand === 'A') g.append('rect').attr('class', 'shape').attr('x', -12).attr('y', -12)
+    .attr('width', 24).attr('height', 24).attr('rx', 6).attr('fill', soft).attr('stroke', deep);
+  else g.append('rect').attr('class', 'shape').attr('x', -11).attr('y', -11)
+    .attr('width', 22).attr('height', 22).attr('rx', 4).attr('fill', soft).attr('stroke', deep)
+    .attr('transform', 'rotate(45)');
+}
+
+const nodeG = root.append('g');
+const nodeSel = nodeG.selectAll('g').data(DATA.nodes).join('g')
+  .attr('class', 'node')
+  .call(d3.drag()
+    .on('start', (ev, d) => { if (!ev.active) sim.alphaTarget(.25).restart(); d.fx = d.x; d.fy = d.y; })
+    .on('drag', (ev, d) => { d.fx = ev.x; d.fy = ev.y; })
+    .on('end', (ev, d) => { if (!ev.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }))
+  .on('click', (ev, d) => { ev.stopPropagation(); select('node', d.id); })
+  .on('mouseenter', (ev, d) => hover(d.id))
+  .on('mouseleave', () => hover(null));
+
+nodeSel.each(function (n) {
+  const u = DATA.units[n.unit];
+  shapeFor(d3.select(this), n, u.deep, u.soft);
+});
+nodeSel.append('text').attr('class', 'emoji').text(n => n.emoji);
+nodeSel.append('text').attr('class', 'lbl').attr('y', 28).text(n => n.label);
+
+/* measure real label widths for the rectangle collision */
+function measureLabels() {
+  nodeSel.select('text.lbl').each(function(n) { n.lw = this.getComputedTextLength(); });
+}
+measureLabels();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => {
+  measureLabels();
+  sim.alpha(.6).restart();
+});
+const nodeBadge = nodeSel.filter(n => n.links.length).append('a')
+  .attr('href', n => n.links[0].u).attr('target', '_blank').attr('rel', 'noopener')
+  .attr('class', n => kClass(n.links[0]))
+  .attr('transform', 'translate(14,-14)')
+  .on('click', (ev, n) => { ev.stopPropagation(); PROG.mark('open', n.id); });
+nodeBadge.append('title').text(n => 'Open: ' + n.links[0].t +
+  (n.links.length > 1 ? ` (+${n.links.length - 1} more — click the goal)` : ''));
+nodeBadge.append('circle').attr('class', 'halo').attr('r', 12);
+nodeBadge.append('circle').attr('class', 'core').attr('r', 9);
+nodeBadge.append('text').attr('y', 3.6).attr('text-anchor', 'middle')
+  .attr('font-size', '10px').attr('fill', '#fff').text(n => kGlyph(n.links[0]));
+nodeBadge.filter(n => n.links.length > 1).append('circle')
+  .attr('cx', 8).attr('cy', 7).attr('r', 5.5).attr('fill', '#fff')
+  .attr('stroke', 'var(--line)').attr('stroke-width', 1);
+nodeBadge.filter(n => n.links.length > 1).append('text')
+  .attr('x', 8).attr('y', 9.6).attr('text-anchor', 'middle')
+  .attr('font-size', '7.5px').attr('font-weight', '700').attr('fill', 'var(--fg)')
+  .text(n => n.links.length);
+
+const trailNumG = root.append('g');
+
+/* ---------- ticking ---------- */
+
+function ticked() {
+  DATA.nodes.forEach(n => {
+    n.x = Math.max(40, Math.min(W - 40, n.x));
+    n.y = Math.max(40, Math.min(H - 40, n.y));
+  });
+  const path = e => {
+    const sx = e.source.x, sy = e.source.y, tx = e.target.x, ty = e.target.y;
+    const mx = (sx + tx) / 2 + (ty - sy) * .08, my = (sy + ty) / 2 + (sx - tx) * .08;
+    return `M${sx},${sy} Q${mx},${my} ${tx},${ty}`;
+  };
+  linkLine.attr('d', path);
+  linkHit.attr('d', path);
+  edgeBadge.attr('transform', e => {
+    const mx = (e.source.x + e.target.x) / 2 + (e.target.y - e.source.y) * .08;
+    const my = (e.source.y + e.target.y) / 2 + (e.source.x - e.target.x) * .08;
+    return `translate(${mx},${my})`;
+  });
+  nodeSel.attr('transform', n => `translate(${n.x},${n.y})`);
+  if (activeTrail) drawTrail();
+}
+sim.on('tick', ticked);
+
+/* Hard final pass: when the simulation stops, directly push apart any
+   residual footprint overlaps the soft force left behind. */
+function separateLabels() {
+  const PADX = 10, TOP = 28, BOT = 46;
+  for (let it = 0; it < 60; it++) {
+    let moved = false;
+    for (let i = 0; i < DATA.nodes.length; i++) {
+      const a = DATA.nodes[i], ahw = Math.max(27, (a.lw || 54) / 2) + PADX;
+      for (let j = i + 1; j < DATA.nodes.length; j++) {
+        const b = DATA.nodes[j], bhw = Math.max(27, (b.lw || 54) / 2) + PADX;
+        const dx = b.x - a.x;
+        const ox = ahw + bhw - Math.abs(dx);
+        if (ox <= 0) continue;
+        const oy = Math.min(a.y + BOT, b.y + BOT) - Math.max(a.y - TOP, b.y - TOP);
+        if (oy <= 0) continue;
+        moved = true;
+        if (ox < oy) {
+          const s = (dx > 0 || (dx === 0 && i % 2) ? 1 : -1) * (ox / 2 + .5);
+          a.x -= s; b.x += s;
+        } else {
+          const dy = b.y - a.y;
+          const s = (dy > 0 || (dy === 0 && i % 2) ? 1 : -1) * (oy / 2 + .5);
+          a.y -= s; b.y += s;
+        }
+      }
+    }
+    DATA.nodes.forEach(n => {
+      n.x = Math.max(40, Math.min(W - 40, n.x));
+      n.y = Math.max(40, Math.min(H - 40, n.y));
+    });
+    if (!moved) break;
+  }
+}
+
+/* ---------- zoom ---------- */
+
+let userInteracted = false;
+const zoom = d3.zoom().scaleExtent([.35, 2.6]).on('zoom', ev => {
+  if (ev.sourceEvent) userInteracted = true;
+  root.attr('transform', ev.transform);
+});
+svg.call(zoom);
+svg.on('click', () => select(null));
+/* fit the actual bounding box of the nodes, centered, with padding */
+function resetView() {
+  const hw = n => Math.max(27, (n.lw || 54) / 2);
+  const pad = 45;
+  const minX = Math.min(...DATA.nodes.map(n => n.x - hw(n))) - pad;
+  const maxX = Math.max(...DATA.nodes.map(n => n.x + hw(n))) + pad;
+  const minY = Math.min(...DATA.nodes.map(n => n.y)) - pad - 26;
+  const maxY = Math.max(...DATA.nodes.map(n => n.y)) + pad + 44;
+  const bw = Math.max(1, maxX - minX), bh = Math.max(1, maxY - minY);
+  const box = document.getElementById('graphCard').getBoundingClientRect();
+  const k = Math.min(box.width / bw, box.height / bh, 1.5);
+  svg.transition().duration(450).call(zoom.transform,
+    d3.zoomIdentity
+      .translate((box.width - bw * k) / 2 - minX * k, (box.height - bh * k) / 2 - minY * k)
+      .scale(k));
+}
+function autofit() { if (!userInteracted) resetView(); }
+
+/* ---------- visibility, hover, selection ---------- */
+
+function edgeVisible(e) {
+  const a = nodeById.get(e.s), b = nodeById.get(e.t);
+  if (!unitOn[a.unit] || !unitOn[b.unit]) return false;
+  if (e.type === 'cross' && !crossOn) return false;
+  return true;
+}
+
+function applyState(hoverId) {
+  const trailSet = activeTrail ? new Set(trailById(activeTrail).steps) : null;
+  const neigh = new Set();
+  if (hoverId) {
+    neigh.add(hoverId);
+    DATA.edges.forEach(e => {
+      if (!edgeVisible(e)) return;
+      if (e.s === hoverId) neigh.add(e.t);
+      if (e.t === hoverId) neigh.add(e.s);
+    });
+  }
+  nodeSel
+    .classed('dim', n => trailSet ? !trailSet.has(n.id)
+      : (!unitOn[n.unit] || (hoverId && !neigh.has(n.id))))
+    .classed('sel', n => selected && selected.kind === 'node' && selected.id === n.id);
+  linkSel.style('display', e => edgeVisible(e) ? null : 'none');
+  linkLine
+    .classed('dim', e => trailSet ? true : (hoverId && e.s !== hoverId && e.t !== hoverId))
+    .classed('sel', e => selected && selected.kind === 'edge' && selected.id === e.eid);
+}
+function hover(id) { applyState(id); }
+
+function resourceHtml(links) {
+  if (!links.length) return '<div class="slot">Resource slot — a trainer or background reading will attach here.</div>';
+  return links.map(l =>
+    `<a class="lnk" href="${l.u}" target="_blank" rel="noopener">${l.t}<span class="k">${l.k}</span></a>`).join('');
+}
+
+function select(kind, id) {
+  if (!kind) { selected = null; document.getElementById('panel').classList.remove('open'); applyState(null); return; }
+  selected = { kind, id };
+  const body = document.getElementById('panelBody');
+  if (kind === 'node') {
+    const n = nodeById.get(id), u = DATA.units[n.unit];
+    const strand = n.strand === 'K' ? 'Knowledge' : n.strand === 'A' ? 'Application' : 'Creation';
+    body.innerHTML =
+      `<div class="chips">
+        <span class="chip" style="background:${u.soft};color:${u.deep}">Unit ${n.unit} · ${u.name}</span>
+        <span class="chip" style="background:var(--panel-2);color:var(--fg-dim)">${strand}</span>
+      </div>
+      <h3>${n.emoji} ${n.label}</h3>
+      <p class="ev" style="margin-top:-2px">${n.id} · ${n.formal}</p>
+      <p class="goal">${n.text}</p>
+      <p class="ev"><b>Evidence:</b> ${n.evidence}</p>
+      <div class="rsec"><h4>Attached resources</h4>${resourceHtml(n.links)}</div>`;
+    body.querySelectorAll('.lnk').forEach(a => a.addEventListener('click', () => PROG.mark('open', id)));
+    if (!n.links.length) PROG.mark('open', id);
+  } else {
+    const e = DATA.edges.find(x => x.eid === id);
+    const a = nodeById.get(e.s), b = nodeById.get(e.t);
+    body.innerHTML =
+      `<div class="chips">
+        <span class="chip" style="background:var(--violet-soft);color:var(--violet)">${e.type === 'unit' ? 'Skill path' : 'Cross-unit bridge'}</span>
+      </div>
+      <h3>${a.label} <span style="color:var(--violet)">→</span> ${b.label}</h3>
+      <div class="chips">
+        <span class="chip" style="background:${DATA.units[a.unit].soft};color:${DATA.units[a.unit].deep}">${a.id}</span>
+        <span class="chip" style="background:${DATA.units[b.unit].soft};color:${DATA.units[b.unit].deep}">${b.id}</span>
+      </div>
+      <div class="why">${e.reason}</div>
+      <div class="rsec"><h4>Attached resources</h4>${resourceHtml(e.links)}</div>`;
+    body.querySelectorAll('.lnk').forEach(a => a.addEventListener('click', () => { PROG.mark('open', e.s); PROG.mark('open', e.t); }));
+  }
+  document.getElementById('panel').classList.add('open');
+  applyState(null);
+}
+document.getElementById('panelClose').addEventListener('click', () => select(null));
+
+/* ---------- trails ---------- */
+
+let activeTrail = null;
+function trailById(id) { return DATA.trails.find(t => t.id === id); }
+function drawTrail() {
+  trailG.selectAll('*').remove();
+  trailNumG.selectAll('*').remove();
+  if (!activeTrail) return;
+  const pts = trailById(activeTrail).steps.map(c => nodeById.get(c));
+  trailG.append('path').attr('class', 'trailpath')
+    .attr('d', 'M' + pts.map(p => `${p.x},${p.y}`).join(' L '));
+  pts.forEach((n, i) => {
+    const done = PROG.stepDone(n.id);
+    const g = trailNumG.append('g').attr('class', 'trailnum' + (done ? ' done' : ''))
+      .attr('transform', `translate(${n.x - 17},${n.y - 17})`);
+    g.append('circle').attr('r', 9);
+    g.append('text').attr('y', 3.5).text(done ? '✓' : i + 1);
+  });
+}
+function setTrail(id) {
+  activeTrail = activeTrail === id ? null : id;
+  document.querySelectorAll('#trails .ghost').forEach(b =>
+    b.setAttribute('aria-pressed', String(b.dataset.trail === activeTrail)));
+  drawTrail(); applyState(null);
+}
+
+/* ---------- personal progress (Google Apps Script backend) ---------- */
+
+const PROGRESS_URL = '';  /* no progress backend for this course */
+
+/* node → trainer slug, derived from the trainer links in the data */
+const NODE_TRAINER = {};
+DATA.nodes.forEach(n => (n.links || []).forEach(l => {
+  if (l.k !== 'trainer') return;
+  const m = l.u.match(/\/([\w-]+)\.html/);
+  NODE_TRAINER[n.id] = m ? m[1] : 'buildatree';
+}));
+
+function decorateTrails() {
+  document.querySelectorAll('#trails .ghost').forEach(b => {
+    const done = PROG.has('trail:' + b.dataset.trail);
+    let m = b.querySelector('.mdl');
+    if (done && !m) { m = document.createElement('span'); m.className = 'mdl'; m.textContent = ' 🏅'; b.appendChild(m); }
+    if (!done && m) m.remove();
+  });
+}
+function refreshNodes() { nodeSel.classed('earned', n => PROG.stepDone(n.id)); }
+
+var PROG = (() => {
+  let kid = null, keys = new Set();
+  try { kid = JSON.parse(localStorage.getItem('meridian-kid') || 'null'); } catch (e) {}
+
+  /* primary transport: fetch WITHOUT cookies — dodges Google's
+     multi-account interstitials; script-tag JSONP as a fallback */
+  function jsonpTag(params, cb) {
+    const fn = '__p' + Math.random().toString(36).slice(2);
+    const s = document.createElement('script');
+    let settled = false, tm;
+    const finish = d => {
+      if (settled) return;
+      settled = true; clearTimeout(tm); delete window[fn]; s.remove();
+      cb && cb(d);
+    };
+    window[fn] = finish;
+    s.onerror = () => finish({ ok: false, error: 'network' });
+    tm = setTimeout(() => finish({ ok: false, error: 'network' }), 12000);
+    s.src = PROGRESS_URL + '?' + Object.entries(Object.assign({}, params, { callback: fn, t: Date.now() }))
+      .map(([k, v]) => k + '=' + encodeURIComponent(v)).join('&');
+    document.head.appendChild(s);
+  }
+  function jsonp(params, cb) {
+    if (!PROGRESS_URL) return;
+    const url = PROGRESS_URL + '?' + Object.entries(Object.assign({}, params, { t: Date.now() }))
+      .map(([k, v]) => k + '=' + encodeURIComponent(v)).join('&');
+    let settled = false;
+    const tm = setTimeout(() => { if (!settled) { settled = true; jsonpTag(params, cb); } }, 12000);
+    fetch(url, { credentials: 'omit', redirect: 'follow' })
+      .then(r => r.json())
+      .then(d => { if (!settled) { settled = true; clearTimeout(tm); cb && cb(d); } })
+      .catch(() => { if (!settled) { settled = true; clearTimeout(tm); jsonpTag(params, cb); } });
+  }
+  /* cold starts can stall the first request — retry once before giving up */
+  function jsonpRetry(params, cb) {
+    jsonp(params, d => {
+      if (!d.ok && d.error === 'network') jsonp(params, cb);
+      else cb && cb(d);
+    });
+  }
+  const has = k => keys.has(k);
+  function stepDone(nodeId) {
+    if (keys.has('open:' + nodeId)) return true;
+    const tr = NODE_TRAINER[nodeId];
+    return !!tr && keys.has('trainer:' + tr);
+  }
+  const count = pre => { let n = 0; keys.forEach(k => { if (k.startsWith(pre)) n++; }); return n; };
+  function refresh() {
+    document.getElementById('kidStat').textContent = kid
+      ? `⚡ ${count('trainer:')} · 🏅 ${count('trail:')}` : '';
+    document.getElementById('kidBtn').textContent = kid ? '👤 ' + kid.name : '👤 Who’s exploring?';
+    decorateTrails(); refreshNodes(); drawTrail();
+  }
+  function mark(type, id) {
+    if (!kid) return;
+    const key = type + ':' + id;
+    if (keys.has(key)) return;
+    keys.add(key);
+    jsonpRetry({ name: kid.name, code: kid.code, action: 'mark', type: type, id: id }, d => {
+      if (d.ok && d.keys) keys = new Set(d.keys);
+      refresh(); checkTrails();
+    });
+    refresh(); checkTrails();
+  }
+  function checkTrails() {
+    if (!kid) return;
+    DATA.trails.forEach(t => {
+      if (keys.has('trail:' + t.id)) return;
+      if (t.steps.every(stepDone)) {
+        mark('trail', t.id);
+        document.getElementById('hint').textContent = '🏅 Trail complete: ' + t.name + '!';
+      }
+    });
+  }
+  function login(name, code, cb) {
+    jsonpRetry({ name: name, code: code }, d => {
+      if (d.ok) {
+        kid = { name: d.name, code: code };
+        localStorage.setItem('meridian-kid', JSON.stringify(kid));
+        keys = new Set(d.keys); refresh(); checkTrails();
+      }
+      cb(d);
+    });
+  }
+  function logout() { kid = null; keys = new Set(); localStorage.removeItem('meridian-kid'); refresh(); }
+  function load() {
+    if (!kid) { refresh(); return; }
+    jsonpRetry({ name: kid.name, code: kid.code }, d => {
+      if (d.ok) keys = new Set(d.keys);
+      else if (d.error === 'auth') { kid = null; localStorage.removeItem('meridian-kid'); }
+      refresh(); checkTrails();
+    });
+  }
+  jsonp({ mode: 'ping' }, () => {});  /* wake the backend while the kid is still reading */
+  return { mark, stepDone, has, login, logout, load, get kid() { return kid; } };
+})();
+const trailsRow = document.getElementById('trails');
+DATA.trails.forEach(t => {
+  const b = document.createElement('button');
+  b.className = 'ghost'; b.type = 'button'; b.dataset.trail = t.id;
+  b.textContent = t.name; b.title = t.desc;
+  b.setAttribute('aria-pressed', 'false');
+  b.addEventListener('click', () => setTrail(t.id));
+  trailsRow.appendChild(b);
+});
+
+/* ---------- legend & controls ---------- */
+
+const legend = document.getElementById('legend');
+Object.entries(DATA.units).forEach(([u, info]) => {
+  const b = document.createElement('button');
+  b.className = 'uchip'; b.type = 'button';
+  b.style.borderColor = info.deep; b.style.color = info.deep; b.style.background = info.soft;
+  b.textContent = `U${u} · ${info.name}`;
+  b.addEventListener('click', () => { unitOn[u] = !unitOn[u]; b.classList.toggle('off', !unitOn[u]); applyState(null); });
+  legend.appendChild(b);
+});
+
+document.getElementById('btnCross').addEventListener('click', (ev) => {
+  crossOn = !crossOn;
+  ev.currentTarget.setAttribute('aria-pressed', String(crossOn));
+  ev.currentTarget.textContent = 'Cross-unit bridges: ' + (crossOn ? 'on' : 'off');
+  applyState(null);
+});
+document.getElementById('btnReset').addEventListener('click', () => {
+  Object.keys(unitOn).forEach(u => unitOn[u] = true);
+  legend.querySelectorAll('.uchip').forEach(b => b.classList.remove('off'));
+  crossOn = true;
+  const bc = document.getElementById('btnCross');
+  bc.setAttribute('aria-pressed', 'true'); bc.textContent = 'Cross-unit bridges: on';
+  select(null);
+  activeTrail = null; drawTrail();
+  document.querySelectorAll('#trails .ghost').forEach(b => b.setAttribute('aria-pressed', 'false'));
+  userInteracted = false; resetView();
+});
+
+document.getElementById('hint').textContent =
+  `${DATA.nodes.length} goals · ${DATA.edges.length} links`;
+
+window.addEventListener('resize', autofit);
+setTimeout(autofit, 250);
+setTimeout(autofit, 1200);
+sim.on('end', () => { separateLabels(); ticked(); autofit(); });
+
+/* ---------- sign-in dialog ---------- */
+const kidDlg = document.getElementById('kidDialog');
+document.getElementById('kidBtn').addEventListener('click', () => {
+  kidDlg.hidden = !kidDlg.hidden;
+  document.getElementById('kidOut').hidden = !PROG.kid;
+  document.getElementById('kidErr').textContent = '';
+  if (PROG.kid) document.getElementById('kidName').value = PROG.kid.name;
+});
+document.getElementById('kidGo').addEventListener('click', () => {
+  const name = document.getElementById('kidName').value.trim();
+  const code = document.getElementById('kidCode').value.trim();
+  const err = document.getElementById('kidErr');
+  if (!name || !code) { err.textContent = 'Name and code, please.'; return; }
+  err.textContent = 'Checking…';
+  PROG.login(name, code, d => {
+    if (d.ok) { kidDlg.hidden = true; document.getElementById('kidCode').value = ''; }
+    else err.textContent = d.error === 'auth'
+      ? 'Hmm — that name or code doesn’t match.'
+      : 'Can’t reach the progress server from this browser — open the map in Chrome or Safari and try again.';
+  });
+});
+document.getElementById('kidCode').addEventListener('keydown', ev => { if (ev.key === 'Enter') document.getElementById('kidGo').click(); });
+document.getElementById('kidOut').addEventListener('click', () => { PROG.logout(); kidDlg.hidden = true; });
+document.addEventListener('click', ev => {
+  if (!kidDlg.hidden && !kidDlg.contains(ev.target) && ev.target.id !== 'kidBtn') kidDlg.hidden = true;
+});
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape') kidDlg.hidden = true; });
+PROG.load();
+
+window.__S = () => ({ nodes: DATA.nodes.length, edges: DATA.edges.length, selected, kid: PROG.kid });
+window.__PROG = PROG;
+</script>
+</body>
+</html>
