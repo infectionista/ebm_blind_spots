@@ -87,7 +87,7 @@ h1 .hi { color: var(--verm); }
 .donebar .act:hover { background: #255841; }
 
 .rx h3 { margin: 0 0 8px; font-size: 16px; font-weight: 700; letter-spacing: -.01em; text-wrap: balance; }
-.rx .eq { font-family: var(--mono); font-size: 13px; line-height: 1.6; background: var(--panel-2); border-radius: 8px; padding: 10px 12px; margin: 10px 0; overflow-x: auto; white-space: nowrap; }
+.rx .eq, .calc .eq { font-family: var(--mono); font-size: 13px; line-height: 1.6; background: var(--panel-2); border-radius: 8px; padding: 10px 12px; margin: 10px 0; overflow-x: auto; white-space: nowrap; }
 .rx p { margin: 8px 0; font-size: 14px; }
 .rx .sub { color: var(--fg-dim); font-size: 13.5px; }
 .rx table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 10px 0; }
@@ -288,7 +288,7 @@ const NOTES = {
   1: '<b>Station 1 · Two groups, four cells.</b> The ten people from Week III: five exposed, five not. Sort them into the 2×2 table, then compute the risk in each group. Two measures of occurrence, side by side &mdash; that is all an association is.',
   2: '<b>Station 2 · Difference or ratio?</b> The same two risks, compared two ways. One way travels in headlines; the other tells a clinic how many people it is about. Compute both for the ten people, then for the most argued-over number of 2021.',
   3: '<b>Station 3 · Rates and person-time.</b> Real cohorts never watch everyone for the same time, so the mortality literature on opioid treatment compares rates, not risks. Take Sordo&rsquo;s two numbers and build the rate ratio and the rate difference &mdash; then say what the ratio cannot say.',
-  4: '<b>Station 4 · Looking backwards.</b> A case-control study starts from the sick and looks back. It cannot compute a risk at all &mdash; so it uses odds. Compute the odds ratio for the study that convicted tobacco in 1950, then find out why odds and risks part company.',
+  4: '<b>Station 4 · Looking backwards.</b> A case-control study starts from the sick and looks back. It cannot compute a risk at all &mdash; so it uses odds. Fill the 2×2 table for the study that convicted tobacco in 1950 and watch the odds ratio compute itself, then find out why odds and risks part company.',
   5: '<b>Station 5 · Which window, which measure.</b> Five real studies from this course, five windows. For each, pick the measure that window can honestly produce. Then the question the whole course turns on: which of these numbers proves anything?',
   6: '<b>Quiz.</b> Six questions. Full marks means you can read a results line and know, before the discussion section starts, what it has and has not shown.',
 };
@@ -300,8 +300,8 @@ function freshState() {
     done: { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false },
     logged: new Set(),
     s1: { vals: {}, ok: {}, msg: '', part: 0 },
-    s2: { vals: {}, ok: {}, msg: '', part: 0 },
-    s3: { vals: {}, ok: {}, msg: '', part: 0, mcq: null },
+    s2: { q: 0, answered: null, score: 0 },
+    s3: { q: 0, answered: null, score: 0 },
     s4: { vals: {}, ok: {}, msg: '', part: 0, mcq: null },
     s5: { idx: 0, score: 0, answered: null, final: null, msg: '' },
     quiz: { picked: {}, submitted: false },
@@ -413,32 +413,37 @@ function renderStage1() {
 
 /* ================= station 2 ================= */
 
-function check2() {
+const INTRO2A = 'The ten people: risk 0.60 among the exposed, 0.20 among the unexposed.';
+const INTRO2B = 'Israel, 2021 (Mevorach, NEJM): myocarditis within 30 days of dose 2, males 16–19 — about 15.1 per 100,000 vaccinated, against a background of about 1.7 per 100,000 in unvaccinated peers. The headline said “nine times the risk”. Now the other half.';
+const QS2 = [
+  { intro: INTRO2A, ask: 'The risk difference is…', opts: ['0.80', '0.40', '3.0'], a: 1,
+    why: '0.60 − 0.20 = 0.40: forty extra cases for every 100 people exposed.',
+    wrong: ['0.80 is the two risks added together — risks are never added across groups.', null, '3.0 is the risk RATIO (0.60 ÷ 0.20): how many times, not how many extra.'] },
+  { intro: INTRO2A, ask: 'The risk ratio is…', opts: ['3.0', '0.40', '0.33'], a: 0,
+    why: '0.60 ÷ 0.20 = 3: the exposed fall ill three times as often.',
+    wrong: [null, '0.40 is the DIFFERENCE — subtraction. The ratio divides.', '0.33 is the ratio upside down (0.20 ÷ 0.60): the unexposed compared to the exposed.'] },
+  { intro: INTRO2A, ask: 'The number needed to harm, NNH = 1 ÷ RD, is…', opts: ['2.5', '40', '0.4'], a: 0,
+    why: '1 ÷ 0.40 = 2.5: for every two or three people exposed, one extra case.',
+    wrong: [null, '40 would be right if the difference were 2.5 per 100. Here it is 40 per 100.', '0.4 is the risk difference itself. NNH flips it over: 1 ÷ 0.40.'] },
+  { intro: INTRO2B, ask: 'The risk difference is…', opts: ['about 9 per 100,000', 'about 17 per 100,000', 'about 13 per 100,000'], a: 2,
+    why: '15.1 − 1.7 ≈ 13.4 extra cases per 100,000 vaccinated — the background 1.7 would have happened anyway.',
+    wrong: ['9 is the RATIO (15.1 ÷ 1.7), not the difference.', '17 adds the two risks together. Subtract — the background was there anyway.', null] },
+  { intro: INTRO2B, ask: 'The number needed to harm is…', opts: ['about 7,500', 'about 6,600', 'about 9'], a: 0,
+    why: '100,000 ÷ 13.4 ≈ 7,500: one extra case for every 7,500 young men vaccinated. A ninefold ratio and a 1-in-7,500 harm are the same finding.',
+    wrong: [null, '6,600 is 100,000 ÷ 15.1 — that forgets the background: 1.7 of the 15.1 would have happened without the vaccine.', '9 is the ratio again. NNH comes from the DIFFERENCE.'] },
+];
+
+function answer2(i) {
   const st = S.s2;
-  const re = A / 5, ru = C / 5;
-  if (st.part === 0) {
-    st.ok.rd = nearProp(st.vals.rd, re - ru, 0.006);
-    st.ok.rr = nearNum(st.vals.rr, re / ru, 0.02);
-    st.ok.nnh = nearNum(st.vals.nnh, 1 / (re - ru), 0.06);
-    if (st.ok.rd && st.ok.rr && st.ok.nnh) { st.part = 1; st.msg = 'good:RD 0.40, RR 3.0, NNH 2.5. Both headlines below are true. “Triples the risk” is the ratio; “40 extra cases per 100” is the difference; “one extra case for every 2.5 people exposed” is the difference turned upside down.'; }
-    else {
-      const hints = [];
-      if (!st.ok.rd) hints.push('Risk difference = risk exposed − risk unexposed = 0.60 − 0.20.');
-      if (!st.ok.rr) hints.push('Risk ratio = 0.60 ÷ 0.20.');
-      if (!st.ok.nnh && st.ok.rd) hints.push('Number needed to harm = 1 ÷ risk difference = 1 ÷ 0.40.');
-      st.msg = 'bad:' + hints.join(' ');
-    }
-  } else if (st.part === 1) {
-    st.ok.mrd = within(st.vals.mrd, 13, 14);
-    st.ok.mnnh = within(st.vals.mnnh, 7000, 8000);
-    if (st.ok.mrd && st.ok.mnnh) { st.part = 2; S.done[2] = true; logIdea('ratio'); st.msg = 'good:About 13 extra cases per 100,000 — one for every 7,500 young men vaccinated. A ninefold ratio and a 0.013% difference describe the same finding. The newsroom printed the first number; the clinic needs the second.'; }
-    else {
-      const hints = [];
-      if (!st.ok.mrd) hints.push('Risk difference = 15.1 − 1.7 per 100,000 ≈ 13.4 per 100,000.');
-      if (!st.ok.mnnh) hints.push('NNH = 1 ÷ (13.4 per 100,000) = 100,000 ÷ 13.4 ≈ 7,500.');
-      st.msg = 'bad:' + hints.join(' ');
-    }
-  }
+  if (st.answered !== null) return;
+  st.answered = i;
+  if (i === QS2[st.q].a) st.score++;
+  render();
+}
+function next2() {
+  const st = S.s2;
+  if (st.q < QS2.length - 1) { st.q++; st.answered = null; }
+  else { S.done[2] = true; logIdea('ratio'); }
   render();
 }
 
@@ -451,14 +456,13 @@ function drawRisks() {
     svg.append(h('text', { x, y: base - r * scale - 8, class: 'lab big', 'text-anchor': 'middle' }, r.toFixed(2)));
     svg.append(h('text', { x, y: base + 18, class: 'lab', 'text-anchor': 'middle' }, lab));
   });
-  /* difference bracket */
   svg.append(h('line', { x1: 345, y1: base - (A / 5) * scale, x2: 345, y2: base - (C / 5) * scale, stroke: 'var(--verm)', 'stroke-width': 2 }));
   svg.append(h('line', { x1: 338, y1: base - (A / 5) * scale, x2: 352, y2: base - (A / 5) * scale, stroke: 'var(--verm)', 'stroke-width': 2 }));
   svg.append(h('line', { x1: 338, y1: base - (C / 5) * scale, x2: 352, y2: base - (C / 5) * scale, stroke: 'var(--verm)', 'stroke-width': 2 }));
   svg.append(h('text', { x: 360, y: base - ((A + C) / 10) * scale + 4, class: 'lab big', fill: 'var(--verm)' }, 'difference'));
   svg.append(h('text', { x: 440, y: 70, class: 'lab big' }, 'DIFFERENCE  (absolute)'));
   svg.append(h('text', { x: 440, y: 90, class: 'lab mono' }, 'RD = 0.60 − 0.20'));
-  svg.append(h('text', { x: 440, y: 108, class: 'lab' }, 'how many extra cases per person exposed'));
+  svg.append(h('text', { x: 440, y: 108, class: 'lab' }, 'how many extra cases'));
   svg.append(h('text', { x: 440, y: 150, class: 'lab big' }, 'RATIO  (relative)'));
   svg.append(h('text', { x: 440, y: 170, class: 'lab mono' }, 'RR = 0.60 ÷ 0.20'));
   svg.append(h('text', { x: 440, y: 188, class: 'lab' }, 'how many times the risk'));
@@ -468,116 +472,123 @@ function drawRisks() {
 
 function renderStage2() {
   const st = S.s2;
-  const [kind, msg] = st.msg ? st.msg.split(/:(.*)/s) : ['', ''];
+  const it = QS2[st.q];
+  const answered = st.answered !== null;
+  const right = answered && st.answered === it.a;
   const doneBar = S.done[2] ? h('div', { class: 'donebar' },
     h('span', {}, 'Ratios travel; differences decide. Read both or you have read half the result.'),
     h('button', { class: 'act', type: 'button', onclick: () => go(3) }, 'Next: rates and person-time →')) : null;
   return h('section', { class: 'stagegrid' },
     h('div', { class: 'card scene' },
-      drawRisks(),
-      st.part === 0 ? h('div', { class: 'calc' },
-        field('s2', 'rd', 'Risk difference (exposed − unexposed)', { ph: 'decimal or %', onenter: check2 }),
-        field('s2', 'rr', 'Risk ratio (exposed ÷ unexposed)', { ph: 'a number', onenter: check2 }),
-        field('s2', 'nnh', 'Number needed to harm (1 ÷ RD)', { ph: 'people', onenter: check2 })) : null,
-      st.part >= 1 ? h('div', { class: 'heads' },
-        h('div', { class: 'head' }, h('span', { class: 'tag' }, 'headline A · ratio'), h('b', {}, '“Exposure triples the risk”'), 'RR = 3.0. True. Says nothing about how many people.'),
-        h('div', { class: 'head' }, h('span', { class: 'tag' }, 'headline B · difference'), h('b', {}, '“40 more cases per 100 exposed”'), 'RD = 0.40, NNH = 2.5. True. Says exactly how many people.')) : null,
-      st.part === 1 ? h('div', { class: 'calc' },
-        h('p', { class: 'stmt' }, 'Israel, 2021 (Mevorach, NEJM). Myocarditis within 30 days of dose 2, males 16–19: about 15.1 per 100,000 vaccinated. The rate ratio against unvaccinated peers was about 9, which puts the background near 1.7 per 100,000.',
-          h('span', { class: 'src' }, 'A ninefold ratio was the headline. Now the difference.')),
-        field('s2', 'mrd', 'Risk difference, per 100,000', { ph: 'per 100,000', onenter: check2 }),
-        field('s2', 'mnnh', 'Number needed to harm (one extra case per … vaccinated)', { ph: 'people', onenter: check2 })) : null,
-      st.part < 2 ? h('div', { class: 'scenebtns' }, h('button', { class: 'act', type: 'button', onclick: check2 }, 'Check')) : null,
-      h('p', { class: 'toast' + (kind === 'good' ? ' good' : '') }, msg),
+      st.q < 3 ? drawRisks() : h('div', { class: 'heads' },
+        h('div', { class: 'head' }, h('span', { class: 'tag' }, 'headline A · ratio'), h('b', {}, '“Nine times the risk”'), 'True. Says nothing about how many people.'),
+        h('div', { class: 'head' }, h('span', { class: 'tag' }, 'headline B · difference'), h('b', {}, '“13 extra cases per 100,000”'), 'True. Says exactly how many people.')),
+      h('div', { class: 'calc' },
+        h('p', { class: 'stmt' }, `${st.q + 1} / ${QS2.length} · ${it.ask}`, h('span', { class: 'src' }, it.intro)),
+        h('div', { class: 'scenebtns', style: 'flex-direction:column;align-items:stretch' },
+          ...it.opts.map((t, i) => h('button', { class: 'act' + (answered ? (i === it.a ? ' good' : ' alt') : ' alt'), type: 'button', style: 'text-align:left',
+            disabled: answered ? 'disabled' : null, onclick: () => answer2(i) }, t)))),
+      h('p', { class: 'toast' + (right ? ' good' : '') },
+        answered ? (right ? '✓ ' + it.why : '✗ ' + (it.wrong[st.answered] || '') + ' ' + it.why) : ''),
+      answered && !S.done[2] ? h('div', { class: 'scenebtns' },
+        h('button', { class: 'act', type: 'button', onclick: next2 }, st.q === QS2.length - 1 ? 'Finish →' : 'Next question →')) : null,
       doneBar),
     h('aside', { class: 'card rx' },
-      h('h3', {}, 'Absolute and relative'),
-      h('div', { class: 'eq' }, 'RD = R₁ − R₀  ·  RR = R₁ ÷ R₀  ·  NNT, NNH = 1 ÷ |RD|'),
-      h('p', {}, 'The risk ratio is dimensionless and portable: it looks the same in a rare disease and a common one, which is why mechanisms and headlines are written in it. The risk difference carries the baseline with it, which is why decisions are made in it.'),
+      h('h3', {}, 'Difference, ratio, and NNT'),
+      h('div', { class: 'eq' }, 'RD = risk₁ − risk₀  ·  RR = risk₁ ÷ risk₀'),
+      h('div', { class: 'eq' }, 'NNT or NNH = 1 ÷ RD'),
+      h('p', {}, 'The ratio answers “how many times more often?”. It looks the same for a rare disease and a common one, so it is what headlines quote. The difference answers “how many extra cases per 100 (or 100,000) people?”. It depends on how common the disease is — and it is what decisions are made with.'),
+      h('p', {}, h('b', {}, 'NNT'), ' — number needed to treat: how many people must take a treatment for one of them to be spared the outcome. ', h('b', {}, 'NNH'), ' — number needed to harm: how many must be exposed for one extra case. Both are the risk difference flipped over: RD 0.40 → 1 ÷ 0.40 = 2.5 people per extra case.'),
       h('table', {},
         h('tr', {}, h('th', {}, 'Baseline risk'), h('th', {}, 'RR'), h('th', {}, 'RD'), h('th', {}, 'NNH')),
         h('tr', {}, h('td', {}, '20 in 100'), h('td', { class: 'n' }, '3'), h('td', { class: 'n' }, '40 in 100'), h('td', { class: 'n' }, '2.5')),
         h('tr', {}, h('td', {}, '1.7 in 100,000'), h('td', { class: 'n' }, '≈ 9'), h('td', { class: 'n' }, '13 in 100,000'), h('td', { class: 'n' }, '≈ 7,500'))),
-      h('p', { class: 'sub' }, 'Same lesson as Week I’s rare-event arithmetic, seen from the other side: a ratio of nine on a baseline of almost nothing is still almost nothing per person — and still thousands of people in a national campaign. Both sentences are needed; each alone misleads.'),
+      h('p', { class: 'sub' }, 'The second row is why both numbers are needed: “nine times the risk” sounds enormous; “13 per 100,000” shows how rare it still is — and still thousands of people across a national campaign. Each sentence alone misleads.'),
       h('details', { class: 'fine' }, h('summary', {}, 'NNT in a trial you know'),
-        h('p', {}, 'RECOVERY: 28-day mortality 22.9% on dexamethasone versus 25.7% on usual care. RD = 2.8 percentage points, NNT ≈ 36. Among ventilated patients, 29.3% versus 41.4%: RD 12.1 points, NNT ≈ 8. One drug, one ratio-shaped story, two very different differences — because the baseline differed.'))
+        h('p', {}, 'RECOVERY: 28-day mortality 22.9% on dexamethasone versus 25.7% on usual care. RD = 2.8 percentage points, NNT = 1 ÷ 0.028 ≈ 36 patients treated per life saved. Among ventilated patients, 29.3% versus 41.4%: RD 12.1 points, NNT ≈ 8. One drug, one ratio-shaped story, two very different differences — because the baseline differed.'))
     ));
 }
 
 /* ================= station 3 ================= */
 
 const SORDO = { inn: 11.3, out: 36.1, bin: 4.3, bout: 9.5 };
+const INTRO3 = 'Sordo et al., BMJ 2017 — methadone: 11.3 deaths per 1,000 person-years in treatment, 36.1 out of treatment.';
+const QS3 = [
+  { intro: INTRO3, ask: 'The rate ratio, out ÷ in, is…', opts: ['about 0.31', 'about 3.2', 'about 24.8'], a: 1,
+    why: '36.1 ÷ 11.3 ≈ 3.2: per year lived, deaths were about three times as frequent out of treatment (the paper: 3.20, 95% CI 2.65 to 3.86).',
+    wrong: ['0.31 is in ÷ out — the same comparison upside down. The paper reports out-to-in.', null, '24.8 is the DIFFERENCE (36.1 − 11.3), not the ratio.'] },
+  { intro: INTRO3, ask: 'The rate difference, out − in, is…', opts: ['24.8 per 1,000 person-years', '3.2 per 1,000 person-years', '47.4 per 1,000 person-years'], a: 0,
+    why: '36.1 − 11.3 = 24.8 extra deaths for every 1,000 years people spend out of treatment.',
+    wrong: [null, '3.2 is the ratio. The difference subtracts.', '47.4 adds the two rates — rates are compared by dividing or subtracting, never adding.'] },
+  { intro: INTRO3, ask: 'So one death is averted for roughly every how many person-years spent in treatment rather than out of it?', opts: ['about 28', 'about 40', 'about 89'], a: 1,
+    why: '1,000 ÷ 24.8 ≈ 40 person-years of treatment per death averted — the planning number hiding behind the ratio.',
+    wrong: ['28 is 1,000 ÷ 36.1: years per death OUT of treatment, not per death averted.', null, '89 is 1,000 ÷ 11.3: years per death IN treatment, not per death averted.'] },
+  { intro: 'Rate ratio 3.2, rate difference 24.8 — both now on the table.', ask: 'What can these numbers NOT tell you on their own?',
+    opts: ['That the difference between in and out of treatment is large', 'That leaving treatment causes the extra deaths', 'How many deaths occur per 1,000 person-years out of treatment'], a: 1,
+    why: 'People leave treatment for reasons that also predict death — relapse, prison, illness, homelessness — so time out of treatment is not a random sample of time. The authors write exactly this: further research must account for confounding and selection. The rate ratio is an association; the causal pass is still to come.',
+    wrong: ['They do tell you that — 3.2 is a large ratio and 24.8 a large difference. Look for the claim they cannot support.', null, 'They tell you that too: 36.1 per 1,000 person-years is printed in the result.'] },
+];
 
-function check3() {
+function answer3(i) {
   const st = S.s3;
-  if (st.part === 0) {
-    st.ok.rr = within(st.vals.rr, 3.1, 3.3);
-    st.ok.rdiff = within(st.vals.rdiff, 24.5, 25.1);
-    st.ok.py = within(st.vals.py, 38, 43);
-    if (st.ok.rr && st.ok.rdiff && st.ok.py) { st.part = 1; st.msg = 'good:Rate ratio 3.2, rate difference 24.8 per 1,000 person-years — about one death fewer for every 40 person-years spent in treatment rather than out of it. The paper reports the ratio (3.20, 95% CI 2.65 to 3.86); the difference is yours to compute, and the one a service planner needs.'; }
-    else {
-      const hints = [];
-      if (!st.ok.rr) hints.push('Rate ratio = 36.1 ÷ 11.3 (out over in, as the paper reports it).');
-      if (!st.ok.rdiff) hints.push('Rate difference = 36.1 − 11.3 per 1,000 person-years.');
-      if (!st.ok.py && st.ok.rdiff) hints.push('Person-years per death averted = 1,000 ÷ 24.8.');
-      st.msg = 'bad:' + hints.join(' ');
-    }
-    render();
-  }
+  if (st.answered !== null) return;
+  st.answered = i;
+  if (i === QS3[st.q].a) st.score++;
+  render();
 }
-function mcq3(i) {
+function next3() {
   const st = S.s3;
-  if (st.part !== 1) return;
-  if (i === 1) { st.part = 2; S.done[3] = true; logIdea('rate'); st.msg = 'good:Right. People leave treatment for reasons that also predict death — relapse, prison, illness, homelessness. Time out of treatment is not a random sample of time. The authors write exactly this: further research must account for confounding and selection bias. The rate ratio is an association; the causal pass is still to come.'; }
-  else st.msg = 'bad:' + (i === 0 ? 'It does tell you that — 3.2 is a large ratio, and 24.8 per 1,000 is a large difference. The question is what it cannot tell you.' : 'It tells you that too: 36.1 per 1,000 person-years is printed in the result. Look for the claim the number cannot support on its own.');
+  if (st.q < QS3.length - 1) { st.q++; st.answered = null; }
+  else { S.done[3] = true; logIdea('rate'); }
   render();
 }
 
 function drawRates() {
-  const svg = h('svg', { id: 'scene', viewBox: '0 0 660 250', role: 'img', 'aria-label': 'Mortality rates in and out of methadone and buprenorphine treatment, per 1,000 person-years' });
-  const base = 200, scale = 4.2;
+  const svg = h('svg', { id: 'scene', viewBox: '0 0 660 265', role: 'img', 'aria-label': 'Mortality rates in and out of methadone and buprenorphine treatment, per 1,000 person-years' });
+  const base = 212, scale = 3.5;
+  svg.append(h('text', { x: 50, y: 22, class: 'lab big' }, 'ALL-CAUSE DEATHS PER 1,000 PERSON-YEARS'));
+  svg.append(h('text', { x: 50, y: 39, class: 'lab' }, 'Sordo et al., BMJ 2017 · 19 cohorts · 122,885 people on methadone, 15,831 on buprenorphine'));
   svg.append(h('line', { x1: 50, y1: base, x2: 620, y2: base, stroke: 'var(--fg)', 'stroke-width': 1.5 }));
-  const bars = [[110, SORDO.inn, 'methadone · in', 'var(--petrol)'], [210, SORDO.out, 'methadone · out', 'var(--verm)'], [400, SORDO.bin, 'buprenorphine · in', 'var(--petrol)'], [500, SORDO.bout, 'buprenorphine · out', 'var(--verm)']];
+  const bars = [[110, SORDO.inn, 'in', 'var(--petrol)'], [210, SORDO.out, 'out', 'var(--verm)'], [400, SORDO.bin, 'in', 'var(--petrol)'], [500, SORDO.bout, 'out', 'var(--verm)']];
   bars.forEach(([x, r, lab, col]) => {
     svg.append(h('rect', { x: x - 38, y: base - r * scale, width: 76, height: r * scale, rx: 6, fill: col, opacity: .85 }));
     svg.append(h('text', { x, y: base - r * scale - 8, class: 'lab big', 'text-anchor': 'middle' }, r.toFixed(1)));
-    svg.append(h('text', { x, y: base + 18, class: 'lab', 'text-anchor': 'middle' }, lab));
+    svg.append(h('text', { x, y: base + 16, class: 'lab big', 'text-anchor': 'middle' }, lab));
   });
-  svg.append(h('text', { x: 50, y: 30, class: 'lab big' }, 'ALL-CAUSE DEATHS PER 1,000 PERSON-YEARS'));
-  svg.append(h('text', { x: 50, y: 48, class: 'lab' }, 'Sordo et al., BMJ 2017 · 19 cohorts · 122,885 people on methadone, 15,831 on buprenorphine'));
-  svg.append(h('text', { x: 330, y: 242, class: 'lab', 'text-anchor': 'middle' }, 'the denominator is time: a person contributes to “in” while treated and to “out” after leaving'));
+  svg.append(h('text', { x: 160, y: base + 34, class: 'lab', 'text-anchor': 'middle' }, 'methadone treatment'));
+  svg.append(h('text', { x: 450, y: base + 34, class: 'lab', 'text-anchor': 'middle' }, 'buprenorphine treatment'));
+  svg.append(h('text', { x: 330, y: 260, class: 'lab', 'text-anchor': 'middle' }, 'the denominator is time: a person counts under “in” while treated and under “out” after leaving'));
   return svg;
 }
 
 function renderStage3() {
   const st = S.s3;
-  const [kind, msg] = st.msg ? st.msg.split(/:(.*)/s) : ['', ''];
+  const it = QS3[st.q];
+  const answered = st.answered !== null;
+  const right = answered && st.answered === it.a;
   const doneBar = S.done[3] ? h('div', { class: 'donebar' },
     h('span', {}, 'A rate ratio compares time at risk, not people — and like every ratio in this trainer, it measures association, not cause.'),
     h('button', { class: 'act', type: 'button', onclick: () => go(4) }, 'Next: looking backwards →')) : null;
-  const MC = ['That the difference between in and out of treatment is large', 'That leaving treatment causes the extra deaths', 'How many deaths occur per 1,000 person-years out of treatment'];
   return h('section', { class: 'stagegrid' },
     h('div', { class: 'card scene' },
       drawRates(),
-      st.part === 0 ? h('div', { class: 'calc' },
-        h('p', { class: 'stmt' }, 'Methadone: 11.3 deaths per 1,000 person-years in treatment, 36.1 out of treatment.'),
-        field('s3', 'rr', 'Rate ratio, out ÷ in', { ph: 'a number', onenter: check3 }),
-        field('s3', 'rdiff', 'Rate difference, out − in (per 1,000 person-years)', { ph: 'per 1,000 PY', onenter: check3 }),
-        field('s3', 'py', 'Person-years in treatment per one death averted (1,000 ÷ RD)', { ph: 'person-years', onenter: check3 }),
-        h('div', { class: 'scenebtns' }, h('button', { class: 'act', type: 'button', onclick: check3 }, 'Check'))) : null,
-      st.part >= 1 ? h('div', { class: 'calc' },
-        h('p', { class: 'stmt' }, 'Rate ratio 3.2. What can this number NOT tell you on its own?'),
+      h('div', { class: 'calc' },
+        h('p', { class: 'stmt' }, `${st.q + 1} / ${QS3.length} · ${it.ask}`, h('span', { class: 'src' }, it.intro)),
         h('div', { class: 'scenebtns', style: 'flex-direction:column;align-items:stretch' },
-          ...MC.map((t, i) => h('button', { class: 'act' + (st.part === 2 ? (i === 1 ? ' good' : ' alt') : ' alt'), type: 'button', style: 'text-align:left',
-            disabled: st.part === 2 ? 'disabled' : null, onclick: () => mcq3(i) }, t)))) : null,
-      h('p', { class: 'toast' + (kind === 'good' ? ' good' : '') }, msg),
+          ...it.opts.map((t, i) => h('button', { class: 'act' + (answered ? (i === it.a ? ' good' : ' alt') : ' alt'), type: 'button', style: 'text-align:left',
+            disabled: answered ? 'disabled' : null, onclick: () => answer3(i) }, t)))),
+      h('p', { class: 'toast' + (right ? ' good' : '') },
+        answered ? (right ? '✓ ' + it.why : '✗ ' + (it.wrong[st.answered] || '') + ' ' + it.why) : ''),
+      answered && !S.done[3] ? h('div', { class: 'scenebtns' },
+        h('button', { class: 'act', type: 'button', onclick: next3 }, st.q === QS3.length - 1 ? 'Finish →' : 'Next question →')) : null,
       doneBar),
     h('aside', { class: 'card rx' },
-      h('h3', {}, 'Rate ratio and rate difference'),
-      h('div', { class: 'eq' }, 'IRR = rate₁ ÷ rate₀  ·  IRD = rate₁ − rate₀'),
-      h('p', {}, 'Same two operations as station 2, applied to incidence rates instead of risks. The ratio is again portable; the difference again carries the baseline — but now in person-time, so “one death averted per 40 person-years in treatment” is a planning number, not a per-patient one.'),
-      h('p', { class: 'sub' }, 'Why rates here and not risks: cohorts in this meta-analysis followed people for 1.3 to 13.9 years, and the same person moves between “in” and “out” several times. Only person-time can carry that. A risk would need everyone watched for the same fixed period, which nobody was.'),
-      h('p', { class: 'sub' }, 'Hazard ratios are rate ratios that allow the rate to change over follow-up. Larochelle’s 0.47 for methadone after a non-fatal overdose is one — the number from your interim-control paper.'),
+      h('h3', {}, 'Rate ratio, rate difference, hazard ratio'),
+      h('div', { class: 'eq' }, 'rate ratio (IRR) = rate₁ ÷ rate₀'),
+      h('div', { class: 'eq' }, 'rate difference (IRD) = rate₁ − rate₀'),
+      h('p', {}, 'The same two moves as station 2 — divide or subtract — applied to rates instead of risks. The ', h('b', {}, 'rate ratio'), ' says how many times more often events happen per year lived. The ', h('b', {}, 'rate difference'), ' says how many extra events per 1,000 person-years — what a year of treatment actually buys.'),
+      h('p', { class: 'sub' }, 'Why rates and not risks here: people in these cohorts were followed for anything from 1 to 14 years, and the same person can be in treatment, out of it, and back in. A risk needs everyone watched for the same fixed period; person-time takes the follow-up as it really was.'),
+      h('p', {}, h('b', {}, 'Hazard ratio (HR)'), ' — the same comparison made moment by moment over the follow-up (papers compute it with a Cox model). Read it like a rate ratio: HR 0.47 means that at any given moment, people on methadone were dying at roughly half the rate of people off it. The 0.47 in Larochelle — your interim-control paper — is exactly this.'),
       h('details', { class: 'fine' }, h('summary', {}, 'The first four weeks'),
         h('p', {}, 'The same paper shows mortality dropping sharply during the first four weeks on methadone and spiking in the weeks after leaving. A single pooled rate hides both — the honest result is a curve, not a number. The forest plot you saw in Week I is this paper’s.'))
     ));
@@ -585,14 +596,39 @@ function renderStage3() {
 
 /* ================= station 4 ================= */
 
-const DH = { a: 647, b: 2, c: 622, d: 27 };  /* smokers / non-smokers among 649 cases and 649 controls */
+const DH = { a: 647, b: 2, c: 622, d: 27 };  /* cases: smokers/non-smokers; controls: smokers/non-smokers */
+
+function or4Text() {
+  const g = k => { const x = parseNum(S.s4.vals[k]); return isFinite(x) ? x : null; };
+  const a = g('a'), b = g('b'), c = g('c'), d = g('d');
+  const show = (x, k) => x === null ? k : x;
+  let res = '…';
+  if (a !== null && b !== null && c !== null && d !== null && b * c !== 0) res = ((a * d) / (b * c)).toFixed(2);
+  return `OR = (a × d) ÷ (b × c) = (${show(a, 'a')} × ${show(d, 'd')}) ÷ (${show(b, 'b')} × ${show(c, 'c')}) = ${res}`;
+}
+function cell4(key) {
+  return h('input', { id: 's4-' + key, type: 'text', inputmode: 'numeric', autocomplete: 'off', placeholder: key, 'aria-label': 'cell ' + key,
+    value: S.s4.vals[key] || '',
+    oninput: (ev) => { S.s4.vals[key] = ev.target.value; const el = $('#orLive'); if (el) el.textContent = or4Text(); },
+    onkeydown: (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); check4(); } } });
+}
 
 function check4() {
   const st = S.s4;
   if (st.part === 0) {
-    st.ok.or = within(st.vals.or, 13.5, 14.5);
-    if (st.ok.or) { st.part = 1; st.msg = 'good:OR = (647 × 27) ÷ (2 × 622) ≈ 14. The odds of having smoked were fourteen times higher among the lung-cancer patients than among the matched controls. Not a risk ratio — the study cannot compute a risk, because Doll and Hill chose how many controls to interview.'; }
-    else st.msg = 'bad:Odds ratio = (a × d) ÷ (b × c) = (647 × 27) ÷ (2 × 622). Cross-multiply the table.';
+    const a = parseNum(st.vals.a), b = parseNum(st.vals.b), c = parseNum(st.vals.c), d = parseNum(st.vals.d);
+    if (![a, b, c, d].every(isFinite)) { st.msg = 'bad:Fill all four cells from the sentence above.'; render(); return; }
+    const got = [a, b, c, d].slice().sort((x, y) => x - y).join(',');
+    if (got !== '2,27,622,647') { st.msg = 'bad:Use the four counts from the sentence — 647, 2, 622 and 27 — each in the cell where its row and column meet.'; render(); return; }
+    const or = (a * d) / (b * c);
+    if (or > 13.5 && or < 14.6) {
+      st.part = 1;
+      st.msg = 'good:OR ≈ 14: the odds of having smoked were fourteen times higher among the lung-cancer patients. Notice what the formula used — only the cross-product (a × d) ÷ (b × c). Swap BOTH rows and columns and it still returns 14; swap just one and it turns upside down.';
+    } else if (or > 0.064 && or < 0.075) {
+      st.msg = 'bad:Look at the live formula: 0.07 is 14 turned upside down. You have flipped one axis — the two rows, or the two columns. Swap them back (or swap the other axis too) and the cross-product returns to 14.';
+    } else {
+      st.msg = 'bad:The four counts are in, but crossed. Put each where its row and column meet — and watch the OR under the table change as you move them.';
+    }
     render();
   } else if (st.part === 1) {
     st.ok.or10 = nearNum(st.vals.or10, (A * D) / (B * C), 0.05);
@@ -604,7 +640,7 @@ function check4() {
 function mcq4(i) {
   const st = S.s4;
   if (st.part !== 2) return;
-  if (i === 1) { st.part = 3; S.done[4] = true; logIdea('odds'); st.msg = 'good:Odds = risk ÷ (1 − risk). At a risk of 0.60 the odds are 1.5; at 0.20 they are 0.25 — the ratio of odds is 6 while the ratio of risks is 3. When the outcome is rare, 1 − risk ≈ 1 and odds ≈ risk, so OR ≈ RR. Lung cancer among controls was rare (and cases are rare in the population), so Doll and Hill’s 14 reads, approximately, as a risk ratio. Four out of ten falling ill is not rare.'; }
+  if (i === 1) { st.part = 3; S.done[4] = true; logIdea('odds'); st.msg = 'good:Odds = risk ÷ (1 − risk). At a risk of 0.60 the odds are 1.5; at 0.20 they are 0.25 — the ratio of odds is 6 while the ratio of risks is 3. When the outcome is rare, 1 − risk ≈ 1 and odds ≈ risk, so OR ≈ RR. Lung cancer is rare, so Doll and Hill’s 14 reads, approximately, as a risk ratio. Four out of ten falling ill is not rare.'; }
   else st.msg = 'bad:' + (i === 0 ? 'Neither is wrong. They answer slightly different questions; the odds ratio simply drifts further from 1 as the outcome gets common.' : 'No rounding here — 6 and 3 are exact. The gap is structural.');
   render();
 }
@@ -638,8 +674,12 @@ function renderStage4() {
     h('div', { class: 'card scene' },
       drawDH(),
       st.part === 0 ? h('div', { class: 'calc' },
-        h('p', { class: 'stmt' }, 'Smokers: 647 of 649 cases, 622 of 649 controls. Non-smokers: 2 and 27. Odds ratio for smoking, cases versus controls?'),
-        field('s4', 'or', 'Odds ratio  (a × d) ÷ (b × c)', { ph: 'a number', onenter: check4 }),
+        h('p', { class: 'stmt' }, 'Among the 649 cases, 647 smoked and 2 did not. Among the 649 controls, 622 smoked and 27 did not. Fill the table — the odds ratio below computes itself as you type.'),
+        h('table', { class: 'tt', 'aria-label': 'Doll and Hill two by two table' },
+          h('tr', {}, h('th', {}), h('th', {}, 'Smokers'), h('th', {}, 'Non-smokers'), h('th', {}, 'Total')),
+          h('tr', {}, h('th', { class: 'row' }, 'Cases'), h('td', {}, cell4('a')), h('td', {}, cell4('b')), h('td', { class: 'tot' }, '649')),
+          h('tr', {}, h('th', { class: 'row' }, 'Controls'), h('td', {}, cell4('c')), h('td', {}, cell4('d')), h('td', { class: 'tot' }, '649'))),
+        h('div', { class: 'eq', id: 'orLive' }, or4Text()),
         h('div', { class: 'scenebtns' }, h('button', { class: 'act', type: 'button', onclick: check4 }, 'Check'))) : null,
       st.part === 1 ? h('div', { class: 'calc' },
         h('p', { class: 'stmt' }, 'Back to the ten people of station 1: a = 3, b = 2, c = 1, d = 4. The risk ratio was 3.0. Compute the odds ratio for the same table.'),
