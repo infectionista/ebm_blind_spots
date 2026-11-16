@@ -333,7 +333,7 @@ function freshState() {
     m4: { sel: null, placed: {}, formulation: null },
     m5: { sel: null, placed: {}, p2a: null, p2b: null },
     m6: { assign: {}, revealed: false, headline: null },
-    m7: { marked: new Set(), checked: false },
+    m7: { found: null, msg: '' },
     m8: { open: null, verdicts: {} },
     done: { m2: false, m3: false, m4: false, m5: false, m6: false, m7: false, m8: false },
     toast: '',
@@ -364,7 +364,7 @@ const MODS = [
     anchor: 'заголовок: «всё хуже»',
     options: ['ok', 'strong', 'contra'], correct: 'strong',
     rule: 'Заголовок подлежит сверке с текстом под ним: составляются они, как правило, разными лицами и с разными целями.' },
-  { id: 'm7', n: 'М6', name: 'Проверьте чиновника', time: '~12 мин',
+  { id: 'm7', n: 'М6', name: 'Проверьте чиновника', time: '~6 мин',
     anchor: 'заболеваемость «снизилась до исторического минимума»',
     options: ['ok', 'src', 'strong', 'nope'], correct: 'src',
     rule: 'Цитата должностного лица — проверяемое утверждение. Определения «исторический», «рекордный», «впервые» имеют точное значение и подлежат сверке с рядом данных.' },
@@ -893,46 +893,33 @@ function drawEpi() {
   return svg;
 }
 
-function check7() {
-  const st = S.m7;
-  st.checked = true;
-  render();
-}
-
 function renderM7() {
   const st = S.m7;
-  const marked = st.marked;
-  let hits = 0, misses = 0, extras = 0;
-  M7_YEARS.forEach(y => {
-    if (M7_BOUNDARY.has(y)) return;
-    if (M7_CORRECT.has(y) && marked.has(y)) hits++;
-    if (M7_CORRECT.has(y) && !marked.has(y)) misses++;
-    if (!M7_CORRECT.has(y) && marked.has(y)) extras++;
-  });
-  const solved = st.checked && misses === 0 && extras === 0;
   return moduleShell('m7',
     stmtCard(DATA.mazus.who + ' (' + DATA.mazus.when + '): заболеваемость',
       DATA.mazus.quote, 'блок 2. Текст возражает мягко: темпы остаются высокими.'),
-    h('div', { class: 'steplab' }, 'Интерактив · отметьте все годы, когда выявляли МЕНЬШЕ, чем в 2025-м'),
+    h('div', { class: 'steplab' }, 'Интерактив · один контрпример'),
+    h('p', { class: 'stmt' }, '«Исторический минимум» — значит: ниже, чем когда-либо раньше. Чтобы опровергнуть такое утверждение, достаточно одного года ниже оранжевой линии. Найдите его на кривой и нажмите на этот год в ленте.'),
     h('div', { class: 'scene' }, drawEpi()),
     h('div', { class: 'years' }, ...M7_YEARS.map(y => {
       const cls = ['yearchip'];
       if (M7_BOUNDARY.has(y)) cls.push('bnd');
-      if (st.checked) {
-        if (M7_CORRECT.has(y) && marked.has(y)) cls.push('hit');
-        if (M7_CORRECT.has(y) && !marked.has(y)) cls.push('miss');
-        if (!M7_CORRECT.has(y) && !M7_BOUNDARY.has(y) && marked.has(y)) cls.push('miss');
-      }
-      return h('button', { class: cls.join(' '), type: 'button', 'aria-pressed': String(marked.has(y)),
-        onclick: () => { if (marked.has(y)) marked.delete(y); else marked.add(y); st.checked = false; render(); } }, y);
+      if (st.found !== null && M7_CORRECT.has(y)) cls.push('hit');
+      return h('button', { class: cls.join(' '), type: 'button',
+        disabled: st.found !== null ? 'disabled' : null,
+        onclick: () => {
+          if (M7_BOUNDARY.has(y)) { st.msg = 'Год ' + y + ' — у самой линии 45 тыс., ряд там будет уточнен. Выберите год, где разница видна глазом.'; }
+          else if (M7_CORRECT.has(y)) { st.found = y; st.msg = ''; }
+          else { st.msg = 'В ' + y + '-м выявляли БОЛЬШЕ 45 тыс. — это не контрпример. Смотрите левую часть кривой и провал середины 2000-х.'; }
+          render();
+        } }, y);
     })),
-    h('p', { class: 'fnote' }, 'Серым тоном отмечаются граничные годы (2002, 2007): ряд там будет уточнен, они не оцениваются.'),
-    h('div', { class: 'btnrow' }, h('button', { class: 'act', type: 'button', onclick: check7 }, 'Проверить разметку'),
-      h('span', { class: 'fnote' }, 'отмечено лет: ' + marked.size)),
-    st.checked ? (solved
-      ? [h('div', { class: 'reveal', html: '<b>Автоответ сложился:</b> меньше, чем в 2025-м, выявляли в 1987–2000 и примерно в 2003–2006 годах. Минимум не исторический, а примерно двадцатилетний.' }),
-         ...verdictBlock('m7', 'В середине 2000-х в России выявляли ~33–40 тыс. случаев в год — меньше, чем 45 тыс. в 2025-м. «Исторический минимум» — проверяемое слово, и оно не выдерживает проверки. Обратите внимание: статья спорила с цитатой, не проверив ее буквально, — и упустила самый сильный аргумент.')]
-      : h('p', { class: 'toast' }, (misses ? 'Не все годы ниже линии отмечены — смотрите левую часть кривой и провал середины 2000-х (пунктирные рамки). ' : '') + (extras ? 'Сняты лишние: годы у пиков (2001, 2016–2017 и соседние) были ВЫШЕ уровня 45 тыс.' : ''))) : null);
+    h('p', { class: 'fnote' }, 'Серые годы (2002, 2007) — у самой линии, ряд там будет уточнен.'),
+    st.msg ? h('p', { class: 'toast' }, st.msg) : null,
+    st.found !== null ? [
+      h('div', { class: 'reveal', html: '<b>Контрпример найден: ' + st.found + '.</b> И он не один: меньше, чем в 2025-м, выявляли во все годы 1987–2000 и примерно в 2003–2006 — они подсвечены. Минимум не исторический, а примерно двадцатилетний.' }),
+      ...verdictBlock('m7', 'В середине 2000-х в России выявляли ~33–40 тыс. случаев в год — меньше, чем 45 тыс. в 2025-м. «Исторический минимум» — проверяемое слово, и оно не выдерживает проверки. Обратите внимание: статья спорила с цитатой, не проверив ее буквально, — и упустила самый сильный аргумент.'),
+    ] : null);
 }
 
 /* =============== М8 · Контроль: всё сходится =============== */
