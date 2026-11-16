@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Аудит одного текста</title>
+<style>
+/* «Аудит одного текста» — EBM Through Blind Spots / FLAS.
+   Один файл, без внешних зависимостей и без fetch. Палитра курса.
+   Серии графиков (#B4573A субъект, #0A97A3 сравнение) провалидированы
+   validate_palette.js на креме #F8EACF (light): PASS; WARN контраста teal
+   снимается обязательными прямыми подписями. #C08A3E — только аннотации
+   с текстовой подписью, #B9A98F — контекст; они не категориальные серии. */
+:root {
+  color-scheme: light;
+  --paper:   #F8EACF;
+  --panel:   #FFFDF6;
+  --panel-2: #F5E7C8;
+  --line:    #D9C9A6;
+  --fg:      #2A2622;
+  --fg-dim:  #8C8478;
+  --petrol:      #0B5359;
+  --petrol-l:    #157079;
+  --petrol-soft: #DCEAE8;
+  --teal-chart:  #0A97A3;
+  --verm:        #B4573A;
+  --verm-soft:   #F6DED3;
+  --ochre:       #C08A3E;
+  --ochre-soft:  #F3E4C6;
+  --ctx:         #B9A98F;
+  --ok:          #2F6B4F;
+  --ok-soft:     #DCEBDD;
+  --gray-letter: #CFC5AE;
+  --ui:   -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, 'DejaVu Sans Mono', monospace;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--paper); color: var(--fg); font-family: var(--ui); font-size: 15.5px; line-height: 1.55; margin: 0; }
+.wrap {
+  max-width: 880px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: max(24px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(48px, env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; gap: 18px;
+}
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--petrol); }
+h1 { font-size: clamp(26px, 5.4vw, 40px); font-weight: 800; letter-spacing: -.02em; line-height: 1.1; margin: 6px 0 0; text-wrap: balance; }
+h1 .hi { color: var(--verm); }
+.lede { margin: 8px 0 0; color: var(--fg-dim); max-width: 72ch; }
+
+.progress { display: flex; gap: 4px; margin-top: 14px; }
+.progress .p { flex: 1; height: 7px; border-radius: 4px; background: var(--gray-letter); }
+.progress .p.on { background: var(--petrol); }
+.progress .p.cur { outline: 2px solid var(--petrol); outline-offset: 1px; }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; min-width: 0; }
+.card h2 { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--petrol); margin: 0 0 10px; }
+.card h3 { margin: 0 0 8px; font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+
+.tocgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 680px) { .tocgrid { grid-template-columns: 1fr; } }
+.modcard { text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; cursor: pointer; font: inherit; color: inherit; display: flex; flex-direction: column; gap: 6px; }
+.modcard:hover { border-color: var(--petrol); }
+.modcard .mnum { font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--petrol); display: flex; justify-content: space-between; }
+.modcard .mnum .tick { color: var(--ok); letter-spacing: 0; }
+.modcard .mname { font-weight: 700; }
+.modcard .mtime { font-size: 13px; color: var(--fg-dim); }
+
+.topbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.ghost { font: 600 13px/1 var(--ui); color: var(--fg-dim); background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 10px 14px; cursor: pointer; }
+.ghost:hover { color: var(--petrol); border-color: var(--petrol); }
+:is(button, [tabindex], input, summary):focus-visible { outline: 2px solid var(--petrol); outline-offset: 2px; }
+
+.stmt { padding: 14px 16px; border-left: 3px solid var(--ochre); background: var(--panel-2); border-radius: 0 10px 10px 0; margin: 0 0 4px; }
+.stmt .where { display: block; font-size: 12.5px; color: var(--fg-dim); margin-top: 6px; }
+.stmt .q { font-style: italic; }
+.steplab { font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--petrol); margin: 16px 0 8px; }
+
+.act { font: 600 14.5px/1.25 var(--ui); color: #fff; background: var(--petrol); border: 0; border-radius: 9px; padding: 11px 16px; cursor: pointer; }
+.act:hover { background: var(--petrol-l); }
+.act:disabled { background: var(--gray-letter); cursor: default; }
+.act.alt { background: var(--panel); color: var(--petrol); border: 1px solid var(--petrol); }
+.act.alt:hover { background: var(--petrol-soft); }
+.act.alt:disabled { color: var(--fg-dim); border-color: var(--line); background: var(--panel); }
+.act.good:disabled { background: var(--ok); color: #fff; border: 0; }
+.act.sel { outline: 3px solid var(--petrol); outline-offset: 1px; }
+.btncol { display: flex; flex-direction: column; gap: 10px; align-items: stretch; margin-top: 10px; }
+.btncol .act { text-align: left; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 12px; }
+
+.toast { margin-top: 12px; font-size: 14px; color: var(--verm); min-height: 1.3em; }
+.toast.good { color: var(--ok); }
+.reveal { margin-top: 14px; padding: 13px 15px; border-radius: 10px; background: var(--ok-soft); font-size: 14.5px; }
+.reveal b { color: var(--ok); }
+.rule { margin-top: 10px; padding: 12px 15px; border-radius: 10px; background: var(--petrol-soft); color: var(--petrol); font-weight: 600; font-size: 14.5px; }
+
+.calcf { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; background: var(--panel-2); border-radius: 8px; padding: 9px 11px; margin-top: 10px; }
+.calcf label { font-size: 14px; flex: 1 1 180px; }
+.calcf input { font: 500 15px/1.2 var(--mono); width: 110px; padding: 8px 9px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); color: var(--fg); }
+.calcf input.ok { border-color: var(--ok); background: var(--ok-soft); }
+.calcf input.bad { border-color: var(--verm); background: var(--verm-soft); }
+
+.excerpt { margin-top: 12px; border: 1px dashed var(--petrol); border-radius: 10px; padding: 12px 15px; background: var(--panel); font-size: 14.5px; }
+.excerpt .src { display: block; font-size: 12.5px; color: var(--fg-dim); margin-top: 8px; }
+.excerpt .en { font-style: italic; }
+.excerpt mark { background: var(--ochre-soft); color: var(--fg); padding: 0 3px; border-radius: 3px; font-weight: 700; }
+
+.scene { margin-top: 12px; }
+.scene svg { width: 100%; height: auto; display: block; user-select: none; -webkit-user-select: none; }
+.srcline { font-size: 12.5px; color: var(--fg-dim); margin: 6px 0 0; }
+.hero { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; }
+.hero .hb { flex: 1 1 180px; background: var(--panel-2); border-radius: 10px; padding: 10px 14px; }
+.hero .hb .hv { font: 700 26px/1.1 var(--ui); font-variant-numeric: tabular-nums; }
+.hero .hb .hl { font-size: 13px; color: var(--fg-dim); margin-top: 2px; }
+.hero .hb.nodata .hv { font-size: 15px; font-weight: 600; color: var(--fg-dim); }
+
+.lab { font-family: var(--ui); font-size: 11px; fill: var(--fg-dim); font-weight: 600; }
+.lab.big { font-size: 13px; fill: var(--fg); font-weight: 700; }
+.lab.mono { font-family: var(--mono); font-weight: 600; }
+.lab.heroN { font-size: 24px; fill: var(--fg); font-weight: 800; }
+
+.quotecard { display: inline-block; background: var(--panel); border: 1.5px solid var(--verm); color: var(--fg); border-radius: 9px; padding: 8px 12px; margin: 4px 6px 4px 0; cursor: pointer; font: 600 13.5px/1.3 var(--ui); }
+.quotecard.sel { background: var(--verm); color: #fff; }
+.quotecard.placed { border-style: dashed; opacity: .75; cursor: default; }
+.zones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+@media (max-width: 560px) { .zones { grid-template-columns: 1fr; } }
+.zone { border: 1.5px dashed var(--line); border-radius: 10px; padding: 10px 12px; min-height: 64px; cursor: pointer; background: var(--panel); }
+.zone:hover { border-color: var(--petrol); }
+.zone .zl { font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--petrol); margin-bottom: 6px; }
+.zone .chiplist { display: flex; flex-wrap: wrap; gap: 6px; }
+.zchip { font-size: 12.5px; font-weight: 600; border-radius: 999px; padding: 4px 10px; background: var(--panel-2); }
+.zchip.okz { background: var(--ok-soft); color: var(--ok); }
+.zchip.badz { background: var(--verm-soft); color: var(--verm); }
+
+.factrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding: 10px 0; }
+.factrow:first-of-type { border-top: 0; }
+.factrow .ft { flex: 1 1 280px; font-size: 14.5px; }
+.factrow .fb { display: flex; gap: 6px; }
+.fbtn { font: 600 12.5px/1 var(--ui); border: 1px solid var(--line); background: var(--panel); color: var(--fg-dim); border-radius: 999px; padding: 7px 11px; cursor: pointer; }
+.fbtn:hover { border-color: var(--petrol); color: var(--petrol); }
+.fbtn[aria-pressed="true"] { background: var(--petrol); border-color: var(--petrol); color: #fff; }
+.fnote { font-size: 13px; color: var(--fg-dim); margin: 2px 0 0; }
+
+.years { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+.yearchip { font: 600 12px/1 var(--mono); border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 7px; padding: 8px 7px; cursor: pointer; min-width: 44px; text-align: center; }
+.yearchip[aria-pressed="true"] { background: var(--verm); border-color: var(--verm); color: #fff; }
+.yearchip.hit { outline: 2px solid var(--ok); }
+.yearchip.miss { outline: 2px solid var(--verm); outline-style: dashed; }
+.yearchip.bnd[aria-pressed="true"] { background: var(--ctx); border-color: var(--ctx); color: var(--fg); }
+
+.claims .factrow .fb { flex-wrap: wrap; }
+.scale { position: relative; height: 56px; border-radius: 10px; background: linear-gradient(90deg, var(--petrol-soft), var(--verm-soft)); margin-top: 10px; display: flex; }
+.scale .half { flex: 1; display: flex; align-items: flex-end; padding: 6px 10px; font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-dim); cursor: pointer; border-radius: 10px; }
+.scale .half:hover { outline: 2px dashed var(--petrol); outline-offset: -4px; }
+
+table.audit { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 10px; }
+table.audit th { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--petrol); text-align: left; padding: 6px 8px 6px 0; border-bottom: 1px solid var(--line); }
+table.audit td { padding: 8px 8px 8px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.audit td.v { white-space: nowrap; font-weight: 600; }
+td.v.okv { color: var(--ok); } td.v.badv { color: var(--verm); }
+@media (max-width: 560px) { table.audit td.v { white-space: normal; } table.audit { font-size: 12.5px; } }
+
+.rulecards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+@media (max-width: 680px) { .rulecards { grid-template-columns: 1fr; } }
+.rulecard { background: var(--panel-2); border-radius: 10px; padding: 11px 14px; font-size: 14px; }
+.rulecard b { color: var(--petrol); display: block; margin-bottom: 3px; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+
+details.fine { margin-top: 12px; font-size: 14px; color: var(--fg-dim); border: 1px dashed var(--line); border-radius: 8px; padding: 8px 12px; }
+details.fine summary { cursor: pointer; font-weight: 600; color: var(--petrol); }
+details.fine p { margin: 8px 0 2px; }
+.foot { color: var(--fg-dim); font-size: 12.5px; line-height: 1.7; margin-top: 6px; }
+.starq { border: 1px dashed var(--ochre); border-radius: 10px; padding: 11px 14px; margin-top: 14px; }
+.starq .sl { font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ochre); margin-bottom: 6px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+.fadebar rect, .level { transition: width .25s ease, height .25s ease, x .25s ease, y .25s ease, opacity .25s ease; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+'use strict';
+
+/* =============== конфиг и данные (единственный источник чисел) =============== */
+
+const CONFIG = { SHOW_LINKS: false, REVEAL_COAUTHOR: false };
+
+const DATA = {
+  // M1 — ВЕЦА, четыре страны
+  eeca4: {
+    inArticle: 92, inSource: 93, year: 2023,
+    sourceQuoteEn: "with 93% occurring in Russia, Ukraine, Uzbekistan, and Kazakhstan",
+    source: "Пресс-релиз ЮНЭЙДС, 22.07.2024 (данные 2023)",
+    countriesTotal: 16
+  },
+
+  // M2 — каскады
+  cascadeRU: {
+    diagnosed: 1232055,
+    registered: 846500,
+    gap: 385555,
+    onArtLow: 610000,
+    onArtHigh: 766000,
+    suppressed: 615000,
+    sources: "Роспотребнадзор/тезисы конгресса 2026; Минздрав; Здравресурс (2024)"
+  },
+  cascadeEN: {
+    plhivEst: null,            // [ПРОВЕРИТЬ] оценка живущих с ВИЧ в Англии, отчет UKHSA 2025
+    diagnosedPct: 95,
+    onArtPctOfDiagnosed: 99,
+    suppressedPctOfOnArt: 98,
+    suppressedPctOfDiagnosed: 97,
+    note: "Отчет UKHSA 2025 — Англия, не вся Великобритания",
+    source: "UKHSA, HIV testing… 2025 report (данные 2024)"
+  },
+
+  // M3 — тестирование
+  testing: {
+    y2014: { total: 28000000, keyShare: 5.8, keyAbs: 1624000 },
+    y2024: { total: 54000000 },
+    y2023: { keyShare: 3.0 },
+    keyAbsNow: 1620000,
+    yearMismatchNote: "5,8% — 2014; 3% — 2023; 54 млн — 2024"
+  },
+
+  // M4 — смерти среди людей с ВИЧ (все причины)
+  deaths: {
+    rangeRecent: [30000, 34000],
+    shape: "рост в 2010-е → пик/плато нач. 2020-х (~34 тыс.) → легкое снижение",
+    series: null               // [ПРОВЕРИТЬ] оцифровать по бюллетеню №50 (hivrussia.info)
+  },
+
+  // M7 — новые зарегистрированные случаи, Россия
+  newCases: {
+    anchors: {
+      1995: 203,        // [ПРОВЕРИТЬ]
+      1999: 19800,      // [ПРОВЕРИТЬ]
+      2001: 87671,
+      2005: 35554,      // [ПРОВЕРИТЬ ±]
+      2016: 103400,     // [ПРОВЕРИТЬ] верхняя методика; по форме №61 ≈ 86–88 тыс.
+      2024: 52000,
+      2025: 45000
+    },
+    threshold2025: 45000,
+    dualMethodNote: "пик 2016–2017: 86–104 тыс. в зависимости от методики счета"
+  },
+
+  mazus: { quote: "снизилась до исторического минимума", when: "июль 2026", who: "главный внештатный специалист Минздрава по ВИЧ" },
+
+  // M8 — мир (фактшит ЮНЭЙДС, проверено 16.11.2026; данные за 2025)
+  global: {
+    plhiv: [41.0, 35.3, 47.5],
+    newInf: [1.2, 0.95, 1.7],
+    deaths: [0.57, 0.43, 0.78],
+    suppressedPctOfAll: 74,
+    onTreatment: 32.1,
+    notOnTreatment: 8.9,
+    peakNewInf: { year: 1994, value: [3.5, 2.7, 4.7], declinePct: 65 },
+    peakDeaths: { year: 2004, value: [2.1, 1.6, 3.0], declinePct: 73 },
+    seriesNewInf: null, seriesDeaths: null // [ПРОВЕРИТЬ] оцифровать кривые фактшита/aidsinfo
+  },
+  eecaRegion: { plhiv: 2.1, newInf: 130000, newInfChange: "+7% к 2010", deaths: 48000, deathsChange: "+48% к 2010",
+    suppressed: 43, suppressedYear: 2023, note: "43% — данные 2023 г. (2024 — pending), худший показатель среди регионов" },
+
+  // Финал — ECDC (данные 2024)
+  ecdc: {
+    ratesPer100k: { "Россия": 33.5, "Украина": 26.5, "Молдова": 26.4 }, // [ПРОВЕРИТЬ по Table 1]
+    northMacedonia: 3.0,
+    eastAvg: 27.2,
+    nmMaleFemaleRatio: 17,
+    source: "ECDC/WHO, HIV/AIDS surveillance in Europe 2025 (данные 2024)"
+  }
+};
+
+/* =============== словарь вердиктов =============== */
+
+const V = {
+  ok:     'подтверждено',
+  src:    'расходится с источником',
+  denom:  'подмена знаменателя',
+  abs:    'доля вместо абсолюта',
+  contra: 'внутреннее противоречие',
+  strong: 'сильнее данных',
+  nope:   'непроверяемо отсюда',
+};
+const V_ABS_STRONG = 'доля вместо абсолюта + сильнее данных';
+
+/* =============== помощники =============== */
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+const SVGTAGS = new Set(['svg','g','path','line','circle','rect','text','polyline','polygon','tspan','defs','pattern','title','marker']);
+const $ = s => document.querySelector(s);
+function h(tag, attrs = {}, ...kids) {
+  const el = SVGTAGS.has(tag) ? document.createElementNS(SVGNS, tag) : document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v === null || v === undefined || v === false) continue;
+    if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (k === 'html') el.innerHTML = v;
+    else el.setAttribute(k, v);
+  }
+  for (const kid of kids.flat(9)) {
+    if (kid === null || kid === undefined || kid === false) continue;
+    el.append(kid.nodeType ? kid : document.createTextNode(kid));
+  }
+  return el;
+}
+const fmt = n => n.toLocaleString('ru-RU');
+function parseNum(str) {
+  if (str === null || str === undefined) return NaN;
+  let s = String(str).trim().replace(/\s+/g, '').replace(',', '.').replace('%', '');
+  return s ? parseFloat(s) : NaN;
+}
+function hatchDefs() {
+  return h('defs', {},
+    h('pattern', { id: 'hatch', width: 7, height: 7, patternTransform: 'rotate(45)', patternUnits: 'userSpaceOnUse' },
+      h('rect', { width: 7, height: 7, fill: 'var(--ctx)', opacity: .45 }),
+      h('line', { x1: 0, y1: 0, x2: 0, y2: 7, stroke: '#FFFDF6', 'stroke-width': 3 })));
+}
+function tip(...lines) { return h('title', {}, lines.join('\n')); }
+
+/* =============== состояние =============== */
+
+let S;
+function freshState() {
+  return {
+    view: 'toc',
+    verdicts: {},               // m1..m7 -> ключ словаря (или 'absstrong'); сравнение в отчете
+    m1: { opened: false, vals: {}, ok: {}, checked: false },
+    m2: { forecast: null, denom: 'diag', diag: false, bonus: null },
+    m3: { forecast: null, abs: false, overlay: false },
+    m4: { sel: null, placed: {}, formulation: null },
+    m5: { sel: null, placed: {}, p2a: null, p2b: null },
+    m6: { assign: {}, revealed: false, headline: null },
+    m7: { marked: new Set(), checked: false },
+    m8: { open: null, verdicts: {} },
+    done: { m1: false, m2: false, m3: false, m4: false, m5: false, m6: false, m7: false, m8: false },
+    toast: '',
+  };
+}
+S = freshState();
+
+/* =============== мета модулей =============== */
+
+const MODS = [
+  { id: 'm1', n: 'М1', name: 'Кликните по ссылке', time: '~5 мин',
+    anchor: 'на четыре страны приходилось 92% новых случаев в регионе',
+    options: ['ok', 'src', 'nope'], correct: 'src',
+    rule: 'Ссылка — не подтверждение, пока вы ее не открыли. Это самая дешевая проверка из существующих.' },
+  { id: 'm2', n: 'М2', name: 'Процент от кого?', time: '~12 мин',
+    anchor: 'в Великобритании подавления «добились у 98%»',
+    options: ['ok', 'denom', 'src', 'strong'], correct: 'denom',
+    rule: 'Процент без знаменателя — не число. Первый вопрос к любой доле: «от кого?»' },
+  { id: 'm3', n: 'М3', name: 'Посчитайте за автора', time: '~10 мин',
+    anchor: 'доля ключевых групп упала с 5,8% до 3% — «отсюда и снижение»',
+    options: ['ok', 'absstrong', 'src'], correct: 'absstrong',
+    rule: 'Проценты и абсолюты рассказывают разные истории. Считайте за автора — его же числами.' },
+  { id: 'm4', n: 'М4', name: 'Очная ставка цитат', time: '~10 мин',
+    anchor: '«реже умирают» — и «смертность на историческом максимуме»',
+    options: ['ok', 'contra', 'src'], correct: 'contra',
+    rule: 'Соберите все упоминания одной величины в одном месте. По отдельности фразы могут быть верны; вместе — нет.' },
+  { id: 'm5', n: 'М5', name: 'Шкала уверенности', time: '~10 мин',
+    anchor: '«доказывают», «перестает работать», «невозможность передать»',
+    options: ['ok', 'strong', 'contra'], correct: 'strong',
+    rule: 'Глагол-связка — заявка на силу доказательств. Проверяйте, покрыта ли заявка, — часто соседним абзацем.' },
+  { id: 'm6', n: 'М6', name: 'Заголовок против текста', time: '~8 мин',
+    anchor: 'заголовок: «всё хуже»',
+    options: ['ok', 'strong', 'contra'], correct: 'strong',
+    rule: 'Сверяйте заголовок с текстом под ним — они нередко написаны разными людьми и для разных целей.' },
+  { id: 'm7', n: 'М7', name: 'Проверьте чиновника', time: '~12 мин',
+    anchor: 'заболеваемость «снизилась до исторического минимума»',
+    options: ['ok', 'src', 'strong', 'nope'], correct: 'src',
+    rule: 'Цитата чиновника — проверяемое утверждение, а не декорация. «Исторический», «рекордный», «впервые» — слова со значением.' },
+  { id: 'm8', n: 'М8', name: 'Контроль: всё сходится', time: '~8 мин',
+    anchor: 'мировой блок: семь утверждений',
+    options: null, correct: 'ok',
+    rule: 'У проверки два исхода, и «подтверждено» — тоже результат. Аудит — не цинизм.' },
+];
+const modMeta = id => MODS.find(m => m.id === id);
+function verdictLabel(k) { return k === 'absstrong' ? V_ABS_STRONG : V[k]; }
+
+/* =============== общие блоки модуля =============== */
+
+function go(view) { S.view = view; S.toast = ''; render(); window.scrollTo({ top: 0 }); }
+
+function stmtCard(text, quote, where) {
+  return h('p', { class: 'stmt' }, text, quote ? [' ', h('span', { class: 'q' }, '«' + quote + '»')] : null,
+    h('span', { class: 'where' }, 'Где в тексте: ' + where));
+}
+
+function verdictBlock(modId, revealHtml) {
+  const meta = modMeta(modId);
+  const picked = S.verdicts[modId];
+  const kids = [h('div', { class: 'steplab' }, 'Ваш вердикт'),
+    h('div', { class: 'btncol' },
+      ...meta.options.map(k => h('button', {
+        class: 'act' + (picked ? (k === meta.correct ? ' good' : ' alt') : ' alt'),
+        type: 'button', disabled: picked ? 'disabled' : null,
+        onclick: () => { S.verdicts[modId] = k; S.done[modId] = true; render(); } }, verdictLabel(k))))];
+  if (picked) {
+    kids.push(h('div', { class: 'reveal', html: (picked === meta.correct ? '<b>Верно: ' : '<b>Верный вердикт: ') + verdictLabel(meta.correct) + '.</b> ' + revealHtml }));
+    kids.push(h('div', { class: 'rule' }, 'Правило: ' + meta.rule));
+    kids.push(h('div', { class: 'btnrow' }, h('button', { class: 'act', type: 'button', onclick: () => go('toc') }, 'К оглавлению →')));
+  }
+  return kids;
+}
+
+function moduleShell(modId, ...content) {
+  const meta = modMeta(modId);
+  return h('section', { class: 'card', id: 'mod-' + modId },
+    h('div', { class: 'topbar' },
+      h('h2', {}, meta.n + ' · ' + meta.name + ' '),
+      h('button', { class: 'ghost', type: 'button', onclick: () => go('toc') }, '← оглавление')),
+    ...content);
+}
+
+/* =============== М1 · Кликните по ссылке =============== */
+
+function check1() {
+  const st = S.m1, d = DATA.eeca4;
+  st.ok.a = parseNum(st.vals.a) === d.inArticle;
+  st.ok.s = parseNum(st.vals.s) === d.inSource;
+  if (!st.opened) { S.toast = 'bad:Сначала откройте источник — кнопка выше.'; render(); return; }
+  if (st.ok.a && st.ok.s) { st.checked = true; S.toast = ''; }
+  else S.toast = 'bad:' + (!st.ok.a ? 'Число «в статье» — в карточке-утверждении наверху. ' : '') + (!st.ok.s ? 'Число «в источнике» — в выдержке пресс-релиза, оно подсвечено.' : '');
+  render();
+}
+
+function drawEecaBar() {
+  const d = DATA.eeca4;
+  const svg = h('svg', { viewBox: '0 0 660 170', role: 'img', 'aria-label': 'Доля четырех стран в новых случаях ВИЧ в регионе ВЕЦА' });
+  const x0 = 40, w = 580, y = 84, bh = 36;
+  const wA = w * d.inSource / 100;
+  svg.append(hatchDefs());
+  if (S.m1.checked) {
+    svg.append(h('text', { x: x0, y: 34, class: 'lab heroN' }, d.inArticle, tip('в статье: ' + d.inArticle + '%')));
+    svg.append(h('text', { x: x0 + 64, y: 34, class: 'lab', 'font-size': 13 }, 'в статье'));
+    svg.append(h('text', { x: x0 + 150, y: 34, class: 'lab heroN', fill: 'var(--petrol)' }, d.inSource, tip('в источнике: ' + d.inSource + '%')));
+    svg.append(h('text', { x: x0 + 214, y: 34, class: 'lab', 'font-size': 13 }, 'в источнике'));
+    svg.append(h('text', { x: x0 + 320, y: 34, class: 'lab' }, 'глазом разница почти неразличима'));
+  }
+  svg.append(h('rect', { x: x0, y, width: wA - 1, height: bh, rx: 4, fill: 'var(--verm)' },
+    tip('Россия, Украина, Узбекистан, Казахстан — ' + d.inSource + '% новых случаев (' + d.year + ')')));
+  svg.append(h('rect', { x: x0 + wA + 1, y, width: w - wA - 1, height: bh, rx: 4, fill: 'var(--ctx)' },
+    tip('остальные ' + (d.countriesTotal - 4) + ' стран региона')));
+  svg.append(h('text', { x: x0 + 8, y: y + 23, class: 'lab big', fill: '#fff' }, '4 страны'));
+  svg.append(h('text', { x: x0 + w - 8, y: y + 23, class: 'lab', 'text-anchor': 'end' }, 'остальные ' + (d.countriesTotal - 4)));
+  svg.append(h('text', { x: x0, y: y + bh + 22, class: 'lab' }, '0%'));
+  svg.append(h('text', { x: x0 + w, y: y + bh + 22, class: 'lab', 'text-anchor': 'end' }, '100% новых случаев в регионе ВЕЦА, ' + d.year));
+  if (S.m1.checked) svg.append(h('text', { x: x0 + w / 2, y: 160, class: 'lab', 'text-anchor': 'middle' }, 'ошибка мелкая, но ссылка ее не прячет, а показывает'));
+  return svg;
+}
+
+function renderM1() {
+  const st = S.m1, d = DATA.eeca4;
+  const [kind, msg] = S.toast ? S.toast.split(/:(.*)/s) : ['', ''];
+  return moduleShell('m1',
+    stmtCard('Статья: на четыре страны — Россию, Украину, Узбекистан и Казахстан — приходилось',
+      '92% новых случаев ВИЧ в регионе (данные 2023 года)', 'блок 4. Рядом стоит ссылка на источник.'),
+    h('div', { class: 'steplab' }, 'Интерактив · откройте то, на что ссылается предложение'),
+    h('div', { class: 'btnrow' },
+      h('button', { class: 'act' + (st.opened ? ' alt' : ''), type: 'button',
+        onclick: () => { st.opened = true; render(); } }, st.opened ? 'Источник открыт ↓' : '→ Открыть источник, на который ссылается фраза')),
+    st.opened ? h('div', { class: 'excerpt' },
+      h('span', { class: 'en' }, '…across the region, ', h('mark', {}, d.sourceQuoteEn), '.'),
+      h('br'), 'Перевод: «…при этом ', h('mark', {}, d.inSource + '%'), ' приходится на Россию, Украину, Узбекистан и Казахстан».',
+      h('span', { class: 'src' }, 'Источник: ' + d.source + (CONFIG.SHOW_LINKS ? '' : ' · выдержка встроена, внешних ссылок в тренажере нет'))) : null,
+    st.opened && !st.checked ? [
+      h('div', { class: 'calcf' }, h('label', { for: 'm1-a' }, 'Число в статье, %'),
+        h('input', { id: 'm1-a', inputmode: 'numeric', autocomplete: 'off', value: st.vals.a || '',
+          class: st.ok.a === false ? 'bad' : null, oninput: ev => { st.vals.a = ev.target.value; } })),
+      h('div', { class: 'calcf' }, h('label', { for: 'm1-s' }, 'Число в источнике, %'),
+        h('input', { id: 'm1-s', inputmode: 'numeric', autocomplete: 'off', value: st.vals.s || '',
+          class: st.ok.s === false ? 'bad' : null, oninput: ev => { st.vals.s = ev.target.value; } })),
+      h('div', { class: 'btnrow' }, h('button', { class: 'act', type: 'button', onclick: check1 }, 'Сравнить'))] : null,
+    h('p', { class: 'toast' + (kind === 'good' ? ' good' : '') }, msg),
+    st.checked ? [h('div', { class: 'scene' }, drawEecaBar()),
+      h('p', { class: 'srcline' }, 'Источник: ' + d.source + '. «Все 16 стран региона» — формулировка ЮНЭЙДС.'),
+      ...verdictBlock('m1', 'Источник, на который ссылается это же предложение, дает ' + d.inSource + '%, не ' + d.inArticle + '%. Разница в один пункт ничего не меняет по сути — но она показывает главное: даже в тщательно сверенном тексте ссылки живут своей жизнью. Проверка заняла у вас меньше минуты.')] : null);
+}
+
+/* =============== М2 · Процент от кого? =============== */
+
+const M2_FORECAST = [
+  'Примерно в два раза',
+  'Примерно в 1,2 раза',
+  'Нельзя ответить, пока не ясно, от кого считаются проценты',
+];
+
+function drawCascades() {
+  const st = S.m2, RU = DATA.cascadeRU, EN = DATA.cascadeEN;
+  const svg = h('svg', { viewBox: '0 0 660 360', role: 'img', 'aria-label': 'Лечебные каскады: Россия и Англия, в процентах от людей с диагнозом' });
+  svg.append(hatchDefs());
+  const base = 268, scale = 2.1; // 100% = 210px
+  const pRU = {
+    diag: 100,
+    reg: RU.registered / RU.diagnosed * 100,
+    artLow: RU.onArtLow / RU.diagnosed * 100,
+    artHigh: RU.onArtHigh / RU.diagnosed * 100,
+    sup: RU.suppressed / RU.diagnosed * 100,
+  };
+  const yOf = p => base - p * scale;
+  // ось
+  svg.append(h('line', { x1: 36, y1: base, x2: 630, y2: base, stroke: 'var(--fg)', 'stroke-width': 1.5 }));
+  [0, 50, 100].forEach(p => {
+    svg.append(h('line', { x1: 36, y1: yOf(p), x2: 630, y2: yOf(p), stroke: 'var(--line)', 'stroke-width': p ? .8 : 0 }));
+    svg.append(h('text', { x: 32, y: yOf(p) + 4, class: 'lab', 'text-anchor': 'end' }, p));
+  });
+  svg.append(h('text', { x: 36, y: 20, class: 'lab big' }, 'КАСКАД ПОМОЩИ · % от людей с диагнозом'));
+  // Россия: 4 ступени
+  const ruX = [70, 150, 230, 310], bw = 62;
+  const ruBars = [
+    [pRU.diag, 'диагноз', fmt(RU.diagnosed)],
+    [pRU.reg, 'на учете', fmt(RU.registered)],
+    [null, 'на терапии', fmt(RU.onArtLow) + '–' + fmt(RU.onArtHigh)],
+    [pRU.sup, 'подавление', '≈' + fmt(RU.suppressed)],
+  ];
+  ruBars.forEach(([p, lab, abs], i) => {
+    const x = ruX[i];
+    if (p === null) { // вилка-ступень
+      svg.append(h('rect', { x, y: yOf(pRU.artHigh), width: bw, height: (pRU.artHigh - pRU.artLow) * scale, fill: 'var(--verm)', opacity: .35 },
+        tip('на терапии: вилка ' + abs, 'закупки (человеко-годы) против заявления Минздрава (люди)')));
+      svg.append(h('rect', { x, y: yOf(pRU.artLow), width: bw, height: pRU.artLow * scale, rx: 4, fill: 'var(--verm)' },
+        tip('на терапии (нижняя оценка): ' + fmt(RU.onArtLow))));
+      svg.append(h('text', { x: x + bw / 2, y: yOf(pRU.artHigh) - 6, class: 'lab mono', 'text-anchor': 'middle' }, Math.round(pRU.artLow) + '–' + Math.round(pRU.artHigh) + '%'));
+    } else {
+      svg.append(h('rect', { x, y: yOf(p), width: bw, height: p * scale, rx: 4, fill: 'var(--verm)' }, tip(lab + ': ' + abs + ' человек')));
+      svg.append(h('text', { x: x + bw / 2, y: yOf(p) - 6, class: 'lab mono', 'text-anchor': 'middle' }, Math.round(p) + '%'));
+    }
+    svg.append(h('text', { x: x + bw / 2, y: base + 15, class: 'lab', 'text-anchor': 'middle' }, lab));
+    svg.append(h('text', { x: x + bw / 2, y: base + 28, class: 'lab', 'text-anchor': 'middle', 'font-size': 9.5 }, abs));
+  });
+  svg.append(h('text', { x: ruX[0], y: base + 48, class: 'lab big' }, 'Россия'));
+  // Англия: 3 публикуемые ступени (от диагностированных)
+  const enX = [430, 510, 568];
+  const enBars = [
+    [100, 'диагноз', 'диагностированы ' + EN.diagnosedPct + '% живущих с ВИЧ'],
+    [EN.onArtPctOfDiagnosed, 'на терапии', EN.onArtPctOfDiagnosed + '% диагностированных'],
+    [EN.suppressedPctOfDiagnosed, 'подавление', EN.suppressedPctOfOnArt + '% получающих терапию'],
+  ];
+  enBars.forEach(([p, lab, note], i) => {
+    const x = enX[i], w2 = i === 2 ? 56 : 62;
+    svg.append(h('rect', { x, y: yOf(p), width: w2, height: p * scale, rx: 4, fill: 'var(--teal-chart)' }, tip(lab + ': ' + note)));
+    svg.append(h('text', { x: x + w2 / 2, y: yOf(p) - 6, class: 'lab mono', 'text-anchor': 'middle' }, Math.round(p) + '%'));
+    svg.append(h('text', { x: x + w2 / 2, y: base + (i === 2 ? 28 : 15), class: 'lab', 'text-anchor': 'middle' }, lab));
+  });
+  svg.append(h('text', { x: enX[0], y: base + 48, class: 'lab big' }, 'Англия'));
+  svg.append(h('text', { x: enX[0], y: base + 62, class: 'lab', 'font-size': 9.5 }, 'Англия, не вся Великобритания · UKHSA 2025'));
+  // диагональ «как сравнила статья»
+  if (st.diag) {
+    const x1 = ruX[3] + bw / 2, y1 = yOf(pRU.sup), x2 = enX[2] + 28, y2 = yOf(EN.suppressedPctOfOnArt / 1); // 98 на оси от диагноза — рисуем к вершине англ. подавления
+    svg.append(h('line', { x1, y1: y1 - 4, x2, y2: yOf(EN.suppressedPctOfDiagnosed) - 4, stroke: 'var(--ochre)', 'stroke-width': 2.5, 'stroke-dasharray': '7 5' }));
+    svg.append(h('text', { x: (x1 + x2) / 2, y: (y1 + yOf(EN.suppressedPctOfDiagnosed)) / 2 - 8, class: 'lab big', 'text-anchor': 'middle', fill: 'var(--ochre)', 'paint-order': 'stroke', stroke: '#FFFDF6', 'stroke-width': 4 }, 'сравнение по диагонали каскада'));
+  }
+  svg.append(h('text', { x: 36, y: 352, class: 'lab' }, 'Столбцы от нуля. Россия — абсолюты подписями; Англия публикует ступени в процентах.'));
+  return svg;
+}
+
+function renderM2() {
+  const st = S.m2, RU = DATA.cascadeRU, EN = DATA.cascadeEN;
+  const supPct = Math.round(RU.suppressed / RU.diagnosed * 100);
+  const picked = S.verdicts.m2;
+  return moduleShell('m2',
+    stmtCard('Статья: в России вирусная нагрузка подавлена у половины людей с выявленным ВИЧ, а в Великобритании',
+      'этого добились у 98%', 'блок 3.'),
+    h('div', { class: 'steplab' }, 'Прогноз · без ответа интерактив не откроется'),
+    h('p', {}, 'Во сколько раз Великобритания впереди России по подавлению вируса?'),
+    h('div', { class: 'btncol' },
+      ...M2_FORECAST.map((t, i) => h('button', {
+        class: 'act' + (st.forecast !== null ? (i === 2 ? ' good' : ' alt') : ' alt'), type: 'button',
+        disabled: st.forecast !== null ? 'disabled' : null,
+        onclick: () => { st.forecast = i; render(); } }, t))),
+    st.forecast !== null && st.forecast !== 2 ? h('p', { class: 'toast' }, 'Задержите этот ответ в голове — и посмотрите на каскады: сам вопрос «во сколько раз» пока не имеет смысла.') : null,
+    st.forecast !== null ? [
+      h('div', { class: 'steplab' }, 'Интерактив · два каскада и переключатель знаменателя'),
+      h('div', { class: 'scene' }, drawCascades()),
+      h('p', { class: 'srcline' }, 'Источники: ' + RU.sources + ' · ' + EN.source + '. Годы данных: Россия — 2024–2026, Англия — 2024.'),
+      h('div', { class: 'btnrow' },
+        h('button', { class: 'act' + (st.denom === 'diag' ? '' : ' alt'), type: 'button', 'aria-pressed': String(st.denom === 'diag'),
+          onclick: () => { st.denom = 'diag'; render(); } }, 'от всех с диагнозом'),
+        h('button', { class: 'act' + (st.denom === 'art' ? '' : ' alt'), type: 'button', 'aria-pressed': String(st.denom === 'art'),
+          onclick: () => { st.denom = 'art'; render(); } }, 'от получающих терапию'),
+        h('button', { class: 'act alt' + (st.diag ? ' sel' : ''), type: 'button',
+          onclick: () => { st.diag = !st.diag; render(); } }, st.diag ? 'скрыть сравнение статьи' : 'как сравнила статья')),
+      st.diag ? h('p', { class: 'fnote' }, 'Пунктирная стрелка — сравнение статьи: российские «50%» от всех с диагнозом против английских «98%» от получающих терапию. Разные ступени каскада, разные знаменатели.') : null,
+      h('div', { class: 'hero' },
+        st.denom === 'diag'
+          ? [h('div', { class: 'hb' }, h('div', { class: 'hv', style: 'color:var(--verm)' }, '≈' + supPct + '%'), h('div', { class: 'hl' }, 'Россия · подавление от всех с диагнозом')),
+             h('div', { class: 'hb' }, h('div', { class: 'hv', style: 'color:var(--teal-chart)' }, '≈' + EN.suppressedPctOfDiagnosed + '%'), h('div', { class: 'hl' }, 'Англия · подавление от всех диагностированных'))]
+          : [h('div', { class: 'hb nodata' }, h('div', { class: 'hv' }, 'надежной открытой оценки нет'), h('div', { class: 'hl' }, 'Россия · подавление среди получающих терапию: эта ступень каскада не публикуется — тоже находка')),
+             h('div', { class: 'hb' }, h('div', { class: 'hv', style: 'color:var(--teal-chart)' }, EN.suppressedPctOfOnArt + '%'), h('div', { class: 'hl' }, 'Англия · подавление среди получающих терапию'))]),
+      h('div', { class: 'starq' },
+        h('div', { class: 'sl' }, '★ Бонус-вопрос'),
+        h('p', {}, 'Минздрав говорит об охвате терапией 90,5% стоящих на учете; по закупкам выходит около 72%. Могут ли оба быть правы?'),
+        h('div', { class: 'btnrow' },
+          h('button', { class: 'act' + (st.bonus === 'yes' ? ' good' : ' alt'), type: 'button', disabled: st.bonus ? 'disabled' : null, onclick: () => { st.bonus = 'yes'; render(); } }, 'Да'),
+          h('button', { class: 'act alt', type: 'button', disabled: st.bonus ? 'disabled' : null, onclick: () => { st.bonus = 'no'; render(); } }, 'Нет')),
+        st.bonus ? h('p', { class: 'fnote' }, (st.bonus === 'no' ? 'Могут. ' : 'Да — и вот как. ') + fmt(RU.onArtLow) + ' — это годовые курсы (человеко-годы препаратов), а не люди: вставшие на учет среди года потребляют доли курса, поэтому людей, получавших терапию, больше, чем курсов. У числа есть единица измерения.') : null),
+      ...verdictBlock('m2', '98% в британском отчете — это подавление среди получающих терапию (и данные по Англии, не всей Великобритании); российские «50%» посчитаны от всех, у кого есть диагноз, включая тех, кто вовсе не в системе помощи. На одинаковом знаменателе — ≈' + supPct + '% против ≈' + EN.suppressedPctOfDiagnosed + '% от всех диагностированных. Заметьте: разрыв остается огромным. Преувеличение было не нужно — честное сравнение бьет так же сильно, но не оставляет оппоненту зацепки.'),
+    ] : null);
+}
+
+/* =============== М3 · Посчитайте за автора =============== */
+
+const M3_FORECAST = [
+  'Упало почти вдвое',
+  'Немного упало',
+  'Почти не изменилось',
+  'Выросло',
+];
+
+function drawTesting() {
+  const st = S.m3, T = DATA.testing;
+  const svg = h('svg', { viewBox: '0 0 660 300', role: 'img', 'aria-label': 'Тестирование на ВИЧ: доля ключевых групп и абсолютные объемы' });
+  if (!st.abs) {
+    // слоупграф долей
+    const x1 = 150, x2 = 480, yOf = v => 240 - v * 32;
+    svg.append(h('text', { x: 40, y: 24, class: 'lab big' }, 'КАК ЭТО ЗВУЧИТ В ДОЛЯХ · % тестов, приходящихся на ключевые группы'));
+    svg.append(h('line', { x1: 40, y1: 240, x2: 620, y2: 240, stroke: 'var(--fg)', 'stroke-width': 1.5 }));
+    svg.append(h('line', { x1, y1: yOf(T.y2014.keyShare), x2, y2: yOf(T.y2023.keyShare), stroke: 'var(--verm)', 'stroke-width': 3 },
+      tip('доля ключевых групп: ' + T.y2014.keyShare + '% (2014) → ' + T.y2023.keyShare + '% (2023)')));
+    [[x1, T.y2014.keyShare, '2014'], [x2, T.y2023.keyShare, '2023']].forEach(([x, v, yr]) => {
+      svg.append(h('circle', { cx: x, cy: yOf(v), r: 7, fill: 'var(--verm)', stroke: '#fff', 'stroke-width': 2 }, tip(yr + ': ' + String(v).replace('.', ',') + '%')));
+      svg.append(h('text', { x, y: yOf(v) - 14, class: 'lab heroN', 'text-anchor': 'middle', 'font-size': 20 }, String(v).replace('.', ',') + '%'));
+      svg.append(h('text', { x, y: 262, class: 'lab big', 'text-anchor': 'middle' }, yr));
+    });
+    svg.append(h('text', { x: (x1 + x2) / 2, y: 120, class: 'lab', 'text-anchor': 'middle' }, 'падение почти вдвое — звучит драматично'));
+    svg.append(h('text', { x: 40, y: 290, class: 'lab' }, 'Ось — %, от нуля. 0% — на базовой линии.'));
+  } else {
+    // парные столбцы абсолютов
+    const base = 240, scale = 3.1; // 54 млн ≈ 167px
+    const yOf = v => base - v * scale;
+    svg.append(h('text', { x: 40, y: 24, class: 'lab big' }, 'ТО ЖЕ — В АБСОЛЮТНЫХ ЧИСЛАХ · млн тестов в год'));
+    svg.append(h('line', { x1: 40, y1: base, x2: 620, y2: base, stroke: 'var(--fg)', 'stroke-width': 1.5 }));
+    const groups = [
+      [120, T.y2014.total / 1e6, 'все тесты · 2014', 'var(--teal-chart)', fmt(T.y2014.total)],
+      [220, T.y2024.total / 1e6, 'все тесты · 2024', 'var(--teal-chart)', fmt(T.y2024.total)],
+      [400, T.y2014.keyAbs / 1e6, 'ключевые группы · 2014', 'var(--verm)', fmt(T.y2014.keyAbs)],
+      [500, DATA.testing.keyAbsNow / 1e6, 'ключевые группы · 2023', 'var(--verm)', fmt(T.keyAbsNow)],
+    ];
+    groups.forEach(([x, v, lab, col, abs]) => {
+      svg.append(h('rect', { class: 'level', x: x - 34, y: yOf(v), width: 68, height: v * scale, rx: 4, fill: col }, tip(lab + ': ' + abs)));
+      svg.append(h('text', { x, y: yOf(v) - 8, class: 'lab mono', 'text-anchor': 'middle' }, v >= 10 ? Math.round(v) : v.toFixed(2).replace('.', ',')));
+      svg.append(h('text', { x, y: base + 15, class: 'lab', 'text-anchor': 'middle' }, lab.split(' · ')[1]));
+    });
+    svg.append(h('text', { x: 170, y: base + 30, class: 'lab big', 'text-anchor': 'middle' }, 'все тесты'));
+    svg.append(h('text', { x: 450, y: base + 30, class: 'lab big', 'text-anchor': 'middle' }, 'ключевые группы'));
+    svg.append(h('text', { x: 450, y: base - 46, class: 'lab big', 'text-anchor': 'middle' }, 'одинаковой высоты ↓'));
+    svg.append(h('text', { x: 40, y: 290, class: 'lab' }, 'Столбцы от нуля, млн тестов в год. Годы рядов различаются — это часть урока.'));
+  }
+  return svg;
+}
+
+function drawOverlay() {
+  const A = DATA.newCases.anchors;
+  const svg = h('svg', { viewBox: '0 0 660 180', role: 'img', 'aria-label': 'Новые диагнозы ВИЧ: якорные точки' });
+  const base = 130, x0 = 70, x1 = 590, yr0 = 2014, yr1 = 2025;
+  const xOf = yr => x0 + (yr - yr0) / (yr1 - yr0) * (x1 - x0);
+  const max = 110000, yOf = v => base - v / max * 95;
+  svg.append(h('text', { x: 40, y: 20, class: 'lab big' }, 'НОВЫЕ ДИАГНОЗЫ · тыс. случаев в год (якорные точки; ряд будет уточнен)'));
+  svg.append(h('line', { x1: 40, y1: base, x2: 620, y2: base, stroke: 'var(--fg)', 'stroke-width': 1.5 }));
+  const pts = [[2016, A[2016]], [2024, A[2024]], [2025, A[2025]]];
+  svg.append(h('polyline', { points: pts.map(([yr, v]) => xOf(yr) + ',' + yOf(v)).join(' '), fill: 'none', stroke: 'var(--verm)', 'stroke-width': 2, 'stroke-dasharray': '6 5' }));
+  pts.forEach(([yr, v]) => {
+    svg.append(h('circle', { cx: xOf(yr), cy: yOf(v), r: 6, fill: 'var(--verm)', stroke: '#fff', 'stroke-width': 1.5 }, tip(yr + ': ' + fmt(v))));
+    svg.append(h('text', { x: xOf(yr), y: yOf(v) - 10, class: 'lab mono', 'text-anchor': 'middle' }, Math.round(v / 1000)));
+    svg.append(h('text', { x: xOf(yr), y: base + 15, class: 'lab', 'text-anchor': 'middle' }, yr));
+  });
+  svg.append(h('text', { x: 40, y: 172, class: 'lab' }, 'Пик 2016–2017 — по верхней методике; пунктир — эскиз между якорями.'));
+  return svg;
+}
+
+function renderM3() {
+  const st = S.m3, T = DATA.testing;
+  return moduleShell('m3',
+    stmtCard('Статья: тестов стало почти вдвое больше (28 → 54 млн), но доля ключевых групп в тестировании упала с 5,8% до 3% —',
+      'по всей видимости, отсюда и снижение заболеваемости', 'блок 3.'),
+    h('div', { class: 'steplab' }, 'Прогноз · без ответа интерактив не откроется'),
+    h('p', {}, 'Доля ключевых групп упала почти вдвое. Что произошло с ЧИСЛОМ тестов в ключевых группах?'),
+    h('div', { class: 'btncol' },
+      ...M3_FORECAST.map((t, i) => h('button', {
+        class: 'act' + (st.forecast !== null ? (i === 2 ? ' good' : ' alt') : ' alt'), type: 'button',
+        disabled: st.forecast !== null ? 'disabled' : null,
+        onclick: () => { st.forecast = i; render(); } }, t))),
+    st.forecast !== null ? [
+      h('div', { class: 'steplab' }, 'Интерактив · та же величина, два способа рассказать'),
+      h('div', { class: 'scene' }, drawTesting()),
+      h('p', { class: 'srcline' }, 'Источники: Минздрав (28 млн — 2014); ЦНИИЭ (5,8% — 2014); тезисы конгресса-2025 (3% — 2023); конференция (54 млн — 2024).'),
+      h('div', { class: 'btnrow' },
+        h('button', { class: 'act' + (st.abs ? ' alt' : ''), type: 'button', onclick: () => { st.abs = !st.abs; render(); } },
+          st.abs ? '← показать в долях' : 'показать в абсолютных числах'),
+        st.abs ? h('button', { class: 'act alt' + (st.overlay ? ' sel' : ''), type: 'button', onclick: () => { st.overlay = !st.overlay; render(); } },
+          st.overlay ? 'скрыть выявление' : 'наложить выявление') : null),
+      st.abs ? h('div', { class: 'hero' },
+        h('div', { class: 'hb' }, h('div', { class: 'hv', style: 'font-size:19px' }, fmt(T.y2014.total) + ' × 5,8% = ' + fmt(T.y2014.keyAbs)), h('div', { class: 'hl' }, 'тестов в ключевых группах, 2014')),
+        h('div', { class: 'hb' }, h('div', { class: 'hv', style: 'font-size:19px' }, fmt(T.y2024.total) + ' × 3,0% = ' + fmt(T.keyAbsNow)), h('div', { class: 'hl' }, 'тестов в ключевых группах, 2023–2024'))) : null,
+      st.abs && st.overlay ? [h('div', { class: 'scene' }, drawOverlay()),
+        h('p', {}, 'Вопрос рядом с графиком: может ли неизменный объем тестирования ключевых групп механически объяснить двукратное падение выявления — при удвоении тестирования всех остальных?')] : null,
+      st.abs ? verdictBlock('m3', 'Доля действительно упала вдвое — но потому, что знаменатель удвоился. Абсолютный объем тестирования ключевых групп не изменился: ' + fmt(T.y2014.keyAbs) + ' против ' + fmt(T.keyAbsNow) + '. Слабая версия тезиса верна: такая структура тестирования не позволяет исключить недовыявление в ключевых группах. Но «по всей видимости, отсюда и снижение» — объяснение, которое собственные числа текста не поддерживают. И мелочь, которую вы теперь замечаете сами: ' + T.yearMismatchNote + ' — ряды сшиты из разных лет.') : h('p', { class: 'fnote' }, 'Переключите вид на абсолютные числа — вердикт откроется после этого.'),
+    ] : null);
+}
+
+/* =============== М4 · Очная ставка цитат =============== */
+
+const M4_QUOTES = [
+  { id: 'q1', text: '«реже заболевают ВИЧ и умирают»', where: 'блок 1' },
+  { id: 'q2', text: '«смертность держится на историческом максимуме»', where: 'блок 3' },
+];
+const M4_ZONES = [
+  { id: 'zA', label: '2000-е — ранний период' },
+  { id: 'zB', label: '2010-е — рост' },
+  { id: 'zC', label: '2020-е — пик, затем легкое снижение' },
+];
+const M4_FORM = [
+  'Смертность уверенно падает',
+  'Смертность на максимуме и продолжает расти',
+  'За последние три года немного снизилась, но остается у исторического максимума',
+  'Данные о смертности противоречивы',
+];
+
+function drawDeaths() {
+  const st = S.m4, D = DATA.deaths;
+  const svg = h('svg', { viewBox: '0 0 660 260', role: 'img', 'aria-label': 'Смерти среди людей с ВИЧ: форма ряда 2000–2025' });
+  const base = 200, x0 = 60, x1 = 620;
+  const lo = D.rangeRecent[0] / 1000, hi = D.rangeRecent[1] / 1000; // 30 и 34
+  const yOf = v => base - v * 4.4; // 34 тыс. ≈ 150px
+  svg.append(h('text', { x: 40, y: 22, class: 'lab big' }, 'СМЕРТИ СРЕДИ ЛЮДЕЙ С ВИЧ · тыс. в год (форма ряда; полный ряд будет уточнен)'));
+  // полоса 30–34
+  svg.append(h('rect', { x: x0, y: yOf(hi), width: x1 - x0, height: yOf(lo) - yOf(hi), fill: 'var(--ochre)', opacity: .18 }));
+  svg.append(h('text', { x: x1, y: yOf(hi) - 4, class: 'lab mono', 'text-anchor': 'end' }, '34 тыс.'));
+  svg.append(h('text', { x: x1, y: yOf(lo) + 12, class: 'lab mono', 'text-anchor': 'end' }, '30 тыс.'));
+  svg.append(h('line', { x1: 40, y1: base, x2: 620, y2: base, stroke: 'var(--fg)', 'stroke-width': 1.5 }));
+  // качественная кривая: подъем → плато → легкое снижение (эскиз, без выдуманных значений)
+  svg.append(h('path', { d: `M ${x0} ${base - 14} C 200 ${base - 20}, 260 ${yOf(20)}, 360 ${yOf(hi - 1)} C 420 ${yOf(hi) + 2} , 470 ${yOf(hi)}, 510 ${yOf(hi)} C 560 ${yOf(hi)}, 585 ${yOf(31)}, ${x1} ${yOf(31)}`,
+    fill: 'none', stroke: 'var(--verm)', 'stroke-width': 2.5, 'stroke-dasharray': '7 5' },
+    tip('эскиз формы: ' + D.shape)));
+  // зоны
+  const zx = { zA: [x0, 240], zB: [240, 440], zC: [440, x1] };
+  M4_ZONES.forEach(z => {
+    const [a, b] = zx[z.id];
+    const placedHere = M4_QUOTES.filter(q => st.placed[q.id] === z.id);
+    svg.append(h('rect', { x: a, y: 36, width: b - a, height: base - 36, fill: placedHere.length ? 'var(--ok)' : 'var(--petrol)',
+      opacity: placedHere.length ? .14 : .05, style: 'cursor:pointer',
+      onclick: () => placeQuote4(z.id) }, tip(z.label + (st.sel ? ' — положить цитату сюда' : ''))));
+    svg.append(h('text', { x: (a + b) / 2, y: base + 16, class: 'lab', 'text-anchor': 'middle' }, z.label.split(' — ')[0]));
+    placedHere.forEach((q, i) => svg.append(h('text', { x: (a + b) / 2, y: 52 + i * 15, class: 'lab', 'text-anchor': 'middle', fill: 'var(--ok)', 'font-weight': 700 }, q.text.slice(0, 28) + '…')));
+  });
+  svg.append(h('text', { x: 40, y: 252, class: 'lab' }, 'Источник: Роспотребнадзор (конференция, окт. 2026): диапазон последних лет 30–34 тыс. в год. Годы по оси: 2000 → 2025.'));
+  return svg;
+}
+
+function placeQuote4(zoneId) {
+  const st = S.m4;
+  if (!st.sel) { S.toast = 'bad:Сначала выберите цитату-карточку под графиком, затем нажмите на участок кривой.'; render(); return; }
+  st.placed[st.sel] = zoneId;
+  S.toast = zoneId === 'zC' ? 'good:Легла на хвост кривой — последние годы.' : 'bad:Эта фраза — о положении дел сейчас. Участок «' + M4_ZONES.find(z => z.id === zoneId).label + '» ее не поддерживает: попробуйте хвост кривой.';
+  if (zoneId !== 'zC') delete st.placed[st.sel];
+  st.sel = null;
+  render();
+}
+
+function renderM4() {
+  const st = S.m4;
+  const bothPlaced = st.placed.q1 === 'zC' && st.placed.q2 === 'zC';
+  const [kind, msg] = S.toast ? S.toast.split(/:(.*)/s) : ['', ''];
+  return moduleShell('m4',
+    stmtCard('Два утверждения одного текста — со ссылкой на один и тот же материал-источник: люди',
+      'реже заболевают ВИЧ и умирают', 'блок 1 · и там же, блок 3: смертность «держится на историческом максимуме».'),
+    h('div', { class: 'steplab' }, 'Интерактив · положите каждую цитату на участок кривой, который ее поддерживает'),
+    h('div', {}, ...M4_QUOTES.map(q => h('button', {
+      class: 'quotecard' + (st.sel === q.id ? ' sel' : '') + (st.placed[q.id] ? ' placed' : ''), type: 'button',
+      disabled: st.placed[q.id] ? 'disabled' : null,
+      onclick: () => { st.sel = q.id; S.toast = 'good:Теперь нажмите на участок кривой.'; render(); } },
+      q.text + ' · ' + q.where))),
+    h('div', { class: 'scene' }, drawDeaths()),
+    h('p', { class: 'toast' + (kind === 'good' ? ' good' : '') }, msg),
+    bothPlaced ? [
+      h('p', { class: 'fnote' }, 'Обе цитаты легли на один и тот же участок — хвост кривой подсвечен.'),
+      h('div', { class: 'steplab' }, 'Выберите точную формулировку'),
+      h('div', { class: 'btncol' },
+        ...M4_FORM.map((t, i) => h('button', {
+          class: 'act' + (st.formulation !== null ? (i === 2 ? ' good' : ' alt') : ' alt'), type: 'button',
+          disabled: st.formulation !== null ? 'disabled' : null,
+          onclick: () => { st.formulation = i; render(); } }, t))),
+      st.formulation !== null && st.formulation !== 2 ? h('p', { class: 'toast' }, 'Так в источнике: диапазон 30–34 тыс. в год — немного снизилась, но у максимума. Обе половины сразу.') : null,
+      st.formulation !== null ? verdictBlock('m4', 'Обе цитаты опираются на один источник, и в нем сказано обе вещи сразу: немного снизилась — и остается у максимума. Разнесенные по разным блокам без связки, они стали противоречием — в статье; источник непротиворечив. Кривая примиряет их за секунду.') : null,
+    ] : null);
+}
+
+/* =============== М5 · Шкала уверенности =============== */
+
+const M5_CARDS = [
+  { id: 'c1', text: 'может начать активнее распространяться', zone: 'soft' },
+  { id: 'c2', text: 'вероятно, занижена', zone: 'soft' },
+  { id: 'c3', text: 'по всей видимости, отсюда и снижение', zone: 'soft' },
+  { id: 'c4', text: 'доказывают', zone: 'hard' },
+  { id: 'c5', text: 'держится на историческом максимуме', zone: 'hard' },
+  { id: 'c6', text: 'перестает работать', zone: 'hard' },
+  { id: 'c7', text: 'нельзя просто снова вернуться', zone: 'hard' },
+  { id: 'c8', text: 'невозможность передать вирус', zone: 'hard' },
+];
+const M5_P2A = [
+  'Система защиты перестает работать',
+  'Если снижение выявления отражает недовыявление, система защиты перестала справляться',
+  'Система защиты работает как прежде',
+];
+const M5_P2B = [
+  'Человек с ВИЧ не может передать вирус',
+  'При устойчиво неопределяемой вирусной нагрузке на терапии вирус не передается половым путем',
+  'Вирус не передается уже после начала терапии',
+];
+
+function renderM5() {
+  const st = S.m5;
+  const placedAll = M5_CARDS.every(c => st.placed[c.id]);
+  const [kind, msg] = S.toast ? S.toast.split(/:(.*)/s) : ['', ''];
+  const place = zone => {
+    if (!st.sel) { S.toast = 'bad:Сначала выберите карточку-связку, затем нажмите на половину шкалы.'; render(); return; }
+    const card = M5_CARDS.find(c => c.id === st.sel);
+    st.placed[st.sel] = zone;
+    S.toast = (zone === card.zone)
+      ? 'good:Да: «' + card.text + '» — ' + (zone === 'soft' ? 'осторожная' : 'категоричная') + ' формулировка.'
+      : 'bad:«' + card.text + '» обычно читается как ' + (card.zone === 'soft' ? 'осторожная: она оставляет автору выход.' : 'категоричная: она не оставляет условий.') + ' Оставим, где положили, — цель не порядок, а само различение.';
+    st.sel = null; render();
+  };
+  return moduleShell('m5',
+    stmtCard('Восемь связок из одного и того же текста. Насколько сильно каждая из них звучит?', null, 'блоки 1–10.'),
+    h('div', { class: 'steplab' }, 'Интерактив · часть 1: разложите связки по шкале'),
+    h('div', {}, ...M5_CARDS.map(c => st.placed[c.id] ? null : h('button', {
+      class: 'quotecard' + (st.sel === c.id ? ' sel' : ''), type: 'button',
+      onclick: () => { st.sel = c.id; S.toast = 'good:Теперь нажмите на половину шкалы.'; render(); } }, '«' + c.text + '»'))),
+    h('div', { class: 'scale' },
+      h('div', { class: 'half', role: 'button', tabindex: 0, onclick: () => place('soft'), onkeydown: ev => { if (ev.key === 'Enter') place('soft'); } }, 'осторожно'),
+      h('div', { class: 'half', role: 'button', tabindex: 0, style: 'justify-content:flex-end', onclick: () => place('hard'), onkeydown: ev => { if (ev.key === 'Enter') place('hard'); } }, 'категорично')),
+    h('div', { class: 'zones' },
+      ...['soft', 'hard'].map(z => h('div', { class: 'zone', onclick: () => place(z) },
+        h('div', { class: 'zl' }, z === 'soft' ? 'положено в «осторожно»' : 'положено в «категорично»'),
+        h('div', { class: 'chiplist' }, ...M5_CARDS.filter(c => st.placed[c.id] === z).map(c =>
+          h('span', { class: 'zchip ' + (c.zone === z ? 'okz' : 'badz') }, c.text)))))),
+    h('p', { class: 'toast' + (kind === 'good' ? ' good' : '') }, msg),
+    placedAll ? [
+      h('p', { class: 'fnote' }, 'Осторожные образцы — «может», «вероятно, занижена» — в этом же тексте есть: авторы умеют, когда помнят. А «по всей видимости» из модуля 3 — модальность осторожная, но вывод под ней все равно сильнее данных: смягчающее слово не заменяет расчет.'),
+      h('div', { class: 'steplab' }, 'Часть 2 · очная ставка с самим текстом'),
+      h('p', {}, '«Перестает работать» — а финал того же блока 10 говорит условно: «если… перестала справляться». Выберите формулировку, которая не обещает больше, чем данные:'),
+      h('div', { class: 'btncol' }, ...M5_P2A.map((t, i) => h('button', {
+        class: 'act' + (st.p2a !== null ? (i === 1 ? ' good' : ' alt') : ' alt'), type: 'button', disabled: st.p2a !== null ? 'disabled' : null,
+        onclick: () => { st.p2a = i; render(); } }, t))),
+      st.p2a !== null ? [
+        h('p', { style: 'margin-top:14px' }, '«Невозможность передать вирус» — а сноска того же текста ставит условие: «если вирус не обнаруживается в крови…». Выберите формулировку по данным:'),
+        h('div', { class: 'btncol' }, ...M5_P2B.map((t, i) => h('button', {
+          class: 'act' + (st.p2b !== null ? (i === 1 ? ' good' : ' alt') : ' alt'), type: 'button', disabled: st.p2b !== null ? 'disabled' : null,
+          onclick: () => { st.p2b = i; render(); } }, t)))] : null,
+      st.p2b !== null ? verdictBlock('m5', 'Самые категоричные связки текста опровергаются его же соседними абзацами: «перестает работать» — условным финалом того же блока, «невозможность передать» — условием из его же сноски. Заявка на силу доказательств не покрыта. И приятный факт: осторожные образцы в этом тексте есть — авторы умеют, когда помнят.') : null,
+    ] : null);
+}
+
+/* =============== М6 · Заголовок против текста =============== */
+
+const M6_FACTS = [
+  { id: 'f1', text: 'выявление снижается три года подряд', exp: 'contra', note: 'снижение выявления — против «всё хуже»' },
+  { id: 'f2', text: '−13,4% новых случаев за последний год', exp: 'contra', note: 'прямое улучшение динамики' },
+  { id: 'f3', text: 'закупки-2025 выправились, и пациентское движение это признало', exp: 'contra', note: 'даже критики согласились' },
+  { id: 'f4', text: 'смертность у исторического максимума', exp: 'pro', note: 'тяжелый показатель — за заголовок' },
+  { id: 'f5', text: '385 тыс. человек — между диагнозом и наблюдением', exp: 'pro', note: 'разрыв каскада — за заголовок' },
+  { id: 'f6', text: 'вирусная нагрузка подавлена у половины', exp: 'pro', note: 'низкий охват — за заголовок' },
+  { id: 'f7', text: 'число живущих с ВИЧ растет', exp: 'neu', note: 'растет и когда люди дольше живут на терапии: prevalence ≈ incidence × duration' },
+  { id: 'f8', text: 'тестирование ключевых групп стагнирует', exp: 'pro', note: 'слепое пятно системы — за заголовок' },
+];
+const M6_CATS = [['pro', 'поддерживает'], ['contra', 'противоречит'], ['neu', 'нейтрален']];
+const M6_HEADS = [
+  '«Всё хуже. Минздрав утверждает обратное»',
+  '«Ситуация с ВИЧ лучше, чем была, но хуже, чем утверждает Минздрав»',
+  '«Выявление ВИЧ снижается третий год; смертность у максимума; охват терапией растет медленно»',
+  '«Катастрофа с ВИЧ в России: эпидемия вышла из-под контроля»',
+];
+
+function renderM6() {
+  const st = S.m6;
+  const allSet = M6_FACTS.every(f => st.assign[f.id]);
+  const counts = { pro: 0, contra: 0, neu: 0 };
+  M6_FACTS.forEach(f => { if (st.assign[f.id]) counts[st.assign[f.id]]++; });
+  return moduleShell('m6',
+    stmtCard('Заголовок статьи:', 'всё хуже', 'шапка (+ подзаголовок: «Минздрав утверждает обратное»). Ниже — восемь фактов из самого текста.'),
+    h('div', { class: 'steplab' }, 'Интерактив · отнесите каждый факт к заголовку'),
+    h('div', {}, ...M6_FACTS.map(f => h('div', { class: 'factrow' },
+      h('div', { class: 'ft' }, f.text,
+        st.revealed ? h('div', { class: 'fnote' }, (st.assign[f.id] === f.exp ? '✓ ' : 'мы отнесли иначе: «' + M6_CATS.find(c => c[0] === f.exp)[1] + '» — ') + f.note) : null),
+      h('div', { class: 'fb' }, ...M6_CATS.map(([k, lab]) => h('button', {
+        class: 'fbtn', type: 'button', 'aria-pressed': String(st.assign[f.id] === k),
+        disabled: st.revealed ? 'disabled' : null,
+        onclick: () => { st.assign[f.id] = k; render(); } }, lab)))))),
+    h('p', { class: 'fnote' }, 'Ваш счет: поддерживает — ' + counts.pro + ' · противоречит — ' + counts.contra + ' · нейтрален — ' + counts.neu + ' (считаются только ваши ответы, никаких внешних метрик).'),
+    allSet && !st.revealed ? h('div', { class: 'btnrow' }, h('button', { class: 'act', type: 'button', onclick: () => { st.revealed = true; render(); } }, 'Сравнить с нашей раскладкой')) : null,
+    st.revealed ? [
+      h('div', { class: 'steplab' }, 'Выберите точный заголовок'),
+      h('div', { class: 'btncol' }, ...M6_HEADS.map((t, i) => h('button', {
+        class: 'act' + (st.headline !== null ? (i === 1 ? ' good' : ' alt') : ' alt'), type: 'button', disabled: st.headline !== null ? 'disabled' : null,
+        onclick: () => { st.headline = i; render(); } }, t))),
+      st.headline !== null ? [
+        h('p', { class: 'fnote' }, 'Заголовок — одновременно утверждение и товар; точная версия проигрывает в кликах и выигрывает в доверии — это осознанная цена.'),
+        verdictBlock('m6', 'Сам текст аккуратен: половина его фактов заголовку противоречит. «Всё хуже» — заголовочное преувеличение при аккуратном тексте: заявка сильнее того, что текст под ней показывает.')] : null,
+    ] : null);
+}
+
+/* =============== М7 · Проверьте чиновника =============== */
+
+const M7_YEARS = (() => { const a = []; for (let y = 1987; y <= 2025; y++) a.push(y); return a; })();
+const M7_CORRECT = new Set([...Array.from({length: 14}, (_, i) => 1987 + i), 2003, 2004, 2005, 2006]); // 1987–2000, 2003–2006
+const M7_BOUNDARY = new Set([2001 + 1, 2007]); // 2002 и 2007 — граничные, не оцениваются
+
+function drawEpi() {
+  const A = DATA.newCases.anchors, st = S.m7;
+  const svg = h('svg', { viewBox: '0 0 660 300', role: 'img', 'aria-label': 'Новые зарегистрированные случаи ВИЧ в России, 1987–2025' });
+  const base = 236, x0 = 56, x1 = 630;
+  const xOf = yr => x0 + (yr - 1987) / (2025 - 1987) * (x1 - x0);
+  const max = 110000, yOf = v => base - v / max * 180;
+  svg.append(h('text', { x: 36, y: 22, class: 'lab big' }, 'НОВЫЕ ЗАРЕГИСТРИРОВАННЫЕ СЛУЧАИ · тыс. в год'));
+  svg.append(h('text', { x: 36, y: 38, class: 'lab' }, 'кривая — эскиз по якорным точкам; полный годовой ряд будет уточнен'));
+  [0, 50000, 100000].forEach(v => {
+    svg.append(h('line', { x1: x0, y1: yOf(v), x2: x1, y2: yOf(v), stroke: 'var(--line)', 'stroke-width': v ? .8 : 0 }));
+    svg.append(h('text', { x: x0 - 6, y: yOf(v) + 4, class: 'lab mono', 'text-anchor': 'end' }, v / 1000));
+  });
+  svg.append(h('line', { x1: x0, y1: base, x2: x1, y2: base, stroke: 'var(--fg)', 'stroke-width': 1.5 }));
+  // эскиз кривой по якорям
+  const pts = [[1987, 0], [1995, A[1995]], [1999, A[1999]], [2001, A[2001]], [2005, A[2005]], [2016, A[2016]], [2024, A[2024]], [2025, A[2025]]];
+  svg.append(h('path', { d: 'M ' + pts.map(([yr, v]) => xOf(yr) + ' ' + yOf(v)).join(' L '),
+    fill: 'none', stroke: 'var(--verm)', 'stroke-width': 2.5, 'stroke-dasharray': '7 5' }));
+  pts.slice(1).forEach(([yr, v]) => {
+    svg.append(h('circle', { cx: xOf(yr), cy: yOf(v), r: 5.5, fill: 'var(--verm)', stroke: '#fff', 'stroke-width': 1.5 }, tip(yr + ': ' + fmt(v) + ' — якорная точка')));
+  });
+  // вторая методика пика
+  svg.append(h('line', { x1: xOf(2016) - 7, y1: yOf(86000), x2: xOf(2016) + 7, y2: yOf(86000), stroke: 'var(--fg)', 'stroke-width': 2 },
+    tip('пик 2016–2017: 86–104 тыс. — две методики счета')));
+  svg.append(h('text', { x: xOf(2016) + 10, y: yOf(86000) + 4, class: 'lab', 'font-size': 9.5 }, '86 тыс. — вторая методика'));
+  // референс-линия 45 тыс.
+  svg.append(h('line', { x1: x0, y1: yOf(DATA.newCases.threshold2025), x2: x1, y2: yOf(DATA.newCases.threshold2025), stroke: 'var(--ochre)', 'stroke-width': 2, 'stroke-dasharray': '6 5' }));
+  svg.append(h('text', { x: x1 - 26, y: yOf(DATA.newCases.threshold2025) - 7, class: 'lab big', 'text-anchor': 'end', fill: 'var(--ochre)', 'paint-order': 'stroke', stroke: '#F8EACF', 'stroke-width': 4 }, 'уровень 2025 года: 45 тыс.'));
+  // аннотации
+  svg.append(h('text', { x: xOf(1999), y: yOf(A[2001]) - 26, class: 'lab', 'text-anchor': 'middle' }, 'вспышка среди людей,'));
+  svg.append(h('text', { x: xOf(1999), y: yOf(A[2001]) - 14, class: 'lab', 'text-anchor': 'middle' }, 'употребляющих инъекционные наркотики'));
+  svg.append(h('text', { x: xOf(2001) - 10, y: yOf(A[2001]) + 4, class: 'lab mono', 'text-anchor': 'end' }, '2001: 87,7'));
+  svg.append(h('text', { x: xOf(2005), y: yOf(A[2005]) + 18, class: 'lab mono', 'text-anchor': 'middle' }, '2005: 35,6'));
+  svg.append(h('text', { x: xOf(2016), y: yOf(A[2016]) - 10, class: 'lab mono', 'text-anchor': 'middle' }, '2016: 103,4'));
+  [1990, 2000, 2010, 2020, 2025].forEach(yr => svg.append(h('text', { x: xOf(yr), y: base + 16, class: 'lab mono', 'text-anchor': 'middle' }, yr)));
+  svg.append(h('text', { x: 36, y: 292, class: 'lab' }, 'Источники: формы федерального статнаблюдения и конференция «Эпиднадзор за ВИЧ-инфекцией», окт. 2026. ' + DATA.newCases.dualMethodNote + '.'));
+  return svg;
+}
+
+function check7() {
+  const st = S.m7;
+  st.checked = true;
+  render();
+}
+
+function renderM7() {
+  const st = S.m7;
+  const marked = st.marked;
+  let hits = 0, misses = 0, extras = 0;
+  M7_YEARS.forEach(y => {
+    if (M7_BOUNDARY.has(y)) return;
+    if (M7_CORRECT.has(y) && marked.has(y)) hits++;
+    if (M7_CORRECT.has(y) && !marked.has(y)) misses++;
+    if (!M7_CORRECT.has(y) && marked.has(y)) extras++;
+  });
+  const solved = st.checked && misses === 0 && extras === 0;
+  return moduleShell('m7',
+    stmtCard(DATA.mazus.who + ' (' + DATA.mazus.when + '): заболеваемость',
+      DATA.mazus.quote, 'блок 2. Текст возражает мягко: темпы остаются высокими.'),
+    h('div', { class: 'steplab' }, 'Интерактив · отметьте все годы, когда выявляли МЕНЬШЕ, чем в 2025-м'),
+    h('div', { class: 'scene' }, drawEpi()),
+    h('div', { class: 'years' }, ...M7_YEARS.map(y => {
+      const cls = ['yearchip'];
+      if (M7_BOUNDARY.has(y)) cls.push('bnd');
+      if (st.checked) {
+        if (M7_CORRECT.has(y) && marked.has(y)) cls.push('hit');
+        if (M7_CORRECT.has(y) && !marked.has(y)) cls.push('miss');
+        if (!M7_CORRECT.has(y) && !M7_BOUNDARY.has(y) && marked.has(y)) cls.push('miss');
+      }
+      return h('button', { class: cls.join(' '), type: 'button', 'aria-pressed': String(marked.has(y)),
+        onclick: () => { if (marked.has(y)) marked.delete(y); else marked.add(y); st.checked = false; render(); } }, y);
+    })),
+    h('p', { class: 'fnote' }, 'Серым тоном отмечаются граничные годы (2002, 2007): ряд там будет уточнен, они не оцениваются.'),
+    h('div', { class: 'btnrow' }, h('button', { class: 'act', type: 'button', onclick: check7 }, 'Проверить разметку'),
+      h('span', { class: 'fnote' }, 'отмечено лет: ' + marked.size)),
+    st.checked ? (solved
+      ? [h('div', { class: 'reveal', html: '<b>Автоответ сложился:</b> меньше, чем в 2025-м, выявляли в 1987–2000 и примерно в 2003–2006 годах. Минимум не исторический, а примерно двадцатилетний.' }),
+         ...verdictBlock('m7', 'В середине 2000-х в России выявляли ~33–40 тыс. случаев в год — меньше, чем 45 тыс. в 2025-м. «Исторический минимум» — проверяемое слово, и оно не выдерживает проверки. Обратите внимание: статья спорила с цитатой, не проверив ее буквально, — и упустила самый сильный аргумент.')]
+      : h('p', { class: 'toast' }, (misses ? 'Не все годы ниже линии отмечены — смотрите левую часть кривой и провал середины 2000-х (пунктирные рамки). ' : '') + (extras ? 'Сняты лишние: годы у пиков (2001, 2016–2017 и соседние) были ВЫШЕ уровня 45 тыс.' : ''))) : null);
+}
+
+/* =============== М8 · Контроль: всё сходится =============== */
+
+const M8_CLAIMS = () => { const G = DATA.global; return [
+  { id: 'g1', ru: 'В мире ' + String(G.plhiv[0]).replace('.', ',') + ' млн человек живут с ВИЧ',
+    ex: String(G.plhiv[0]).replace('.', ',') + ' млн', ci: '[' + String(G.plhiv[1]).replace('.', ',') + '–' + String(G.plhiv[2]).replace('.', ',') + ']' },
+  { id: 'g2', ru: String(G.newInf[0]).replace('.', ',') + ' млн новых инфекций за год',
+    ex: String(G.newInf[0]).replace('.', ',') + ' млн', ci: '[' + String(G.newInf[1]).replace('.', ',') + '–' + String(G.newInf[2]).replace('.', ',') + ']' },
+  { id: 'g3', ru: fmt(G.deaths[0] * 1000) + ' тыс. смертей от причин, связанных со СПИДом',
+    ex: fmt(G.deaths[0] * 1000) + ' тыс.', ci: '[' + fmt(G.deaths[1] * 1000) + '–' + fmt(G.deaths[2] * 1000) + ']' },
+  { id: 'g4', ru: 'Вирусная нагрузка подавлена у ' + G.suppressedPctOfAll + '% всех живущих с ВИЧ',
+    ex: G.suppressedPctOfAll + '%', ci: 'от всех живущих, не от получающих терапию' },
+  { id: 'g5', ru: 'Около 9 млн человек не получают лечения',
+    ex: String(G.plhiv[0]).replace('.', ',') + ' − ' + String(G.onTreatment).replace('.', ',') + ' = ' + String(G.notOnTreatment).replace('.', ',') + ' млн', ci: 'производное из двух чисел фактшита' },
+  { id: 'g6', ru: 'Новые инфекции упали на ' + G.peakNewInf.declinePct + '% к пику ' + G.peakNewInf.year + ' года',
+    ex: '−' + G.peakNewInf.declinePct + '% · пик ' + G.peakNewInf.year + ': ' + String(G.peakNewInf.value[0]).replace('.', ',') + ' млн', ci: '«peak in 1994» — дословно по фактшиту' },
+  { id: 'g7', ru: 'Смерти упали на ' + G.peakDeaths.declinePct + '% к пику ' + G.peakDeaths.year + ' года',
+    ex: '−' + G.peakDeaths.declinePct + '% · пик ' + G.peakDeaths.year + ': ' + String(G.peakDeaths.value[0]).replace('.', ',') + ' млн', ci: '[' + String(G.peakDeaths.value[1]).replace('.', ',') + '–' + String(G.peakDeaths.value[2]).replace('.', ',') + ']' },
+]; };
+
+function drawGlobal() {
+  const G = DATA.global;
+  const svg = h('svg', { viewBox: '0 0 660 348', role: 'img', 'aria-label': 'Мир: новые инфекции и смерти — якорные точки с доверительными интервалами' });
+  const panels = [
+    { y0: 30, lab: 'НОВЫЕ ИНФЕКЦИИ · млн в год', peak: G.peakNewInf, now: G.newInf },
+    { y0: 185, lab: 'СМЕРТИ · млн в год', peak: G.peakDeaths, now: G.deaths },
+  ];
+  panels.forEach(p => {
+    const base = p.y0 + 105, x0 = 70, x1 = 600;
+    const xOf = yr => x0 + (yr - 1990) / (2025 - 1990) * (x1 - x0);
+    const max = 5, yOf = v => base - v / max * 85;
+    svg.append(h('text', { x: 40, y: p.y0 - 8, class: 'lab big' }, p.lab));
+    svg.append(h('line', { x1: 40, y1: base, x2: 620, y2: base, stroke: 'var(--fg)', 'stroke-width': 1.2 }));
+    const pts = [[p.peak.year, p.peak.value], [2025, p.now]];
+    svg.append(h('polyline', { points: pts.map(([yr, v]) => xOf(yr) + ',' + yOf(v[0])).join(' '), fill: 'none', stroke: 'var(--teal-chart)', 'stroke-width': 2, 'stroke-dasharray': '6 5' }));
+    pts.forEach(([yr, v]) => {
+      svg.append(h('line', { x1: xOf(yr), y1: yOf(v[1]), x2: xOf(yr), y2: yOf(v[2]), stroke: 'var(--teal-chart)', 'stroke-width': 4, opacity: .4 },
+        tip(yr + ': ' + String(v[0]).replace('.', ',') + ' млн [' + String(v[1]).replace('.', ',') + '–' + String(v[2]).replace('.', ',') + '] — интервал ЮНЭЙДС')));
+      svg.append(h('circle', { cx: xOf(yr), cy: yOf(v[0]), r: 6, fill: 'var(--teal-chart)', stroke: '#fff', 'stroke-width': 1.5 }));
+      svg.append(h('text', { x: xOf(yr), y: yOf(v[2]) - 8, class: 'lab mono', 'text-anchor': 'middle' }, String(v[0]).replace('.', ',')));
+      svg.append(h('text', { x: xOf(yr), y: base + 14, class: 'lab mono', 'text-anchor': 'middle' }, yr));
+    });
+    svg.append(h('text', { x: xOf(p.peak.year) + 14, y: yOf(p.peak.value[2]) - 22, class: 'lab big', 'paint-order': 'stroke', stroke: '#FFFDF6', 'stroke-width': 4 }, 'пик · −' + p.peak.declinePct + '% к 2025'));
+    svg.append(h('text', { x: 40, y: base + 28, class: 'lab', 'font-size': 9.5 }, 'полоса — доверительный интервал ЮНЭЙДС; полный ряд будет уточнен'));
+  });
+  svg.append(h('text', { x: 40, y: 342, class: 'lab' }, 'Источник: фактшит ЮНЭЙДС (данные 2025), сверено 16.11.2026. Две панели вместо двойной оси.'));
+  return svg;
+}
+
+function renderM8() {
+  const st = S.m8;
+  const claims = M8_CLAIMS();
+  const doneCount = Object.keys(st.verdicts).length;
+  const allDone = doneCount === claims.length;
+  if (allDone && !S.done.m8) { S.done.m8 = true; }
+  return moduleShell('m8',
+    stmtCard('Мировой блок статьи — семь утверждений с числами. Проверьте каждое по действующему фактшиту ЮНЭЙДС.', null, 'блок 4.'),
+    h('div', { class: 'steplab' }, 'Интерактив · «проверить» открывает выдержку; затем вердикт'),
+    h('div', { class: 'claims' }, ...claims.map(c => h('div', { class: 'factrow' },
+      h('div', { class: 'ft' }, c.ru,
+        st.open === c.id ? h('div', { class: 'excerpt' }, 'Фактшит: ', h('mark', {}, c.ex), ' ', c.ci,
+          h('span', { class: 'src' }, 'ЮНЭЙДС, данные за 2025 год')) : null),
+      h('div', { class: 'fb' },
+        h('button', { class: 'fbtn', type: 'button', onclick: () => { if (!st.opened) st.opened = new Set(); st.opened.add(c.id); st.open = st.open === c.id ? null : c.id; render(); } }, st.open === c.id ? 'скрыть' : 'проверить'),
+        ...[['ok', V.ok], ['src', V.src], ['nope', V.nope]].map(([k, lab]) => h('button', {
+          class: 'fbtn', type: 'button', 'aria-pressed': String(st.verdicts[c.id] === k),
+          disabled: st.verdicts[c.id] ? 'disabled' : null,
+          onclick: () => { if (!st.opened) st.opened = new Set(); if (!st.opened.has(c.id) && !st.verdicts[c.id]) { S.toast = 'bad:Сначала откройте выдержку этой строки — кнопка «проверить».'; render(); return; } st.verdicts[c.id] = k; S.toast = ''; render(); } }, lab)))))),
+    h('p', { class: 'toast' }, (S.toast || '').split(/:(.*)/s)[1] || ''),
+    h('p', { class: 'fnote' }, 'Проверено утверждений: ' + doneCount + ' / ' + claims.length),
+    allDone ? [
+      h('div', { class: 'scene' }, drawGlobal()),
+      h('div', { class: 'reveal', html: '<b>Семь проверок — семь совпадений</b>, вплоть до «пика 1994 года», который звучит как опечатка, но стоит в фактшите дословно. Это и есть второй исход аудита: проверено и подтверждено. Текст, который вы препарировали семь модулей подряд, в мировом блоке безупречен — ошибки живут не везде, а в предсказуемых местах: знаменатели, доли, модальность, заголовки.' + (Object.values(st.verdicts).every(v => v === 'ok') ? '' : ' (Вы поставили не всем «подтверждено» — вернитесь к выдержкам: каждое из семи чисел стоит в фактшите.)') }),
+      h('div', { class: 'rule' }, 'Правило: ' + modMeta('m8').rule),
+      h('div', { class: 'btnrow' }, h('button', { class: 'act', type: 'button', onclick: () => go('toc') }, 'К оглавлению →')),
+    ] : null);
+}
+
+/* =============== финал =============== */
+
+function drawEcdc() {
+  const E = DATA.ecdc;
+  const svg = h('svg', { viewBox: '0 0 660 262', role: 'img', 'aria-label': 'Новые диагнозы ВИЧ на 100 тыс. населения, 2024' });
+  const rows = [...Object.entries(E.ratesPer100k), ['Северная Македония', E.northMacedonia]];
+  const x0 = 180, xmax = 600, vmax = 36;
+  const xOf = v => x0 + v / vmax * (xmax - x0);
+  svg.append(h('text', { x: 40, y: 22, class: 'lab big' }, 'НОВЫЕ ДИАГНОЗЫ НА 100 ТЫС. НАСЕЛЕНИЯ · 2024'));
+  rows.forEach(([name, v], i) => {
+    const y = 56 + i * 36 + (i === 3 ? 18 : 0);
+    const isNM = i === 3;
+    svg.append(h('text', { x: x0 - 10, y: y + 4, class: 'lab big', 'text-anchor': 'end' }, name));
+    svg.append(h('line', { x1: x0, y1: y, x2: xOf(v), y2: y, stroke: isNM ? 'var(--verm)' : 'var(--ctx)', 'stroke-width': 3 }));
+    svg.append(h('circle', { cx: xOf(v), cy: y, r: 7, fill: isNM ? 'var(--verm)' : 'var(--ctx)' },
+      tip(name + ': ' + String(v).replace('.', ',') + (isNM ? ' и ниже — среди наименьших в регионе' : ''))));
+    svg.append(h('text', { x: xOf(v) + 12, y: y + 4, class: 'lab mono' }, (isNM ? '≤' : '') + String(v).replace('.', ',')));
+  });
+  // разрыв оси
+  svg.append(h('text', { x: x0 + 10, y: 56 + 2 * 36 + 28, class: 'lab', 'font-size': 14 }, '⌇ разрыв оси'));
+  svg.append(h('text', { x: 40, y: 234, class: 'lab' }, 'Источник: ' + E.source + '.'));
+  svg.append(h('text', { x: 40, y: 250, class: 'lab' }, 'Средняя по восточному субрегиону: ' + String(E.eastAvg).replace('.', ',') + ' на 100 тыс.'));
+  return svg;
+}
+
+function reportRows() {
+  return MODS.map(m => {
+    if (m.id === 'm8') {
+      const n = Object.values(S.m8.verdicts).filter(v => v === 'ok').length;
+      const tot = Object.keys(S.m8.verdicts).length;
+      return { mod: m.n + ' · ' + m.name, claim: m.anchor,
+        mine: tot ? V.ok + ' × ' + n + ' из ' + tot : '—',
+        right: V.ok + ' × 7', okAll: tot === 7 && n === 7, rule: m.rule };
+    }
+    const mine = S.verdicts[m.id];
+    return { mod: m.n + ' · ' + m.name, claim: m.anchor,
+      mine: mine ? verdictLabel(mine) : '—',
+      right: verdictLabel(m.correct), okAll: mine === m.correct, rule: m.rule };
+  });
+}
+function reportText() {
+  const lines = ['АУДИТ ОДНОГО ТЕКСТА — ОТЧЕТ', ''];
+  reportRows().forEach(r => {
+    lines.push(r.mod);
+    lines.push('  утверждение: ' + r.claim);
+    lines.push('  ваш вердикт: ' + r.mine + '  ·  верный: ' + r.right);
+    lines.push('  правило: ' + r.rule);
+    lines.push('');
+  });
+  return lines.join('\n');
+}
+function copyReport() {
+  const text = reportText();
+  const done = () => { S.toast = 'good:Отчет скопирован.'; render(); };
+  const fallback = () => {
+    const ta = h('textarea', { style: 'position:fixed;left:-9999px' }, text);
+    document.body.append(ta); ta.select();
+    try { document.execCommand('copy'); } catch (e) { /* показываем textarea */ }
+    ta.remove(); done();
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+  else fallback();
+}
+
+function renderFinal() {
+  const E = DATA.ecdc;
+  const [kind, msg] = S.toast ? S.toast.split(/:(.*)/s) : ['', ''];
+  return h('section', { class: 'card', id: 'final' },
+    h('div', { class: 'topbar' }, h('h2', {}, 'Финал · семь правил и отчет'),
+      h('button', { class: 'ghost', type: 'button', onclick: () => go('toc') }, '← оглавление')),
+    h('div', { class: 'rulecards' }, ...MODS.slice(0, 7).map(m =>
+      h('div', { class: 'rulecard' }, h('b', {}, m.n + ' · ' + m.name), m.rule))),
+    h('div', { class: 'rule', style: 'margin-top:12px' }, 'И рамка поверх всех семи — ' + modMeta('m8').n + ': ' + modMeta('m8').rule),
+    h('div', { class: 'steplab' }, 'Как выглядит честная редакция'),
+    h('p', {}, 'На профильной конференции прозвучало, что по заболеваемости на 100 тыс. после России и Украины идет Северная Македония. Редакция сама поймала ошибку источника и разобрала ее в сноске:'),
+    h('div', { class: 'scene' }, drawEcdc()),
+    h('p', { class: 'fnote' }, 'Абсурд слайда виден глазом. Вероятный источник путаницы: у Северной Македонии самое высокое в регионе соотношение мужчин и женщин среди новых диагнозов, примерно ' + E.nmMaleFemaleRatio + ':1 — «третье место», но в другом рейтинге. Урок: источником ошибки бывает и эксперт на трибуне; честная редакция ошибку не прячет, а разбирает.'),
+    h('div', { class: 'steplab' }, 'Таблица аудита — из ваших ответов'),
+    h('table', { class: 'audit' },
+      h('tr', {}, h('th', {}, 'Прием'), h('th', {}, 'Ваш вердикт'), h('th', {}, 'Верный')),
+      ...reportRows().map(r => h('tr', {},
+        h('td', {}, r.mod, h('div', { class: 'fnote' }, r.claim)),
+        h('td', { class: 'v ' + (r.mine === '—' ? '' : r.okAll ? 'okv' : 'badv') }, r.mine),
+        h('td', { class: 'v' }, r.right)))),
+    h('div', { class: 'btnrow' },
+      h('button', { class: 'act', type: 'button', onclick: copyReport }, 'Скопировать отчет'),
+      h('span', { class: 'toast' + (kind === 'good' ? ' good' : ''), style: 'margin:0' }, msg)),
+    CONFIG.REVEAL_COAUTHOR ? h('div', { class: 'reveal', style: 'margin-top:14px', html: '<b>И последнее.</b> Статья написана автором при участии вашего преподавателя — и этот аудит заказал сам соавтор.' }) : null);
+}
+
+/* =============== оглавление =============== */
+
+function renderToc() {
+  const doneN = MODS.filter(m => S.done[m.id]).length;
+  return [
+    h('section', { class: 'card' },
+      h('h2', {}, 'Как это устроено'),
+      h('p', {}, 'Перед вами — результаты аудита одного реального текста: карточек о ВИЧ в России, опубликованных одним крупным русскоязычным изданием в ноябре 2026 года. Восемь модулей — семь переносимых приемов проверки чисел и формулировок плюс один контрольный. В каждом модуле вы не «ищете проблемы», а выполняете операцию: пересчитываете, переключаете знаменатель, открываете источник, кладете цитаты рядом — и находка возникает сама.'),
+      h('p', {}, 'Важная рамка: у проверки два исхода, и «подтверждено» — тоже результат. Один из модулей — именно об этом.'),
+      h('p', { class: 'fnote' }, 'Полный прогон — 60–90 минут. Модули автономны: можно проходить в любом порядке и делить между парами. Ответы живут в памяти страницы до перезагрузки.')),
+    h('div', { class: 'tocgrid' },
+      ...MODS.map(m => h('button', { class: 'modcard', type: 'button', onclick: () => go(m.id) },
+        h('span', { class: 'mnum' }, h('span', {}, m.n + ' · ' + m.time), S.done[m.id] ? h('span', { class: 'tick' }, '✓ пройден') : null),
+        h('span', { class: 'mname' }, m.name),
+        h('span', { class: 'mtime' }, m.anchor))),
+      h('button', { class: 'modcard', type: 'button', onclick: () => go('final') },
+        h('span', { class: 'mnum' }, h('span', {}, 'Финал'), doneN === 8 ? h('span', { class: 'tick' }, 'все модули пройдены') : null),
+        h('span', { class: 'mname' }, 'Семь правил · честная редакция · отчет'),
+        h('span', { class: 'mtime' }, 'таблица аудита собирается из ваших ответов'))),
+  ];
+}
+
+/* =============== каркас =============== */
+
+const VIEWS = { m1: renderM1, m2: renderM2, m3: renderM3, m4: renderM4, m5: renderM5, m6: renderM6, m7: renderM7, m8: renderM8 };
+
+function render() {
+  const app = $('#app');
+  const doneN = MODS.filter(m => S.done[m.id]).length;
+  const view = S.view === 'toc' ? renderToc() : S.view === 'final' ? renderFinal() : VIEWS[S.view]();
+  app.replaceChildren(
+    h('header', {},
+      h('div', { class: 'eyebrow' }, 'EBM Through Blind Spots · FLAS'),
+      h('h1', {}, 'Аудит одного ', h('span', { class: 'hi' }, 'текста')),
+      h('p', { class: 'lede' }, 'Семь переносимых приемов проверки — на материале одних карточек о ВИЧ в России. Без медицинской подготовки: только числа, знаменатели и формулировки.'),
+      h('div', { class: 'progress', role: 'img', 'aria-label': 'Пройдено модулей: ' + doneN + ' из 8' },
+        ...MODS.map(m => h('div', { class: 'p' + (S.done[m.id] ? ' on' : '') + (S.view === m.id ? ' cur' : '') })))),
+    ...(Array.isArray(view) ? view : [view]),
+    h('footer', { class: 'foot' },
+      'Материал: карточки о ВИЧ в России, одно крупное русскоязычное издание, ноябрь 2026. Все проверки выполнены по первоисточникам (ЮНЭЙДС · UKHSA · ECDC/WHO · материалы конференции «Эпиднадзор за ВИЧ-инфекцией») 16.11.2026. Выдержки встроены; внешних ссылок в тренажере нет.'));
+}
+
+window.__S = () => S;
+document.addEventListener('keydown', () => {}); // no-op; состояние не сбрасывается
+render();
+</script>
+</body>
+</html>
