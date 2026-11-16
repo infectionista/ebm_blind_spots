@@ -95,6 +95,7 @@ h1 .hi { color: var(--verm); }
 .reveal { margin-top: 14px; padding: 13px 15px; border-radius: 10px; background: var(--ok-soft); font-size: 14.5px; }
 .reveal b { color: var(--ok); }
 .rule { margin-top: 10px; padding: 12px 15px; border-radius: 10px; background: var(--petrol-soft); color: var(--petrol); font-weight: 600; font-size: 14.5px; }
+.formula { font-family: var(--mono); font-size: 13.5px; background: var(--panel-2); border-radius: 8px; padding: 10px 12px; margin-top: 12px; }
 
 .calcf { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; background: var(--panel-2); border-radius: 8px; padding: 9px 11px; margin-top: 10px; }
 .calcf label { font-size: 14px; flex: 1 1 180px; }
@@ -328,7 +329,7 @@ function freshState() {
     view: 'toc',
     verdicts: {},               // m1..m7 -> ключ словаря (или 'absstrong'); сравнение в отчете
     m2: { forecast: null, denom: 'diag', diag: false, bonus: null },
-    m3: { forecast: null, abs: false, overlay: false },
+    m3: { forecast: null, abs: false, overlay: false, mcq: null, mcqMsg: '' },
     m4: { sel: null, placed: {}, formulation: null },
     m5: { sel: null, placed: {}, p2a: null, p2b: null },
     m6: { assign: {}, revealed: false, headline: null },
@@ -350,7 +351,7 @@ const MODS = [
   { id: 'm3', n: 'М2', name: 'Посчитайте за автора', time: '~10 мин',
     anchor: 'доля ключевых групп упала с 5,8% до 3% — «отсюда и снижение»',
     options: ['ok', 'absstrong', 'src'], correct: 'absstrong',
-    rule: 'Проценты и абсолюты рассказывают разные истории. Считайте за автора — его же числами.' },
+    rule: 'Падающая доля может прятать неизменное число. Прежде чем верить доле, пересчитайте ее в абсолют — числами самого автора, это две минуты.' },
   { id: 'm4', n: 'М3', name: 'Очная ставка цитат', time: '~10 мин',
     anchor: '«реже умирают» — и «смертность на историческом максимуме»',
     options: ['ok', 'contra', 'src'], correct: 'contra',
@@ -395,7 +396,7 @@ function verdictBlock(modId, revealHtml) {
         onclick: () => { S.verdicts[modId] = k; S.done[modId] = true; render(); } }, verdictLabel(k))))];
   if (picked) {
     kids.push(h('div', { class: 'reveal', html: (picked === meta.correct ? '<b>Верно: ' : '<b>Верный вердикт: ') + verdictLabel(meta.correct) + '.</b> ' + revealHtml }));
-    kids.push(h('div', { class: 'rule' }, 'Правило: ' + meta.rule));
+    kids.push(h('div', { class: 'rule' }, 'Вывод на вынос: ' + meta.rule));
     kids.push(h('div', { class: 'btnrow' }, h('button', { class: 'act', type: 'button', onclick: () => go('toc') }, 'К оглавлению →')));
   }
   return kids;
@@ -443,14 +444,14 @@ function drawCascades() {
   const ruBars = [
     [pRU.diag, 'диагноз', fmt(RU.diagnosed)],
     [pRU.reg, 'на учете', fmt(RU.registered)],
-    [null, 'на терапии', fmt(RU.onArtLow) + '–' + fmt(RU.onArtHigh)],
-    [pRU.sup, 'подавление', '≈' + fmt(RU.suppressed)],
+    [null, 'на терапии', Math.round(RU.onArtLow / 1000) + '–' + Math.round(RU.onArtHigh / 1000) + ' тыс.'],
+    [pRU.sup, 'подавление', '≈' + Math.round(RU.suppressed / 1000) + ' тыс.'],
   ];
   ruBars.forEach(([p, lab, abs], i) => {
     const x = ruX[i];
     if (p === null) { // вилка-ступень
       svg.append(h('rect', { x, y: yOf(pRU.artHigh), width: bw, height: (pRU.artHigh - pRU.artLow) * scale, fill: 'var(--verm)', opacity: .35 },
-        tip('на терапии: вилка ' + abs, 'закупки (человеко-годы) против заявления Минздрава (люди)')));
+        tip('на терапии: вилка ' + fmt(RU.onArtLow) + '–' + fmt(RU.onArtHigh), 'закупки (человеко-годы) против заявления Минздрава (люди)')));
       svg.append(h('rect', { x, y: yOf(pRU.artLow), width: bw, height: pRU.artLow * scale, rx: 4, fill: 'var(--verm)' },
         tip('на терапии (нижняя оценка): ' + fmt(RU.onArtLow))));
       svg.append(h('text', { x: x + bw / 2, y: yOf(pRU.artHigh) - 6, class: 'lab mono', 'text-anchor': 'middle' }, Math.round(pRU.artLow) + '–' + Math.round(pRU.artHigh) + '%'));
@@ -463,20 +464,20 @@ function drawCascades() {
   });
   svg.append(h('text', { x: ruX[0], y: base + 48, class: 'lab big' }, 'Россия'));
   // Англия: 3 публикуемые ступени (от диагностированных)
-  const enX = [430, 510, 568];
+  const enX = [420, 495, 570];
   const enBars = [
     [100, 'диагноз', 'диагностированы ' + EN.diagnosedPct + '% живущих с ВИЧ'],
     [EN.onArtPctOfDiagnosed, 'на терапии', EN.onArtPctOfDiagnosed + '% диагностированных'],
     [EN.suppressedPctOfDiagnosed, 'подавление', EN.suppressedPctOfOnArt + '% получающих терапию'],
   ];
   enBars.forEach(([p, lab, note], i) => {
-    const x = enX[i], w2 = i === 2 ? 56 : 62;
+    const x = enX[i], w2 = 60;
     svg.append(h('rect', { x, y: yOf(p), width: w2, height: p * scale, rx: 4, fill: 'var(--teal-chart)' }, tip(lab + ': ' + note)));
     svg.append(h('text', { x: x + w2 / 2, y: yOf(p) - 6, class: 'lab mono', 'text-anchor': 'middle' }, Math.round(p) + '%'));
     svg.append(h('text', { x: x + w2 / 2, y: base + (i === 2 ? 28 : 15), class: 'lab', 'text-anchor': 'middle' }, lab));
   });
   svg.append(h('text', { x: enX[0], y: base + 48, class: 'lab big' }, 'Англия'));
-  svg.append(h('text', { x: enX[0], y: base + 62, class: 'lab', 'font-size': 9.5 }, 'Англия, не вся Великобритания · UKHSA 2025'));
+  svg.append(h('text', { x: 648, y: base + 62, class: 'lab', 'font-size': 9.5, 'text-anchor': 'end' }, 'Англия, не вся Великобритания · UKHSA 2025'));
   // диагональ «как сравнила статья»
   if (st.diag) {
     const x1 = ruX[3] + bw / 2, y1 = yOf(pRU.sup), x2 = enX[2] + 28, y2 = yOf(EN.suppressedPctOfOnArt / 1); // 98 на оси от диагноза — рисуем к вершине англ. подавления
@@ -532,6 +533,12 @@ function renderM2() {
 }
 
 /* =============== М3 · Посчитайте за автора =============== */
+
+const M3_MCQ = [
+  { t: 'Его урезали почти вдвое', why: 'Нет: число тестов не изменилось — 1,62 млн тогда и 1,62 млн сейчас. Упала только доля, потому что знаменатель удвоился.' },
+  { t: 'Оно стояло на месте, пока все остальное тестирование удвоилось. Стагнация, а не урезание', why: 'Именно. У ключевых групп ничего не отняли — но ничего и не добавили за десятилетие, в котором общее тестирование удвоилось. Это и есть честная находка — без причинного скачка.' },
+  { t: 'Оно росло вместе со всей программой', why: 'Числа-герои равны: 1 624 000 и 1 620 000. Не росло.' },
+];
 
 const M3_FORECAST = [
   'Упало почти вдвое',
@@ -604,7 +611,7 @@ function drawOverlay() {
 function renderM3() {
   const st = S.m3, T = DATA.testing;
   return moduleShell('m3',
-    stmtCard('Статья: тестов стало почти вдвое больше (28 → 54 млн), но доля ключевых групп в тестировании упала с 5,8% до 3% —',
+    stmtCard('Статья: тестов стало почти вдвое больше (28 → 54 млн), но доля ключевых групп — групп наибольшего риска — в тестировании упала с 5,8% до 3% —',
       'по всей видимости, отсюда и снижение заболеваемости', 'блок 3.'),
     h('div', { class: 'steplab' }, 'Прогноз · без ответа интерактив не откроется'),
     h('p', {}, 'Доля ключевых групп упала почти вдвое. Что произошло с ЧИСЛОМ тестов в ключевых группах?'),
@@ -620,14 +627,23 @@ function renderM3() {
       h('div', { class: 'btnrow' },
         h('button', { class: 'act' + (st.abs ? ' alt' : ''), type: 'button', onclick: () => { st.abs = !st.abs; render(); } },
           st.abs ? '← показать в долях' : 'показать в абсолютных числах'),
-        st.abs ? h('button', { class: 'act alt' + (st.overlay ? ' sel' : ''), type: 'button', onclick: () => { st.overlay = !st.overlay; render(); } },
+        st.abs && st.mcq !== null ? h('button', { class: 'act alt' + (st.overlay ? ' sel' : ''), type: 'button', onclick: () => { st.overlay = !st.overlay; render(); } },
           st.overlay ? 'скрыть выявление' : 'наложить выявление') : null),
-      st.abs ? h('div', { class: 'hero' },
+      st.abs ? [h('div', { class: 'hero' },
         h('div', { class: 'hb' }, h('div', { class: 'hv', style: 'font-size:19px' }, fmt(T.y2014.total) + ' × 5,8% = ' + fmt(T.y2014.keyAbs)), h('div', { class: 'hl' }, 'тестов в ключевых группах, 2014')),
-        h('div', { class: 'hb' }, h('div', { class: 'hv', style: 'font-size:19px' }, fmt(T.y2024.total) + ' × 3,0% = ' + fmt(T.keyAbsNow)), h('div', { class: 'hl' }, 'тестов в ключевых группах, 2023–2024'))) : null,
-      st.abs && st.overlay ? [h('div', { class: 'scene' }, drawOverlay()),
-        h('p', {}, 'Вопрос рядом с графиком: может ли неизменный объем тестирования ключевых групп механически объяснить двукратное падение выявления — при удвоении тестирования всех остальных?')] : null,
-      st.abs ? verdictBlock('m3', 'Доля действительно упала вдвое — но потому, что знаменатель удвоился. Абсолютный объем тестирования ключевых групп не изменился: ' + fmt(T.y2014.keyAbs) + ' против ' + fmt(T.keyAbsNow) + '. Слабая версия тезиса верна: такая структура тестирования не позволяет исключить недовыявление в ключевых группах. Но «по всей видимости, отсюда и снижение» — объяснение, которое собственные числа текста не поддерживают. И мелочь, которую вы теперь замечаете сами: ' + T.yearMismatchNote + ' — ряды сшиты из разных лет.') : h('p', { class: 'fnote' }, 'Переключите вид на абсолютные числа — вердикт откроется после этого.'),
+        h('div', { class: 'hb' }, h('div', { class: 'hv', style: 'font-size:19px' }, fmt(T.y2024.total) + ' × 3,0% = ' + fmt(T.keyAbsNow)), h('div', { class: 'hl' }, 'тестов в ключевых группах, 2023–2024'))),
+        h('div', { class: 'formula' }, 'доля = тесты в ключевых группах ÷ ВСЕ тесты'),
+        h('p', { class: 'fnote' }, 'Числитель за десять лет не изменился. Знаменатель удвоился. Поэтому доля упала вдвое — больше за этим падением ничего не стоит.'),
+        h('p', { class: 'stmt' }, 'Итак: что упавшая вдвое доля говорит о тестировании ключевых групп?'),
+        h('div', { class: 'btncol' }, ...M3_MCQ.map((o, i) => h('button', {
+          class: 'act' + (st.mcq !== null ? (i === 1 ? ' good' : ' alt') : ' alt'), type: 'button',
+          disabled: st.mcq !== null ? 'disabled' : null,
+          onclick: () => { st.mcq = i; st.mcqMsg = (i === 1 ? 'good:' : 'bad:') + M3_MCQ[i].why; render(); } }, o.t))),
+        st.mcqMsg ? h('p', { class: 'toast' + (st.mcqMsg.startsWith('good') ? ' good' : '') }, st.mcqMsg.split(/:(.*)/s)[1]) : null,
+      ] : null,
+      st.abs && st.mcq !== null && st.overlay ? [h('div', { class: 'scene' }, drawOverlay()),
+        h('p', {}, 'Вопрос к наложению: может ли неизменный объем тестирования ключевых групп механически объяснить двукратное падение выявления — при удвоении тестирования всех остальных?')] : null,
+      st.abs && st.mcq !== null ? verdictBlock('m3', 'Доля упала вдвое только потому, что удвоился знаменатель: ' + fmt(T.y2014.keyAbs) + ' тестов в ключевых группах в 2014-м — и те же ' + fmt(T.keyAbsNow) + ' десятилетие спустя. Что числа статьи поддерживают: тестирование именно тех групп, где концентрируется эпидемия, стоит на месте, — значит, часть «снижения заболеваемости» может быть недовыявлением. Чего не поддерживают: «по всей видимости, отсюда и снижение» — причинное объяснение, которое собственные числа текста не тянут. И мелочь, которую вы теперь замечаете сами: ' + T.yearMismatchNote + ' — ряды сшиты из разных лет.') : h('p', { class: 'fnote' }, 'Переключите вид на абсолютные числа и ответьте на вопрос — вердикт откроется после этого.'),
     ] : null);
 }
 
@@ -770,7 +786,7 @@ function renderM5() {
           h('span', { class: 'zchip ' + (c.zone === z ? 'okz' : 'badz') }, c.text)))))),
     h('p', { class: 'toast' + (kind === 'good' ? ' good' : '') }, msg),
     placedAll ? [
-      h('p', { class: 'fnote' }, 'Осторожные образцы — «может», «вероятно, занижена» — в этом же тексте есть: авторы умеют, когда помнят. А «по всей видимости» из модуля 3 — модальность осторожная, но вывод под ней все равно сильнее данных: смягчающее слово не заменяет расчет.'),
+      h('p', { class: 'fnote' }, 'Осторожные образцы — «может», «вероятно, занижена» — в этом же тексте есть: авторы умеют, когда помнят. А «по всей видимости» из модуля М2 — модальность осторожная, но вывод под ней все равно сильнее данных: смягчающее слово не заменяет расчет.'),
       h('div', { class: 'steplab' }, 'Часть 2 · очная ставка с самим текстом'),
       h('p', {}, '«Перестает работать» — а финал того же блока 10 говорит условно: «если… перестала справляться». Выберите формулировку, которая не обещает больше, чем данные:'),
       h('div', { class: 'btncol' }, ...M5_P2A.map((t, i) => h('button', {
@@ -991,7 +1007,7 @@ function renderM8() {
     allDone ? [
       h('div', { class: 'scene' }, drawGlobal()),
       h('div', { class: 'reveal', html: '<b>Семь проверок — семь совпадений</b>, вплоть до «пика 1994 года», который звучит как опечатка, но стоит в фактшите дословно. Это и есть второй исход аудита: проверено и подтверждено. Текст, который вы препарировали шесть модулей подряд, в мировом блоке безупречен — ошибки живут не везде, а в предсказуемых местах: знаменатели, доли, модальность, заголовки.' + (Object.values(st.verdicts).every(v => v === 'ok') ? '' : ' (Вы поставили не всем «подтверждено» — вернитесь к выдержкам: каждое из семи чисел стоит в фактшите.)') }),
-      h('div', { class: 'rule' }, 'Правило: ' + modMeta('m8').rule),
+      h('div', { class: 'rule' }, 'Вывод на вынос: ' + modMeta('m8').rule),
       h('div', { class: 'btnrow' }, h('button', { class: 'act', type: 'button', onclick: () => go('toc') }, 'К оглавлению →')),
     ] : null);
 }
@@ -1042,7 +1058,7 @@ function reportText() {
     lines.push(r.mod);
     lines.push('  утверждение: ' + r.claim);
     lines.push('  ваш вердикт: ' + r.mine + '  ·  верный: ' + r.right);
-    lines.push('  правило: ' + r.rule);
+    lines.push('  вывод: ' + r.rule);
     lines.push('');
   });
   return lines.join('\n');
@@ -1064,7 +1080,7 @@ function renderFinal() {
   const E = DATA.ecdc;
   const [kind, msg] = S.toast ? S.toast.split(/:(.*)/s) : ['', ''];
   return h('section', { class: 'card', id: 'final' },
-    h('div', { class: 'topbar' }, h('h2', {}, 'Финал · шесть правил и отчет'),
+    h('div', { class: 'topbar' }, h('h2', {}, 'Финал · шесть выводов и отчет'),
       h('button', { class: 'ghost', type: 'button', onclick: () => go('toc') }, '← оглавление')),
     h('div', { class: 'rulecards' }, ...MODS.slice(0, 6).map(m =>
       h('div', { class: 'rulecard' }, h('b', {}, m.n + ' · ' + m.name), m.rule))),
@@ -1103,7 +1119,7 @@ function renderToc() {
         h('span', { class: 'mtime' }, m.anchor))),
       h('button', { class: 'modcard', type: 'button', onclick: () => go('final') },
         h('span', { class: 'mnum' }, h('span', {}, 'Финал'), doneN === MODS.length ? h('span', { class: 'tick' }, 'все модули пройдены') : null),
-        h('span', { class: 'mname' }, 'Шесть правил · честная редакция · отчет'),
+        h('span', { class: 'mname' }, 'Шесть выводов · честная редакция · отчет'),
         h('span', { class: 'mtime' }, 'таблица аудита собирается из ваших ответов'))),
   ];
 }
