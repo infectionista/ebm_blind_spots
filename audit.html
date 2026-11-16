@@ -1001,29 +1001,6 @@ function renderM8() {
 
 /* =============== финал =============== */
 
-function drawEcdc() {
-  const E = DATA.ecdc;
-  const svg = h('svg', { viewBox: '0 0 660 262', role: 'img', 'aria-label': 'Новые диагнозы ВИЧ на 100 тыс. населения, 2024' });
-  const rows = [...Object.entries(E.ratesPer100k), ['Северная Македония', E.northMacedonia]];
-  const x0 = 180, xmax = 600, vmax = 36;
-  const xOf = v => x0 + v / vmax * (xmax - x0);
-  svg.append(h('text', { x: 40, y: 22, class: 'lab big' }, 'НОВЫЕ ДИАГНОЗЫ НА 100 ТЫС. НАСЕЛЕНИЯ · 2024'));
-  rows.forEach(([name, v], i) => {
-    const y = 56 + i * 36 + (i === 3 ? 18 : 0);
-    const isNM = i === 3;
-    svg.append(h('text', { x: x0 - 10, y: y + 4, class: 'lab big', 'text-anchor': 'end' }, name));
-    svg.append(h('line', { x1: x0, y1: y, x2: xOf(v), y2: y, stroke: isNM ? 'var(--verm)' : 'var(--ctx)', 'stroke-width': 3 }));
-    svg.append(h('circle', { cx: xOf(v), cy: y, r: 7, fill: isNM ? 'var(--verm)' : 'var(--ctx)' },
-      tip(name + ': ' + String(v).replace('.', ',') + (isNM ? ' и ниже — среди наименьших в регионе' : ''))));
-    svg.append(h('text', { x: xOf(v) + 12, y: y + 4, class: 'lab mono' }, (isNM ? '≤' : '') + String(v).replace('.', ',')));
-  });
-  // разрыв оси
-  svg.append(h('text', { x: x0 + 10, y: 56 + 2 * 36 + 28, class: 'lab', 'font-size': 14 }, '⌇ разрыв оси'));
-  svg.append(h('text', { x: 40, y: 234, class: 'lab' }, 'Источник: ' + E.source + '.'));
-  svg.append(h('text', { x: 40, y: 250, class: 'lab' }, 'Средняя по восточному субрегиону: ' + String(E.eastAvg).replace('.', ',') + ' на 100 тыс.'));
-  return svg;
-}
-
 function reportRows() {
   return MODS.map(m => {
     if (m.id === 'm8') {
@@ -1064,7 +1041,6 @@ function copyReport() {
 }
 
 function renderFinal() {
-  const E = DATA.ecdc;
   const [kind, msg] = S.toast ? S.toast.split(/:(.*)/s) : ['', ''];
   return h('section', { class: 'card', id: 'final' },
     h('div', { class: 'topbar' }, h('h2', {}, 'Финал · заключения и отчет'),
@@ -1072,10 +1048,6 @@ function renderFinal() {
     h('div', { class: 'rulecards' }, ...MODS.slice(0, 6).map(m =>
       h('div', { class: 'rulecard' }, h('b', {}, m.n + ' · ' + m.name), m.rule))),
     h('div', { class: 'rule', style: 'margin-top:12px' }, 'Рамка поверх шести заключений — ' + modMeta('m8').n + ': ' + modMeta('m8').rule),
-    h('div', { class: 'steplab' }, 'Как выглядит честная редакция'),
-    h('p', {}, 'На профильной конференции прозвучало, что по заболеваемости на 100 тыс. после России и Украины идет Северная Македония. Редакция сама поймала ошибку источника и разобрала ее в сноске:'),
-    h('div', { class: 'scene' }, drawEcdc()),
-    h('p', { class: 'fnote' }, 'Абсурд слайда виден глазом. Вероятный источник путаницы: у Северной Македонии самое высокое в регионе соотношение мужчин и женщин среди новых диагнозов, примерно ' + E.nmMaleFemaleRatio + ':1 — «третье место», но в другом рейтинге. Урок: источником ошибки бывает и эксперт на трибуне; честная редакция ошибку не прячет, а разбирает.'),
     h('div', { class: 'steplab' }, 'Таблица аудита — из ваших ответов'),
     h('table', { class: 'audit' },
       h('tr', {}, h('th', {}, 'Прием'), h('th', {}, 'Ваш вердикт'), h('th', {}, 'Верный')),
@@ -1106,7 +1078,7 @@ function renderToc() {
         h('span', { class: 'mtime' }, m.anchor))),
       h('button', { class: 'modcard', type: 'button', onclick: () => go('final') },
         h('span', { class: 'mnum' }, h('span', {}, 'Финал'), doneN === MODS.length ? h('span', { class: 'tick' }, 'все модули пройдены') : null),
-        h('span', { class: 'mname' }, 'Заключения · честная редакция · отчет'),
+        h('span', { class: 'mname' }, 'Заключения и таблица аудита'),
         h('span', { class: 'mtime' }, 'таблица аудита собирается из ваших ответов'))),
   ];
 }
