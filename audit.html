@@ -327,7 +327,6 @@ function freshState() {
   return {
     view: 'toc',
     verdicts: {},               // m1..m7 -> ключ словаря (или 'absstrong'); сравнение в отчете
-    m1: { opened: false, vals: {}, ok: {}, checked: false },
     m2: { forecast: null, denom: 'diag', diag: false, bonus: null },
     m3: { forecast: null, abs: false, overlay: false },
     m4: { sel: null, placed: {}, formulation: null },
@@ -335,7 +334,7 @@ function freshState() {
     m6: { assign: {}, revealed: false, headline: null },
     m7: { marked: new Set(), checked: false },
     m8: { open: null, verdicts: {} },
-    done: { m1: false, m2: false, m3: false, m4: false, m5: false, m6: false, m7: false, m8: false },
+    done: { m2: false, m3: false, m4: false, m5: false, m6: false, m7: false, m8: false },
     toast: '',
   };
 }
@@ -344,35 +343,31 @@ S = freshState();
 /* =============== мета модулей =============== */
 
 const MODS = [
-  { id: 'm1', n: 'М1', name: 'Кликните по ссылке', time: '~5 мин',
-    anchor: 'на четыре страны приходилось 92% новых случаев в регионе',
-    options: ['ok', 'src', 'nope'], correct: 'src',
-    rule: 'Ссылка — не подтверждение, пока вы ее не открыли. Это самая дешевая проверка из существующих.' },
-  { id: 'm2', n: 'М2', name: 'Процент от кого?', time: '~12 мин',
+  { id: 'm2', n: 'М1', name: 'Процент от кого?', time: '~12 мин',
     anchor: 'в Великобритании подавления «добились у 98%»',
     options: ['ok', 'denom', 'src', 'strong'], correct: 'denom',
     rule: 'Процент без знаменателя — не число. Первый вопрос к любой доле: «от кого?»' },
-  { id: 'm3', n: 'М3', name: 'Посчитайте за автора', time: '~10 мин',
+  { id: 'm3', n: 'М2', name: 'Посчитайте за автора', time: '~10 мин',
     anchor: 'доля ключевых групп упала с 5,8% до 3% — «отсюда и снижение»',
     options: ['ok', 'absstrong', 'src'], correct: 'absstrong',
     rule: 'Проценты и абсолюты рассказывают разные истории. Считайте за автора — его же числами.' },
-  { id: 'm4', n: 'М4', name: 'Очная ставка цитат', time: '~10 мин',
+  { id: 'm4', n: 'М3', name: 'Очная ставка цитат', time: '~10 мин',
     anchor: '«реже умирают» — и «смертность на историческом максимуме»',
     options: ['ok', 'contra', 'src'], correct: 'contra',
     rule: 'Соберите все упоминания одной величины в одном месте. По отдельности фразы могут быть верны; вместе — нет.' },
-  { id: 'm5', n: 'М5', name: 'Шкала уверенности', time: '~10 мин',
+  { id: 'm5', n: 'М4', name: 'Шкала уверенности', time: '~10 мин',
     anchor: '«доказывают», «перестает работать», «невозможность передать»',
     options: ['ok', 'strong', 'contra'], correct: 'strong',
     rule: 'Глагол-связка — заявка на силу доказательств. Проверяйте, покрыта ли заявка, — часто соседним абзацем.' },
-  { id: 'm6', n: 'М6', name: 'Заголовок против текста', time: '~8 мин',
+  { id: 'm6', n: 'М5', name: 'Заголовок против текста', time: '~8 мин',
     anchor: 'заголовок: «всё хуже»',
     options: ['ok', 'strong', 'contra'], correct: 'strong',
     rule: 'Сверяйте заголовок с текстом под ним — они нередко написаны разными людьми и для разных целей.' },
-  { id: 'm7', n: 'М7', name: 'Проверьте чиновника', time: '~12 мин',
+  { id: 'm7', n: 'М6', name: 'Проверьте чиновника', time: '~12 мин',
     anchor: 'заболеваемость «снизилась до исторического минимума»',
     options: ['ok', 'src', 'strong', 'nope'], correct: 'src',
     rule: 'Цитата чиновника — проверяемое утверждение, а не декорация. «Исторический», «рекордный», «впервые» — слова со значением.' },
-  { id: 'm8', n: 'М8', name: 'Контроль: всё сходится', time: '~8 мин',
+  { id: 'm8', n: 'М7', name: 'Контроль: всё сходится', time: '~8 мин',
     anchor: 'мировой блок: семь утверждений',
     options: null, correct: 'ok',
     rule: 'У проверки два исхода, и «подтверждено» — тоже результат. Аудит — не цинизм.' },
@@ -413,71 +408,6 @@ function moduleShell(modId, ...content) {
       h('h2', {}, meta.n + ' · ' + meta.name + ' '),
       h('button', { class: 'ghost', type: 'button', onclick: () => go('toc') }, '← оглавление')),
     ...content);
-}
-
-/* =============== М1 · Кликните по ссылке =============== */
-
-function check1() {
-  const st = S.m1, d = DATA.eeca4;
-  st.ok.a = parseNum(st.vals.a) === d.inArticle;
-  st.ok.s = parseNum(st.vals.s) === d.inSource;
-  if (!st.opened) { S.toast = 'bad:Сначала откройте источник — кнопка выше.'; render(); return; }
-  if (st.ok.a && st.ok.s) { st.checked = true; S.toast = ''; }
-  else S.toast = 'bad:' + (!st.ok.a ? 'Число «в статье» — в карточке-утверждении наверху. ' : '') + (!st.ok.s ? 'Число «в источнике» — в выдержке пресс-релиза, оно подсвечено.' : '');
-  render();
-}
-
-function drawEecaBar() {
-  const d = DATA.eeca4;
-  const svg = h('svg', { viewBox: '0 0 660 170', role: 'img', 'aria-label': 'Доля четырех стран в новых случаях ВИЧ в регионе ВЕЦА' });
-  const x0 = 40, w = 580, y = 84, bh = 36;
-  const wA = w * d.inSource / 100;
-  svg.append(hatchDefs());
-  if (S.m1.checked) {
-    svg.append(h('text', { x: x0, y: 34, class: 'lab heroN' }, d.inArticle, tip('в статье: ' + d.inArticle + '%')));
-    svg.append(h('text', { x: x0 + 64, y: 34, class: 'lab', 'font-size': 13 }, 'в статье'));
-    svg.append(h('text', { x: x0 + 150, y: 34, class: 'lab heroN', fill: 'var(--petrol)' }, d.inSource, tip('в источнике: ' + d.inSource + '%')));
-    svg.append(h('text', { x: x0 + 214, y: 34, class: 'lab', 'font-size': 13 }, 'в источнике'));
-    svg.append(h('text', { x: x0 + 320, y: 34, class: 'lab' }, 'глазом разница почти неразличима'));
-  }
-  svg.append(h('rect', { x: x0, y, width: wA - 1, height: bh, rx: 4, fill: 'var(--verm)' },
-    tip('Россия, Украина, Узбекистан, Казахстан — ' + d.inSource + '% новых случаев (' + d.year + ')')));
-  svg.append(h('rect', { x: x0 + wA + 1, y, width: w - wA - 1, height: bh, rx: 4, fill: 'var(--ctx)' },
-    tip('остальные ' + (d.countriesTotal - 4) + ' стран региона')));
-  svg.append(h('text', { x: x0 + 8, y: y + 23, class: 'lab big', fill: '#fff' }, '4 страны'));
-  svg.append(h('text', { x: x0 + w - 8, y: y + 23, class: 'lab', 'text-anchor': 'end' }, 'остальные ' + (d.countriesTotal - 4)));
-  svg.append(h('text', { x: x0, y: y + bh + 22, class: 'lab' }, '0%'));
-  svg.append(h('text', { x: x0 + w, y: y + bh + 22, class: 'lab', 'text-anchor': 'end' }, '100% новых случаев в регионе ВЕЦА, ' + d.year));
-  if (S.m1.checked) svg.append(h('text', { x: x0 + w / 2, y: 160, class: 'lab', 'text-anchor': 'middle' }, 'ошибка мелкая, но ссылка ее не прячет, а показывает'));
-  return svg;
-}
-
-function renderM1() {
-  const st = S.m1, d = DATA.eeca4;
-  const [kind, msg] = S.toast ? S.toast.split(/:(.*)/s) : ['', ''];
-  return moduleShell('m1',
-    stmtCard('Статья: на четыре страны — Россию, Украину, Узбекистан и Казахстан — приходилось',
-      '92% новых случаев ВИЧ в регионе (данные 2023 года)', 'блок 4. Рядом стоит ссылка на источник.'),
-    h('div', { class: 'steplab' }, 'Интерактив · откройте то, на что ссылается предложение'),
-    h('div', { class: 'btnrow' },
-      h('button', { class: 'act' + (st.opened ? ' alt' : ''), type: 'button',
-        onclick: () => { st.opened = true; render(); } }, st.opened ? 'Источник открыт ↓' : '→ Открыть источник, на который ссылается фраза')),
-    st.opened ? h('div', { class: 'excerpt' },
-      h('span', { class: 'en' }, '…across the region, ', h('mark', {}, d.sourceQuoteEn), '.'),
-      h('br'), 'Перевод: «…при этом ', h('mark', {}, d.inSource + '%'), ' приходится на Россию, Украину, Узбекистан и Казахстан».',
-      h('span', { class: 'src' }, 'Источник: ' + d.source + (CONFIG.SHOW_LINKS ? '' : ' · выдержка встроена, внешних ссылок в тренажере нет'))) : null,
-    st.opened && !st.checked ? [
-      h('div', { class: 'calcf' }, h('label', { for: 'm1-a' }, 'Число в статье, %'),
-        h('input', { id: 'm1-a', inputmode: 'numeric', autocomplete: 'off', value: st.vals.a || '',
-          class: st.ok.a === false ? 'bad' : null, oninput: ev => { st.vals.a = ev.target.value; } })),
-      h('div', { class: 'calcf' }, h('label', { for: 'm1-s' }, 'Число в источнике, %'),
-        h('input', { id: 'm1-s', inputmode: 'numeric', autocomplete: 'off', value: st.vals.s || '',
-          class: st.ok.s === false ? 'bad' : null, oninput: ev => { st.vals.s = ev.target.value; } })),
-      h('div', { class: 'btnrow' }, h('button', { class: 'act', type: 'button', onclick: check1 }, 'Сравнить'))] : null,
-    h('p', { class: 'toast' + (kind === 'good' ? ' good' : '') }, msg),
-    st.checked ? [h('div', { class: 'scene' }, drawEecaBar()),
-      h('p', { class: 'srcline' }, 'Источник: ' + d.source + '. «Все 16 стран региона» — формулировка ЮНЭЙДС.'),
-      ...verdictBlock('m1', 'Источник, на который ссылается это же предложение, дает ' + d.inSource + '%, не ' + d.inArticle + '%. Разница в один пункт ничего не меняет по сути — но она показывает главное: даже в тщательно сверенном тексте ссылки живут своей жизнью. Проверка заняла у вас меньше минуты.')] : null);
 }
 
 /* =============== М2 · Процент от кого? =============== */
@@ -1060,7 +990,7 @@ function renderM8() {
     h('p', { class: 'fnote' }, 'Проверено утверждений: ' + doneCount + ' / ' + claims.length),
     allDone ? [
       h('div', { class: 'scene' }, drawGlobal()),
-      h('div', { class: 'reveal', html: '<b>Семь проверок — семь совпадений</b>, вплоть до «пика 1994 года», который звучит как опечатка, но стоит в фактшите дословно. Это и есть второй исход аудита: проверено и подтверждено. Текст, который вы препарировали семь модулей подряд, в мировом блоке безупречен — ошибки живут не везде, а в предсказуемых местах: знаменатели, доли, модальность, заголовки.' + (Object.values(st.verdicts).every(v => v === 'ok') ? '' : ' (Вы поставили не всем «подтверждено» — вернитесь к выдержкам: каждое из семи чисел стоит в фактшите.)') }),
+      h('div', { class: 'reveal', html: '<b>Семь проверок — семь совпадений</b>, вплоть до «пика 1994 года», который звучит как опечатка, но стоит в фактшите дословно. Это и есть второй исход аудита: проверено и подтверждено. Текст, который вы препарировали шесть модулей подряд, в мировом блоке безупречен — ошибки живут не везде, а в предсказуемых местах: знаменатели, доли, модальность, заголовки.' + (Object.values(st.verdicts).every(v => v === 'ok') ? '' : ' (Вы поставили не всем «подтверждено» — вернитесь к выдержкам: каждое из семи чисел стоит в фактшите.)') }),
       h('div', { class: 'rule' }, 'Правило: ' + modMeta('m8').rule),
       h('div', { class: 'btnrow' }, h('button', { class: 'act', type: 'button', onclick: () => go('toc') }, 'К оглавлению →')),
     ] : null);
@@ -1134,11 +1064,11 @@ function renderFinal() {
   const E = DATA.ecdc;
   const [kind, msg] = S.toast ? S.toast.split(/:(.*)/s) : ['', ''];
   return h('section', { class: 'card', id: 'final' },
-    h('div', { class: 'topbar' }, h('h2', {}, 'Финал · семь правил и отчет'),
+    h('div', { class: 'topbar' }, h('h2', {}, 'Финал · шесть правил и отчет'),
       h('button', { class: 'ghost', type: 'button', onclick: () => go('toc') }, '← оглавление')),
-    h('div', { class: 'rulecards' }, ...MODS.slice(0, 7).map(m =>
+    h('div', { class: 'rulecards' }, ...MODS.slice(0, 6).map(m =>
       h('div', { class: 'rulecard' }, h('b', {}, m.n + ' · ' + m.name), m.rule))),
-    h('div', { class: 'rule', style: 'margin-top:12px' }, 'И рамка поверх всех семи — ' + modMeta('m8').n + ': ' + modMeta('m8').rule),
+    h('div', { class: 'rule', style: 'margin-top:12px' }, 'И рамка поверх всех шести — ' + modMeta('m8').n + ': ' + modMeta('m8').rule),
     h('div', { class: 'steplab' }, 'Как выглядит честная редакция'),
     h('p', {}, 'На профильной конференции прозвучало, что по заболеваемости на 100 тыс. после России и Украины идет Северная Македония. Редакция сама поймала ошибку источника и разобрала ее в сноске:'),
     h('div', { class: 'scene' }, drawEcdc()),
@@ -1163,24 +1093,24 @@ function renderToc() {
   return [
     h('section', { class: 'card' },
       h('h2', {}, 'Как это устроено'),
-      h('p', {}, 'Перед вами — результаты аудита одного реального текста: карточек о ВИЧ в России, опубликованных одним крупным русскоязычным изданием в ноябре 2026 года. Восемь модулей — семь переносимых приемов проверки чисел и формулировок плюс один контрольный. В каждом модуле вы не «ищете проблемы», а выполняете операцию: пересчитываете, переключаете знаменатель, открываете источник, кладете цитаты рядом — и находка возникает сама.'),
+      h('p', {}, 'Перед вами — результаты аудита одного реального текста: карточек о ВИЧ в России, опубликованных одним крупным русскоязычным изданием в ноябре 2026 года. Семь модулей — шесть переносимых приемов проверки чисел и формулировок плюс один контрольный. В каждом модуле вы не «ищете проблемы», а выполняете операцию: пересчитываете, переключаете знаменатель, открываете источник, кладете цитаты рядом — и находка возникает сама.'),
       h('p', {}, 'Важная рамка: у проверки два исхода, и «подтверждено» — тоже результат. Один из модулей — именно об этом.'),
-      h('p', { class: 'fnote' }, 'Полный прогон — 60–90 минут. Модули автономны: можно проходить в любом порядке и делить между парами. Ответы живут в памяти страницы до перезагрузки.')),
+      h('p', { class: 'fnote' }, 'Полный прогон — 55–85 минут. Модули автономны: можно проходить в любом порядке и делить между парами. Ответы живут в памяти страницы до перезагрузки.')),
     h('div', { class: 'tocgrid' },
       ...MODS.map(m => h('button', { class: 'modcard', type: 'button', onclick: () => go(m.id) },
         h('span', { class: 'mnum' }, h('span', {}, m.n + ' · ' + m.time), S.done[m.id] ? h('span', { class: 'tick' }, '✓ пройден') : null),
         h('span', { class: 'mname' }, m.name),
         h('span', { class: 'mtime' }, m.anchor))),
       h('button', { class: 'modcard', type: 'button', onclick: () => go('final') },
-        h('span', { class: 'mnum' }, h('span', {}, 'Финал'), doneN === 8 ? h('span', { class: 'tick' }, 'все модули пройдены') : null),
-        h('span', { class: 'mname' }, 'Семь правил · честная редакция · отчет'),
+        h('span', { class: 'mnum' }, h('span', {}, 'Финал'), doneN === MODS.length ? h('span', { class: 'tick' }, 'все модули пройдены') : null),
+        h('span', { class: 'mname' }, 'Шесть правил · честная редакция · отчет'),
         h('span', { class: 'mtime' }, 'таблица аудита собирается из ваших ответов'))),
   ];
 }
 
 /* =============== каркас =============== */
 
-const VIEWS = { m1: renderM1, m2: renderM2, m3: renderM3, m4: renderM4, m5: renderM5, m6: renderM6, m7: renderM7, m8: renderM8 };
+const VIEWS = { m2: renderM2, m3: renderM3, m4: renderM4, m5: renderM5, m6: renderM6, m7: renderM7, m8: renderM8 };
 
 function render() {
   const app = $('#app');
@@ -1190,8 +1120,8 @@ function render() {
     h('header', {},
       h('div', { class: 'eyebrow' }, 'EBM Through Blind Spots · FLAS'),
       h('h1', {}, 'Аудит одного ', h('span', { class: 'hi' }, 'текста')),
-      h('p', { class: 'lede' }, 'Семь переносимых приемов проверки — на материале одних карточек о ВИЧ в России. Без медицинской подготовки: только числа, знаменатели и формулировки.'),
-      h('div', { class: 'progress', role: 'img', 'aria-label': 'Пройдено модулей: ' + doneN + ' из 8' },
+      h('p', { class: 'lede' }, 'Шесть переносимых приемов проверки — на материале одних карточек о ВИЧ в России. Без медицинской подготовки: только числа, знаменатели и формулировки.'),
+      h('div', { class: 'progress', role: 'img', 'aria-label': 'Пройдено модулей: ' + doneN + ' из ' + MODS.length },
         ...MODS.map(m => h('div', { class: 'p' + (S.done[m.id] ? ' on' : '') + (S.view === m.id ? ' cur' : '') })))),
     ...(Array.isArray(view) ? view : [view]),
     h('footer', { class: 'foot' },
