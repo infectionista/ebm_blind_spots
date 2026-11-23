@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en" data-mode="flow">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Media Worlds Simulator</title>
+<script>
+(function(){var d=document.documentElement,w=window.innerWidth,h=window.innerHeight;
+if(w>=1000&&h>0&&w/h>=1.2){d.setAttribute('data-mode','stage');d.style.setProperty('--k',Math.min(w/1280,h/720).toFixed(4));}})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* "EBM Through Blind Spots" course palette. Console = petrol wall of screens; worlds = cream paper.
+     One fixed light theme by choice, like the rest of the course materials.
+     Layout: a 1280x720 slide stage scaled to the window on wide screens; a single flowing column on phones. */
+  --paper:#F8EACF; --panel:#F5E7C8; --box:#FBF8F1; --ink:#2A2622; --dim:#7A7266;
+  --petrol:#0B5359; --petrol-l:#157079; --petrol-d:#083C41; --petrol-soft:#DCEAE8;
+  --verm:#B4573A; --verm-soft:#FBEDE6; --ochre:#C08A3E; --ochre-l:#E3B565; --ochre-soft:#F3E4C6;
+  --line:#D9C9A6; --mute:#B9A98F; --cream-hi:#FBF3DE;
+  --font:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--petrol-d);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body[data-view="world"],body[data-view="key"]{background:var(--paper)}
+button{font:inherit;color:inherit}
+a{color:var(--petrol-l)}
+h1,h2,h3,p{margin:0}
+:focus-visible{outline:3px solid var(--ochre);outline-offset:2px}
+[hidden]{display:none !important}
+svg{user-select:none}
+
+.frame{min-height:100%;display:flex;justify-content:center}
+.stage{flex:1;min-width:0;max-width:780px;display:flex;flex-direction:column;position:relative}
+.view{flex:1;display:flex;flex-direction:column;min-width:0}
+
+/* ---------- console ---------- */
+.console{background:var(--petrol);color:var(--panel);padding:18px 16px 16px;gap:14px;
+  background-image:radial-gradient(rgba(245,231,200,.07) 1px,transparent 1.3px);background-size:7px 7px}
+.chead{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:center}
+.chead h1,.chead .lede,.chead .chips{grid-column:1 / -1}
+.chead .seg{justify-self:end}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.console .eyebrow{color:var(--ochre-l)}
+.console h1{font-size:25px;line-height:1.14;font-weight:800;letter-spacing:-.01em;text-wrap:balance;color:var(--cream-hi)}
+.console h1 .acc{color:var(--ochre-l)}
+.console .lede{font-size:14px;color:#E9DFC4;max-width:64ch}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:inline-flex;border:1px solid currentColor;border-radius:999px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.04em}
+.console .seg{color:var(--panel)}
+.console .seg button[aria-pressed="true"]{background:var(--panel);color:var(--petrol)}
+.chip{border:1px solid rgba(245,231,200,.4);background:transparent;color:var(--panel);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip[aria-pressed="true"]{background:var(--panel);color:var(--petrol);border-color:var(--panel)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:2px;flex:none}
+.g-inf{background:#6DBAC2}.g-pas{background:#E58E70}.g-med{background:var(--ochre-l)}.g-key{background:var(--cream-hi)}
+
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px}
+@media (min-width:540px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.tile{appearance:none;border:0;background:none;padding:0;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:6px;min-width:0;color:var(--panel);transition:opacity .2s}
+.tile.dim{opacity:.3}
+.scr{display:block;position:relative;aspect-ratio:16/9;border-radius:11px;overflow:hidden;background:var(--petrol-d);
+  box-shadow:0 0 0 2px rgba(245,231,200,.22),0 3px 0 rgba(0,0,0,.28);transition:box-shadow .18s,transform .18s}
+.scr svg,.scr img{position:absolute;inset:0;width:100%;height:100%;display:block}
+.scr img{object-fit:cover}
+.scr img.hi{opacity:0;transition:opacity .25s}
+.scr img.hi.on{opacity:1}
+.scr .slot{position:absolute;right:7px;bottom:5px;font-size:8.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(245,231,200,.6)}
+.keyscr .slot{color:rgba(11,83,89,.6)}
+.tile:hover .scr,.tile:focus-visible .scr{box-shadow:0 0 0 3px var(--ochre-l),0 0 22px rgba(227,181,101,.5);transform:translateY(-2px)}
+.tile:focus-visible{outline:none}
+.plate{display:block;min-width:0}
+.plate .meta{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;letter-spacing:.08em;color:#CFE1DE;font-variant-numeric:tabular-nums}
+.plate .nm{display:block;font-size:13.5px;font-weight:700;color:var(--cream-hi);line-height:1.2;overflow-wrap:anywhere}
+.lamp{margin-left:auto;width:7px;height:7px;border-radius:50%;background:rgba(245,231,200,.2);flex:none}
+.lamp.on{background:var(--ochre-l);box-shadow:0 0 6px var(--ochre-l)}
+
+.status{display:flex;justify-content:space-between;gap:10px 16px;align-items:center;flex-wrap:wrap;border-top:1px solid rgba(245,231,200,.25);padding-top:10px;font-size:12px}
+.readout{font-variant-numeric:tabular-nums;color:var(--cream-hi);min-width:0;flex:1 1 260px}
+.sright{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.hint{color:#BFD3D0;font-size:11px}
+
+/* ---------- world and key ---------- */
+.world,.key{background:var(--paper);padding:12px 16px 18px;gap:12px;
+  background-image:radial-gradient(rgba(42,38,34,.045) 1px,transparent 1.3px);background-size:6px 6px}
+.bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn{border:1.5px solid var(--petrol);background:transparent;color:var(--petrol);border-radius:8px;padding:5px 11px;font-size:12.5px;font-weight:700;cursor:pointer;line-height:1.3}
+.btn:hover{background:var(--petrol-soft)}
+.btn.solid,.btn[aria-pressed="true"]{background:var(--petrol);color:var(--cream-hi)}
+.btn.solid:hover{background:var(--petrol-l)}
+.count{font-size:12px;color:var(--dim);font-weight:600;font-variant-numeric:tabular-nums}
+.spacer{flex:1}
+.world .seg,.key .seg{color:var(--petrol)}
+.world .seg button[aria-pressed="true"],.key .seg button[aria-pressed="true"]{background:var(--petrol);color:var(--cream-hi)}
+
+.whead{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:center}
+.vp{border:3px solid var(--petrol);border-radius:13px;overflow:hidden}
+.vp .scr{border-radius:0;box-shadow:none}
+.wtext{min-width:0}
+.whead .eyebrow{color:var(--petrol)}
+.whead h1{font-size:23px;line-height:1.15;font-weight:800;letter-spacing:-.01em;text-wrap:balance;margin:4px 0 6px;outline:none}
+.whead h1 .acc{color:var(--verm)}
+.whead .lede{font-size:14.5px;max-width:68ch}
+
+.chain{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.sbox{background:var(--box);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:7px;min-width:0}
+.sbox h3{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--petrol);display:flex;gap:7px;align-items:baseline;line-height:1.25}
+.sbox h3 b{font-size:15px;letter-spacing:0;color:var(--ink);font-weight:800;flex:none}
+.sbox p{font-size:13.5px;line-height:1.42;overflow-wrap:break-word}
+.blind{margin-top:auto;border:1px dashed #9C8C70;border-radius:7px;padding:6px 8px 7px;
+  background:repeating-linear-gradient(45deg,rgba(185,169,143,.55) 0 2px,transparent 2px 7px),var(--ochre-soft)}
+.blind .lbl{display:block;font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+.blind .lbl i{font-style:normal;background:var(--box);padding:1px 4px}
+.blind .tx{font-size:13px;line-height:1.6;background:var(--box);padding:1px 4px;-webkit-box-decoration-break:clone;box-decoration-break:clone;overflow-wrap:break-word}
+.tr{display:grid;grid-template-columns:26px minmax(0,1fr);gap:8px;align-items:center}
+.arrow{color:var(--petrol);display:flex;justify-content:center}
+.arrow svg{width:44px;height:20px;transform:rotate(90deg)}
+.arrow.brk{color:var(--verm)}
+.tnote{font-size:12.5px;line-height:1.35;padding:5px 9px;border-radius:8px;min-width:0;overflow-wrap:break-word}
+.tnote.brk{background:var(--verm-soft);box-shadow:inset 0 0 0 1.5px var(--verm)}
+.tnote .tl{font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.tnote .flag{color:var(--verm)}
+.tnote b{font-weight:700;color:var(--petrol)}
+.fill{font-size:14px;text-align:left}
+.fill b{color:var(--verm);font-weight:800}
+
+.cards{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.card{border-radius:10px;padding:10px 13px 11px;min-width:0}
+.card h3{font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}
+.card p{font-size:13.5px;line-height:1.42;overflow-wrap:break-word}
+.card.move{background:var(--petrol);color:var(--cream-hi)}
+.card.move h3{color:var(--ochre-l)}
+.card.move .nm{display:block;font-size:15.5px;font-weight:800;line-height:1.2;margin-bottom:5px}
+.card.meas{background:var(--panel);border:1px solid var(--line)}
+.card.meas h3,.card.ctr h3{color:var(--petrol)}
+.card.meas .hero{display:block;font-size:30px;font-weight:800;line-height:1.05;letter-spacing:-.01em;font-variant-numeric:tabular-nums;margin-bottom:5px}
+.card.ctr{background:var(--petrol-soft);border-left:4px solid var(--petrol)}
+.card ul{margin:0;padding-left:18px;font-size:13.5px;line-height:1.42}
+.src{font-size:11.5px;color:var(--dim);line-height:1.5}
+.src a{color:var(--petrol-l);text-underline-offset:2px}
+.rv.pending{visibility:hidden}
+
+/* ---------- portal (entering a world) ---------- */
+#portal{position:fixed;z-index:50;overflow:hidden;background:var(--petrol-d);border-radius:12px;
+  transition:left .58s cubic-bezier(.7,0,.2,1),top .58s cubic-bezier(.7,0,.2,1),width .58s cubic-bezier(.7,0,.2,1),height .58s cubic-bezier(.7,0,.2,1),border-radius .58s}
+#portal.out{opacity:0;transition:opacity .34s ease}
+#portal .scr{position:absolute;inset:0;aspect-ratio:auto;border-radius:0;box-shadow:none}
+#portal .rings{position:absolute;inset:-60%;border-radius:50%;
+  background:repeating-radial-gradient(circle at 50% 50%,rgba(251,243,222,0) 0 26px,rgba(251,243,222,.3) 26px 29px);
+  animation:rings .72s ease-in both}
+#portal .cap{position:absolute;left:0;right:0;bottom:9%;text-align:center;color:var(--cream-hi);font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:13px;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+@keyframes rings{from{transform:scale(.15);opacity:0}35%{opacity:1}to{transform:scale(1.5);opacity:0}}
+
+/* ---------- stage mode: one 1280x720 slide ---------- */
+html[data-mode="stage"] body{overflow:hidden;font-size:13px}
+html[data-mode="stage"] .frame{display:block;height:100%;min-height:0;position:relative}
+html[data-mode="stage"] .stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;max-width:none;transform:translate(-50%,-50%) scale(var(--k,1));transform-origin:center}
+html[data-mode="stage"] .view{position:absolute;inset:0}
+html[data-mode="stage"] .console{padding:15px 28px 11px;gap:11px}
+html[data-mode="stage"] .console > *{flex:none}
+html[data-mode="stage"] .chead{gap:4px 24px}
+html[data-mode="stage"] .console h1{font-size:27px}
+html[data-mode="stage"] .console .lede{font-size:13.5px;max-width:none;grid-column:1;grid-row:3}
+html[data-mode="stage"] .chead .chips{grid-column:2;grid-row:3;justify-content:flex-end;flex-wrap:nowrap}
+html[data-mode="stage"] .grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:11px 16px}
+html[data-mode="stage"] .tile{gap:5px}
+html[data-mode="stage"] .plate .nm{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-mode="stage"] .status{margin-top:auto;padding-top:8px}
+html[data-mode="stage"] .world,html[data-mode="stage"] .key{padding:11px 28px 10px;gap:7px;justify-content:space-between}
+html[data-mode="stage"] .world > *,html[data-mode="stage"] .key > *{flex:none}
+html[data-mode="stage"] .whead{grid-template-columns:168px minmax(0,1fr);gap:18px}
+html[data-mode="stage"] .sbox h3{font-size:10px;letter-spacing:.04em}
+html[data-mode="stage"] .whead h1{font-size:25px;margin:3px 0 5px}
+html[data-mode="stage"] .whead .lede{font-size:13.5px;max-width:none}
+html[data-mode="stage"] .chain{grid-template-columns:minmax(0,1fr) 50px minmax(0,1fr) 50px minmax(0,1fr) 50px minmax(0,1fr);grid-template-rows:auto auto;gap:6px 0}
+html[data-mode="stage"] .tr{display:contents}
+html[data-mode="stage"] .sbox{grid-row:1;padding:9px 11px 10px;gap:6px}
+html[data-mode="stage"] .sbox.s0{grid-column:1}
+html[data-mode="stage"] .sbox.s1{grid-column:3}
+html[data-mode="stage"] .sbox.s2{grid-column:5}
+html[data-mode="stage"] .sbox.s3{grid-column:7}
+html[data-mode="stage"] .sbox p{font-size:12.5px;line-height:1.4}
+html[data-mode="stage"] .blind .tx{font-size:12px;line-height:1.55}
+html[data-mode="stage"] .arrow{grid-row:1;align-self:center}
+html[data-mode="stage"] .arrow svg{transform:none}
+html[data-mode="stage"] .tr1 .arrow{grid-column:2}
+html[data-mode="stage"] .tr2 .arrow{grid-column:4}
+html[data-mode="stage"] .tr3 .arrow{grid-column:6}
+html[data-mode="stage"] .tnote{grid-row:2;justify-self:center;width:272px;font-size:11.5px;line-height:1.32;padding:4px 9px 5px}
+html[data-mode="stage"] .tr1 .tnote{grid-column:1 / span 3}
+html[data-mode="stage"] .tr2 .tnote{grid-column:3 / span 3}
+html[data-mode="stage"] .tr3 .tnote{grid-column:5 / span 3}
+html[data-mode="stage"] .fill{font-size:13.5px;text-align:center}
+html[data-mode="stage"] .cards{grid-template-columns:minmax(0,34fr) minmax(0,36fr) minmax(0,50fr);gap:12px}
+html[data-mode="stage"] .card{padding:8px 12px 9px}
+html[data-mode="stage"] .card p,html[data-mode="stage"] .card ul{font-size:12.5px;line-height:1.38}
+html[data-mode="stage"] .card.move .nm{font-size:14.5px}
+html[data-mode="stage"] .card.meas .hero{font-size:27px}
+html[data-mode="stage"] .src{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-mode="stage"] .key .sbox p{font-size:14.5px}
+html[data-mode="stage"] .key .blind .tx{font-size:13.5px}
+html[data-mode="stage"] .key .tnote{font-size:12.5px}
+html[data-mode="stage"] .key .fill{font-size:15px;font-weight:600;max-width:980px;align-self:center}
+html[data-mode="stage"] .key .card{padding:12px 14px 13px}
+html[data-mode="stage"] .key .card p,html[data-mode="stage"] .key .card ul{font-size:13.5px;line-height:1.45}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important;animation:none !important}
+}
+</style>
+</head>
+<body data-view="console">
+<div class="frame"><div class="stage" id="stage">
+  <section class="view console" id="console"></section>
+  <section class="view world" id="world" hidden></section>
+  <section class="view key" id="key" hidden></section>
+</div></div>
+<div id="portal" hidden aria-hidden="true"></div>
+<noscript><p style="color:#FBF3DE;padding:24px;font-family:sans-serif">This page needs JavaScript: it draws 14 media cases as S0 → S1 → S2 → S3 schemes.</p></noscript>
+
+<script>
+"use strict";
+/* ===== pictures =====
+   Every screen has one 16:9 picture in two sizes, kept beside this page:
+   media-worlds/world-NN-640.jpg (wall of screens) and media-worlds/world-NN-1600.jpg (inside a world).
+   NN = 00 for the key screen, 01-14 for the worlds. If a file is missing, the screen shows a stand-by planet. */
+const IMG_DIR = "media-worlds/", IMG = {};
+for(let i = 0; i <= 14; i++) IMG[i] = IMG_DIR + "world-" + String(i).padStart(2, "0");
+const imgSrc = (id, big) => IMG[id] ? IMG[id] + (big ? "-1600.jpg" : "-640.jpg") : null;
+/* the small file is enough for the little picture on a stage slide; a phone column shows it full width */
+const bigVp = () => document.documentElement.dataset.mode !== "stage";
+
+/* ===== interface strings: [English, Russian] ===== */
+const UI = {
+  eyebrow:["EBM Through Blind Spots · FLAS · Media worlds","EBM Through Blind Spots · FLAS · Миры медиа"],
+  h1:["Fourteen worlds where a finding was lost in *translation*","Четырнадцать миров, где находка потерялась при *переводе*"],
+  lede:["Pick a screen to step inside. Every world is drawn the same way: instrument → source → media → reader.","Выберите экран, чтобы войти. Каждый мир нарисован одинаково: инструмент → источник → медиа → читатель."],
+  all:["All 14","Все 14"], inf:["Infections","Инфекции"], pas:["Psychoactive substances","Психоактивные вещества"], pasChip:["Psychoactive substances","ПАВ"], med:["Other medicine","Остальная медицина"],
+  status0:["Select a world. 14 cases, 1933–2021: 4 on infections, 4 on psychoactive substances, 6 from the rest of medicine.","Выберите мир. 14 кейсов, 1933–2021: 4 об инфекциях, 4 о психоактивных веществах, 6 из остальной медицины."],
+  statusKey:["00 · The key: how every world is drawn, and the vocabulary of the course.","00 · Ключ: как нарисован каждый мир и словарь курса."],
+  moveIs:["the move","приём"],
+  hint:["Keys: ← → worlds · Esc console · S steps · L language","Клавиши: ← → миры · Esc пульт · S шаги · L язык"],
+  slot:["picture slot","место для картинки"],
+  visited:["visited","пройден"],
+  enter:["Entering world","Вход в мир"],
+  world:["World","Мир"],
+  back:["Console","Пульт"],
+  step:["Step by step","Пошагово"],
+  reveal:["Reveal","Дальше"],
+  prev:["Back","Назад"], next:["Next","Вперёд"],
+  keyName:["The key","Ключ"], keyTitle:["How to read a world","Как читать мир"],
+  s0:["what the instrument could see","что мог увидеть инструмент"],
+  s1:["what the source claimed","что заявил источник"],
+  s2:["what media and policy made of it","что сделали медиа и политика"],
+  s3:["what the reader assembled","что собрал читатель"],
+  blind:["could not see","не мог увидеть"],
+  lost:["lost","потеряно"], added:["added","добавлено"], tr:["translation","перевод"],
+  brk_newsroom:["the break · in the newsroom","разрыв · в редакции"],
+  brk_before:["the break · before the newsroom","разрыв · до редакции"],
+  brk_source:["the break · in the source itself","разрыв · в самом источнике"],
+  fill:["What filled the unlabelled gap:","Чем заполнили неподписанный пробел:"],
+  move:["The move","Приём"], measured:["What was measured","Что измерено"], counter:["Counter-argument","Контраргумент"],
+  sources:["Sources","Источники"],
+};
+
+/* ===== the key (course vocabulary, from session 1) ===== */
+const KEY = {
+  title:["How to read a *world*","Как читать *мир*"],
+  lede:["Research reaches the reader after three translations. Every world in this simulator is drawn as the same four states.","Исследование доходит до читателя после трёх переводов. Каждый мир в этом симуляторе нарисован как одни и те же четыре состояния."],
+  s0:["What the instrument could see.","Что мог увидеть инструмент."],
+  blind:["What it could not see, however well the study was run: the blind spot.","Чего он увидеть не мог при сколь угодно хорошем исполнении: слепое пятно."],
+  s1:["What the paper claims. Peer review shapes it. In these worlds the source can also be a regulator, the police or a press release.","Что утверждает статья. Её формирует рецензирование. В этих мирах источником бывает и регулятор, и полиция, и пресс-релиз."],
+  s2:["What media and policy make of it.","Что из этого делают медиа и политика."],
+  s3:["What the reader assembles, using their own priors.","Что собирает читатель, опираясь на собственные исходные убеждения."],
+  notes:[["peer review shapes it","её формирует рецензирование"],["media reformulate it","медиа её переформулируют"],["the reader’s own assumptions complete the work","работу завершают собственные допущения читателя"]],
+  fill:["Every arrow loses something and adds something. The blind spot at S0 is the only thing that never travels: a gap that carries no label gets filled with whatever the reader already believed.","Каждая стрелка что-то теряет и что-то добавляет. Слепое пятно из S0 — единственное, что дальше не передаётся: пробел без подписи заполняется тем, во что читатель уже верил."],
+  exT:["Example · the Pfizer phase 3 trial","Пример · третья фаза испытания Pfizer"],
+  ex:["S0: the endpoint was symptomatic disease. S1: “95% efficacy”. S2: “stops the spread”. S3: “they lied to me”. Nobody lied at S1.","S0: конечная точка — симптомная болезнь. S1: «эффективность 95 %». S2: «останавливает распространение». S3: «нам солгали». На S1 никто не солгал."],
+  defT:["Blind spot or error","Слепое пятно или ошибка"],
+  def:["A blind spot is a limitation that follows from the design of the instrument. It is there when the study is executed perfectly. An error is a failure of execution: it could have been avoided by doing the same study better.","Слепое пятно — ограничение, которое следует из устройства инструмента. Оно остаётся и при безупречном исполнении. Ошибка — сбой исполнения: её можно было избежать, сделав то же исследование лучше."],
+  lookT:["In each world, look for","В каждом мире ищите"],
+  look:[["the hatched patch in S0","the arrow marked as the break","what filled the gap","what the counter-argument gets right"],["штриховку в S0","стрелку с пометкой «разрыв»","чем заполнили пробел","в чём прав контраргумент"]],
+  across:["In six worlds (2, 4, 6, 10, 12, 14) the break came before the newsroom: a journal article, a regulator’s statement or a press release. In four (3, 6, 12, 13) journalists or editors exposed the error themselves.","В шести мирах (2, 4, 6, 10, 12, 14) разрыв случился до редакции: в журнальной статье, заявлении регулятора или пресс-релизе. В четырёх (3, 6, 12, 13) ошибку вскрыли сами журналисты или редакции."]
+};
+
+/* ===== the fourteen worlds ===== */
+const W = [
+{ g:"pas", years:"1933–1937", name:["Reefer Madness","«Reefer Madness»"],
+  title:["Reefer Madness: a murder as *proof*","«Reefer Madness»: убийство как *доказательство*"],
+  lede:["The head of the Federal Bureau of Narcotics and the press presented a killing by a man with severe psychosis as the work of marijuana.","Глава Федерального бюро по наркотикам и газеты представили убийство, совершённое человеком с тяжёлым психозом, как действие марихуаны."],
+  s0:["One man, one night. On 16 October 1933 Victor Licata, 21, kills five relatives in Tampa. Eleven days after his arrest psychiatrists diagnose dementia praecox with homicidal tendencies.","Один человек, одна ночь. 16 октября 1933 года в Тампе 21-летний Виктор Ликата убивает пятерых родных. Через 11 дней после ареста психиатры ставят dementia praecox с гомицидными тенденциями."],
+  blind:["One case with no comparison cannot show what caused anything.","Один случай без сравнения не показывает причину."],
+  s1:["The next morning a detective tells the local paper that Licata had been “addicted” to marijuana cigarettes for over six months. His medical file never mentions marijuana.","Наутро детектив сообщает местной газете, что Ликата больше полугода был «зависим» от сигарет с марихуаной. В медицинском деле марихуана не упомянута."],
+  s2:["Tampa Morning Tribune, 20 October 1933: “Stop This Murderous Smoke”. In 1937 Harry Anslinger retells the case in The American Magazine and at the Congressional hearings, now as the story of a sane, quiet youth.","Tampa Morning Tribune, 20 октября 1933 года: «Stop This Murderous Smoke». В 1937-м Гарри Анслингер пересказывает случай в The American Magazine и на слушаниях в Конгрессе — уже как историю здравомыслящего тихого юноши."],
+  s3:["The Marihuana Tax Act is signed on 2 August 1937 and takes effect on 1 October. Licata is found insane and never tried.","Marihuana Tax Act подписан 2 августа 1937 года и вступает в силу 1 октября. Ликату признают невменяемым и не судят."],
+  tr:[[["the attempt to commit him a year earlier","попытка госпитализации годом раньше"],["a drug habit","«зависимость»"]],
+      [["the diagnosis","диагноз"],["“this is what the drug does”","«вот что делает наркотик»"]],
+      [["the words “one case”","слова «один случай»"],["a federal ban","федеральный запрет"]]],
+  brk:2, where:"newsroom",
+  fill:["a drug as the cause","наркотик в роли причины"],
+  move:["One case as proof of cause","Единичный случай как доказательство причины"],
+  moveText:["A single unverified case served as evidence of causation; the diagnosis and the earlier attempt to have him committed were left out. The Hearst newspaper chain multiplied such stories.","Единичный непроверенный случай стал аргументом о причинной связи; диагноз и прежнюю попытку госпитализации опустили. Газетная сеть Херста тиражировала такие истории."],
+  hero:["1 case","1 случай"],
+  heroText:["became the main “proof” behind the federal ban of 1937.","стал главным «доказательством» при принятии федерального запрета 1937 года."],
+  counter:["The link between cannabis and psychosis is not invented: a 2016 meta-analysis gives an odds ratio of 3.9 (95% CI 2.84–5.34) for the heaviest users, with a dose–response. But that is the risk of psychotic disorders, not of violence, and the authors do not regard causality as settled.","Связь каннабиса с психозом не выдумка: метаанализ 2016 года даёт отношение шансов 3,9 (95 % ДИ 2,84–5,34) для самых интенсивных потребителей, с зависимостью «доза — эффект». Но это риск психотических расстройств, не насилия, и причинность авторы окончательно доказанной не считают."],
+  src:[["Wikipedia: Victor Licata (after Sloman, 1998)","https://en.wikipedia.org/wiki/Victor_Licata"],["Anslinger & Cooper, The American Magazine, July 1937 (reprint)","https://hiddeninthecrag.wordpress.com/2018/10/17/marihuana-in-the-30s-and-40s/"],["Marconi et al., Schizophrenia Bulletin 2016","https://pmc.ncbi.nlm.nih.gov/articles/PMC4988731"]] },
+
+{ g:"inf", years:"1974–1982", name:["Whooping-cough vaccine","Коклюшная вакцина"],
+  title:["Whooping-cough vaccine: 36 cases become a *rate*","Коклюшная вакцина: 36 случаев превращаются в *частоту*"],
+  lede:["Television and newspapers presented a series of 36 cases with no comparison group as proof of “brain damage” from the jab.","Серию из 36 случаев без группы сравнения телевидение и газеты подали как доказательство «поражения мозга» от прививки."],
+  s0:["36 children with neurological illness after DTP, seen over 11 years at Great Ormond Street Hospital in London (Kulenkampff, Schwartzman and Wilson, January 1974).","36 детей с неврологическими нарушениями после АКДС, которых за 11 лет наблюдали в лондонской больнице Грейт-Ормонд-стрит (Куленкампф, Шварцман и Уилсон, январь 1974)."],
+  blind:["No denominator and no comparison group: coincidence and cause look the same.","Нет знаменателя и группы сравнения: совпадение и причина выглядят одинаково."],
+  s1:["A case series in Archives of Disease in Childhood: illness that followed vaccination.","Серия случаев в Archives of Disease in Childhood: болезнь, наступившая после прививки."],
+  s2:["ITV, This Week, April 1974, prime time: a full-screen caption about a hundred brain-damaged children every year. Newspaper campaigns follow. In the US: “DPT: Vaccine Roulette” (WRC-TV, 19 April 1982).","ITV, This Week, апрель 1974 года, прайм-тайм: титр во весь экран о сотне детей с поражением мозга ежегодно. Затем — газетные кампании. В США: «DPT: Vaccine Roulette» (WRC-TV, 19 апреля 1982)."],
+  s3:["Coverage falls from 77% (1974) to 30% (1978), in places to 9%. The 1977–79 epidemic: more than 102,500 notified cases and an estimated 36 child deaths.","Охват падает с 77 % (1974) до 30 % (1978), местами до 9 %. Эпидемия 1977–1979 годов: более 102 500 зарегистрированных случаев и, по оценке, 36 детских смертей."],
+  tr:[[["how many children were vaccinated","сколько детей привито"],["“after” read as “because of”","«после» как «вследствие»"]],
+      [["“36 over 11 years”","«36 за 11 лет»"],["a hundred a year","сотня в год"]],
+      [["the risk from the disease itself","риск самой болезни"],["“roulette”","«рулетка»"]]],
+  brk:1, where:"before",
+  fill:["a yearly count of damaged children","годовой счёт пострадавших детей"],
+  move:["A case series with no comparison group","Серия случаев без группы сравнения"],
+  moveText:["Neurological illness in infants begins at the age when the jabs are given, so some cases must fall in the week after one. With no denominator and no comparison group, the screen turned separate stories into a “rate”.","Неврологические болезни младенцев дебютируют в том же возрасте, когда делают прививки, и часть случаев неизбежно приходится на неделю после укола. Без знаменателя и группы сравнения экран превратил отдельные истории в «частоту»."],
+  hero:["77% → 30%","77 % → 30 %"],
+  heroText:["vaccine coverage in Britain, 1974 → 1978.","охват вакцинацией в Великобритании, 1974 → 1978."],
+  counter:["The signal was not invented. The British NCES study (1976–79) linked serious neurological illness to a jab in the previous seven days (relative risk 2.4) and put lasting damage at 1 in 310,000 doses; a later reanalysis judged even that too high. Asking about safety was legitimate; turning a rare, disputed risk into “roulette” was the distortion.","Сигнал не был выдуман. Британское исследование NCES (1976–1979) связало тяжёлые неврологические заболевания с прививкой в предшествующие семь дней (относительный риск 2,4) и оценило стойкое повреждение в 1 на 310 000 доз; позднейший реанализ счёл завышенной и эту оценку. Спрашивать о безопасности было законно; искажением стала «рулетка»."],
+  src:[["Kulenkampff et al., Arch Dis Child 1974","https://pmc.ncbi.nlm.nih.gov/articles/PMC1648839"],["CDC MMWR 1982","https://www.cdc.gov/mmwr/preview/mmwrhtml/00001197.htm"],["Miller et al., BMJ 1981 (NCES)","https://pmc.ncbi.nlm.nih.gov/articles/PMC1505512"]] },
+
+{ g:"pas", years:"1980", name:["Jimmy’s World","«Мир Джимми»"],
+  title:["Jimmy’s World: a hero who was never *there*","«Мир Джимми»: герой, которого *не было*"],
+  lede:["The Washington Post ran a front-page story about an eight-year-old heroin addict, won a Pulitzer Prize for it and gave it back: the boy did not exist.","Washington Post напечатала на первой полосе историю восьмилетнего героинового наркомана, получила за неё Пулитцеровскую премию и вернула её: мальчика не существовало."],
+  s0:["Nothing. No child, no house, no record: nobody but the author ever saw “Jimmy”.","Ничего. Ни ребёнка, ни дома, ни документа: «Джимми» не видел никто, кроме автора."],
+  blind:["A source that no one else may check is not an instrument.","Источник, который больше никто не может проверить, — не инструмент."],
+  s1:["Janet Cooke’s account: an eight-year-old in south-east Washington whom a dealer injects with heroin in front of his mother. Sources anonymous; the family, she says, has moved.","Рассказ Джанет Кук: восьмилетний мальчик из юго-восточного Вашингтона, которому героин колет наркоторговец на глазах у матери. Источники анонимны; семья, по её словам, переехала."],
+  s2:["Front page, 28 September 1980. The editors never get to see even the boy’s house, and still enter the story for a Pulitzer Prize, which it wins in April 1981.","Первая полоса, 28 сентября 1980 года. Редакторам не показывают даже дом мальчика — и текст всё равно выдвигают на Пулитцеровскую премию; в апреле 1981-го он её получает."],
+  s3:["The city searches for the child and finds no one. Two days after the prize, after almost 11 hours of questioning, Cooke confesses. The Post returns the prize: the only such case in Pulitzer history.","Город ищет ребёнка и не находит. Через два дня после премии, после почти 11 часов расспросов, Кук признаётся. Газета возвращает премию — единственный такой случай в истории Пулитцера."],
+  tr:[[["nothing (there was nothing to lose)","ничего (терять было нечего)"],["a child","ребёнок"]],
+      [["verification","проверка"],["page one, then a prize","первая полоса и премия"]],
+      [["colleagues’ doubts","сомнения коллег"],["a city-wide search","поиски по всему городу"]]],
+  brk:1, where:"source",
+  fill:["a boy the newsroom was ready to believe in","мальчик, в которого редакция была готова поверить"],
+  move:["An invented hero","Выдуманный герой"],
+  moveText:["Outright fabrication under cover of an anonymous source. Colleagues had doubts, Black reporters most of all, to whom the description of the ghetto rang false; the story was put up for the prize anyway.","Прямая фабрикация под прикрытием анонимности источника. Сомневались и коллеги, особенно чернокожие журналисты, которым описание гетто казалось фальшивым, — текст всё равно выдвинули на премию."],
+  hero:["2 days","2 дня"],
+  heroText:["from the prize to the confession. The Pulitzer went to Teresa Carpenter of the Village Voice; on 19 April 1981 the Post published its own account of the editorial failures.","от премии до признания. Награду передали Терезе Карпентер из Village Voice; 19 апреля 1981 года Post опубликовала собственный разбор редакционных сбоев."],
+  counter:["Heroin in Washington was a real problem, and that is exactly why the story went unchecked: it confirmed what the newsroom already believed. The case is useful not as “journalists lie” but as an example of plausibility standing in for verification.","Героин в Вашингтоне был реальной проблемой, и именно поэтому историю не проверили: она подтверждала то, во что редакция уже верила. Кейс полезен не как «журналисты врут», а как пример того, что правдоподобие заменяет проверку."],
+  src:[["Columbia Journalism Review","https://www.cjr.org/the_feature/the_fabulist_who_changed_journalism.php"],["Time, “A Fraud in the Pulitzers” (1981)","https://content.time.com/time/subscriber/article/0,33009,924722-1,00.html"],["Wikipedia: Janet Cooke","https://en.wikipedia.org/wiki/Janet_Cooke"]] },
+
+{ g:"pas", years:"1985–1990s", name:["“Crack babies”","«Крэк-младенцы»"],
+  title:["“Crack babies”: a lost generation that never *came*","«Крэк-младенцы»: потерянное поколение, которого *не случилось*"],
+  lede:["The press turned a preliminary study of 23 women into a forecast of a “biological underclass”.","Предварительное исследование на 23 женщинах пресса превратила в прогноз о «биологическом низшем классе»."],
+  s0:["23 pregnant women who used cocaine (Chasnoff and colleagues, NEJM, 12 September 1985). A preliminary report.","23 беременные, употреблявшие кокаин (Часнофф с коллегами, NEJM, 12 сентября 1985 года). Предварительное сообщение."],
+  blind:["Too few women to tell cocaine apart from tobacco, alcohol, poverty and missing prenatal care.","Слишком мало женщин, чтобы отделить кокаин от табака, алкоголя, бедности и отсутствия дородовой помощи."],
+  s1:["A journal article on cocaine in pregnancy. Reporters start calling within days, and the phrase “crack babies” appears.","Журнальная статья о кокаине при беременности. Звонки журналистов начинаются через несколько дней — тогда же появляется выражение «crack babies»."],
+  s2:["By the late 1980s: a “lost generation”. New York Times, 7 August 1989: “Crack’s Tiniest, Costliest Victims”. On air, doctors promise cerebral palsy and retardation; the tremor and shrill cry of prematurity stand in as “cocaine symptoms”.","К концу 1980-х — «потерянное поколение». New York Times, 7 августа 1989 года: «Crack’s Tiniest, Costliest Victims». В эфире врачи обещают ДЦП и умственную отсталость; «симптомами кокаина» служат признаки недоношенности — дрожь и пронзительный крик."],
+  s3:["The forecast becomes practice: some mothers have their children taken away, some are arrested.","Прогноз становится практикой: у части матерей забирают детей, некоторых арестовывают."],
+  tr:[[["everything else in these women’s lives","всё остальное в жизни этих женщин"],["one cause: cocaine","одна причина — кокаин"]],
+      [["“23 women, preliminary”","«23 женщины, предварительно»"],["a doomed generation","обречённое поколение"]],
+      [["poverty","бедность"],["blame for the mothers","вина матерей"]]],
+  brk:1, where:"before",
+  fill:["a forecast for a whole generation","прогноз для целого поколения"],
+  move:["Small sample, unmeasured confounders","Малая выборка, неучтённые конфаундеры"],
+  moveText:["Extrapolation from a small sample with no account of confounders: mothers who used crack more often smoked, drank, lived in poverty and had no prenatal care. Researchers who found no effect had trouble getting into the news.","Экстраполяция с малой выборки без учёта вмешивающихся факторов: матери, употреблявшие крэк, чаще курили, пили, жили в бедности и не получали дородовой помощи. Исследователям, которые не находили эффекта, было трудно попасть в новости."],
+  hero:["36 studies","36 исследований"],
+  heroText:["reviewed in JAMA in 2001: no convincing evidence of specific harm from prenatal cocaine exposure up to age 6 after adjustment for tobacco, alcohol and marijuana in pregnancy and for the child’s environment. Hallam Hurt followed 224 children for almost 25 years: poverty outweighed cocaine.","в обзоре JAMA 2001 года: после поправки на табак, алкоголь и марихуану во время беременности и на среду ребёнка специфического вреда внутриутробного воздействия кокаина до 6 лет не найдено. Халлам Хёрт почти 25 лет наблюдала 224 ребёнка: бедность оказалась сильнее кокаина."],
+  counter:["Cocaine in pregnancy is not harmless: the review’s author accepts small effects in newborns, comparable to tobacco, and possible links with attention. The first reports were honest alarm in the middle of an epidemic. The error was presenting a preliminary hypothesis as a settled forecast.","Кокаин при беременности не безвреден: автор обзора признаёт небольшие эффекты у новорождённых, сопоставимые с табаком, и возможную связь с вниманием. Первые сообщения врачей были честной тревогой в разгар эпидемии. Ошибкой стало то, что предварительную гипотезу подали как установленный прогноз."],
+  src:[["Chasnoff et al., NEJM 1985","https://www.scinapse.io/papers/2323237126"],["Frank et al., JAMA 2001","https://pmc.ncbi.nlm.nih.gov/articles/PMC2504866"],["Philadelphia Inquirer on Hurt’s study (2013)","https://www.inquirer.com/philly/health/20130721__Crack_baby__study_ends_with_unexpected_but_clear_result.html"]] },
+
+{ g:"inf", years:"1992–1994", name:["Sunday Times and HIV","Sunday Times и ВИЧ"],
+  title:["The Sunday Times: “the African AIDS plague is a *myth*”","Sunday Times: «африканская эпидемия СПИДа — *миф*»"],
+  lede:["For two years one of Britain’s leading newspapers campaigned against the conclusion that HIV causes AIDS.","Одна из главных британских газет два года вела кампанию против вывода, что ВИЧ вызывает СПИД."],
+  s0:["Epidemiology: AIDS follows HIV infection, including in people infected through blood products, outside any “risk group”.","Эпидемиология: СПИД следует за заражением ВИЧ — в том числе у людей вне «групп риска», заразившихся через препараты крови."],
+  blind:["In the early 1990s it was still unclear how exactly the virus causes the disease.","В начале 1990-х оставалось неясным, как именно вирус вызывает болезнь."],
+  s1:["The scientific consensus: HIV causes AIDS. A small group around Peter Duesberg disagrees.","Научный консенсус: ВИЧ вызывает СПИД. Небольшая группа вокруг Питера Дюсберга не согласна."],
+  s2:["From spring 1992 the paper gives the dissenters a platform; in 1993 it runs “African AIDS Plague a Myth”. Long-known cases of HIV-negative Kaposi’s sarcoma appear as new findings; scientists’ objections appear as censorship.","С весны 1992 года газета даёт трибуну несогласным; в 1993-м выходит шапка «African AIDS Plague a Myth». Давно описанные случаи ВИЧ-отрицательной саркомы Капоши подаются как новые находки, возражения учёных — как цензура."],
+  s3:["On 9 December 1993 Nature announces that it will monitor the paper’s coverage, and prints the letters the paper would not. The head of the Terrence Higgins Trust calls the campaign extremely damaging to AIDS work.","9 декабря 1993 года Nature объявляет, что будет отслеживать публикации газеты, и печатает письма, которые она не напечатала. Глава Terrence Higgins Trust называет кампанию крайне вредной для работы по СПИДу."],
+  tr:[[["the open question about mechanism","открытый вопрос о механизме"],["nothing (nobody lied at S1)","ничего (на S1 никто не солгал)"]],
+      [["the weight of the evidence","вес данных"],["“two equal sides”","«две равные стороны»"]],
+      [["the letters of rebuttal","письма с возражениями"],["doubt about the test and the virus","сомнение в тесте и вирусе"]]],
+  brk:2, where:"newsroom",
+  fill:["“HIV may not be the cause”","«возможно, причина не ВИЧ»"],
+  move:["False balance as a campaign","Ложный баланс как кампания"],
+  moveText:["False balance turned into a campaign: the position of a small group was presented as equal to the consensus. Data on false positives from the first tests of the mid-1980s were carried over to modern ones.","Ложный баланс, превращённый в кампанию: позиция небольшой группы подавалась как равная консенсусу. Данные о ложноположительных результатах первых тестов середины 1980-х переносились на современные."],
+  hero:["2 years","2 года"],
+  heroText:["of campaign, 1992–94. Researchers working in Zambia replied in Nature: “HIV in Zambia: myth or monster?”. Critics link the coverage to Thabo Mbeki’s later interest in denialist ideas.","кампании, 1992–1994. Исследователи, работавшие в Замбии, ответили в Nature статьёй «HIV in Zambia: myth or monster?». Критики связывают эти тексты с более поздним увлечением Табо Мбеки идеями отрицателей."],
+  counter:["Editor Andrew Neil said doubts about HIV were being suppressed in the press with the rigour of a one-party state; the paper believed it was defending the right to scientific dissent. The mechanism really was unclear at the time. But an open question about mechanism did not cancel the epidemiology the paper kept walking around.","Главный редактор Эндрю Нил говорил, что сомнения в роли ВИЧ подавляются в прессе с жёсткостью однопартийного государства; редакция считала, что защищает право на научное несогласие. Механизм тогда действительно оставался неясным. Но открытый вопрос о механизме не отменял эпидемиологии, которую газета систематически обходила."],
+  src:[["Nature, “New-style abuse of press freedom” (1993)","https://www.nature.com/articles/366493a0.pdf"],["Nature: the letters the paper did not print (1994)","https://nature.com/articles/367109a0.pdf"],["Godfrey-Faussett et al., Nature 1994","https://www.nature.com/articles/368183a0"]] },
+
+{ g:"inf", years:"1998–2000s", name:["MMR and autism","MMR и аутизм"],
+  title:["MMR and autism: how “balance” made a scientific *dispute*","MMR и аутизм: как «баланс» создал научный *спор*"],
+  lede:["The British press turned a series of 12 cases into a long-running story of “scientists against scientists”.","Серию из 12 случаев британская пресса превратила в многолетний спор «учёные против учёных»."],
+  s0:["12 children (Wakefield and colleagues, Lancet, 28 February 1998). The paper did not study a link with the vaccine; its own text says none was proven.","12 детей (Уэйкфилд с коллегами, Lancet, 28 февраля 1998 года). Связь с вакциной в работе не изучалась; в самой статье сказано, что она не доказана."],
+  blind:["Twelve cases without a comparison cannot test a link at all.","Двенадцать случаев без сравнения не могут проверить связь вообще."],
+  s1:["At the press conference Wakefield proposes replacing the triple vaccine with separate jabs.","На пресс-конференции Уэйкфилд предлагает заменить тривакцину раздельными прививками."],
+  s2:["Peak in 2002: 561 stories in seven months, autism mentioned in more than two-thirds. “Balancing” quotes suggest two equal bodies of evidence. The lead plot: Tony Blair will not say whether his son Leo has had the jab.","Пик в 2002 году: 561 материал за семь месяцев, аутизм упомянут более чем в двух третях. «Уравновешивающие» цитаты создают впечатление двух равных массивов данных. Главный сюжет: Тони Блэр не говорит, привит ли его сын Лео."],
+  s3:["53% of those polled think the evidence is split evenly; 23% know that most of it favours the vaccine. Measles: 56 cases in 1998, 1,348 in 2008.","53 % опрошенных считают, что данные разделились поровну; 23 % знают, что основная их масса — на стороне вакцины. Корь: 56 случаев в 1998 году, 1 348 в 2008-м."],
+  tr:[[["“not proven, not studied”","«не доказано, не изучалось»"],["advice to split the vaccine","совет разделить вакцину"]],
+      [["the weight of the evidence","вес данных"],["“two sides”","«две стороны»"]],
+      [["who stood on each side","кто стоял на каждой стороне"],["“the experts are split”","«эксперты разделились»"]]],
+  brk:1, where:"before",
+  fill:["“the scientists are split”","«учёные разделились»"],
+  move:["False balance","Ложный баланс"],
+  moveText:["Wakefield’s claims were not systematically challenged; attempts to “balance” a story only created an impression of two equal bodies of data. By Ben Goldacre’s count about 80% of the stories were written by non-specialist reporters.","Утверждения Уэйкфилда системно не оспаривались: попытки «уравновесить» текст лишь создавали впечатление двух равных массивов данных. По подсчёту Бена Голдакра, около 80 % материалов писали неспециализированные репортёры."],
+  hero:["92% → 80%","92 % → 80 %"],
+  heroText:["MMR coverage in England, 1995–96 → 2003–04; in parts of London as low as 58%. The Lancet retracted the paper on 2 February 2010.","охват прививкой в Англии, 1995–96 → 2003–04; в Лондоне местами до 58 %. Lancet отозвал статью 2 февраля 2010 года."],
+  counter:["Reporters were relaying a Lancet paper and a press conference at a major London hospital: the source looked sound. A journalist also exposed the fraud: Brian Deer showed that none of the 12 cases had been described without distortion. The case is not about “bad press” in general but about what the two-sides format does to a body of evidence.","Журналисты пересказывали статью из Lancet и пресс-конференцию крупной лондонской клиники — источник выглядел надёжным. Подлог тоже раскрыл журналист: Брайан Дир показал, что ни один из 12 случаев не был описан без искажений. Кейс не про «плохую прессу» вообще, а про то, как формат «две стороны» искажает картину данных."],
+  src:[["ESRC: Hargreaves, Lewis and Speers (2003)","https://www.eurekalert.org/news-releases/524195"],["Burgess et al., Vaccine 2006","https://www.psandman.com/articles/BurgessLeask.pdf"],["Deer, BMJ 2011","https://briandeer.com/solved/bmj-wakefield-1-1.htm"]] },
+
+{ g:"pas", years:"2009–2010", name:["Mephedrone","Мефедрон"],
+  title:["Mephedrone: the deaths it did not *cause*","Мефедрон: смерти, которых он *не вызывал*"],
+  lede:["The British press attributed the deaths of two teenagers to mephedrone before the tests were back. Toxicology found none.","Британская пресса приписала мефедрону гибель двух подростков до результатов экспертизы. Токсикология его не нашла."],
+  s0:["Two deaths in Scunthorpe on 15 March 2010: Louis Wainwright, 18, and Nicholas Smith, 19. Toxicology has not been done yet.","Две смерти в Сканторпе 15 марта 2010 года: 18-летний Луис Уэйнрайт и 19-летний Николас Смит. Токсикологии ещё нет."],
+  blind:["Until the laboratory reports, the cause of death is unknown.","Пока нет заключения лаборатории, причина смерти неизвестна."],
+  s1:["The police link the deaths to mephedrone. Earlier, an internal police report had retold posts from internet forums; its own author noted that they deserved little trust.","Полиция связывает смерти с мефедроном. Ещё раньше внутренний полицейский отчёт пересказал записи с интернет-форумов; его автор указал, что доверия они заслуживают мало."],
+  s2:["November 2009: The Sun turns the forum anecdote into a headline. March 2010: a national story, with up to 25 deaths “linked” to the drug, meaning cases where it was only suspected.","Ноябрь 2009 года: The Sun делает из форумного анекдота заголовок. Март 2010-го: общенациональная история и до 25 смертей, «связанных» с веществом, — то есть случаев, где оно лишь подозревалось."],
+  s3:["16 April 2010: mephedrone becomes a Class B drug. Late May: no trace of it in either teenager; the inquest speaks of methadone. Two members of the advisory council resign.","16 апреля 2010 года мефедрон становится наркотиком класса B. Конец мая: следов вещества у погибших нет, на дознании речь идёт о метадоне. Двое членов экспертного совета уходят в отставку."],
+  tr:[[["“not yet tested”","«ещё не проверено»"],["a named culprit","названный виновник"]],
+      [["the word “suspected”","слово «подозревается»"],["a death toll","счёт смертей"]],
+      [["the wait for data","ожидание данных"],["a fast-tracked ban","ускоренный запрет"]]],
+  brk:2, where:"newsroom",
+  fill:["a police statement","заявление полиции"],
+  move:["Cause of death before the tests","Причина смерти до экспертизы"],
+  moveText:["The cause of death was announced before toxicology, on the word of the police. An anecdote from a forum became a fact as it was retold.","Причину смерти объявили до токсикологии, со слов полиции. Анекдот с форума при пересказе превратился в факт."],
+  hero:["0","0"],
+  heroText:["traces of mephedrone in either teenager. The ban (16 April 2010) came before the result (late May). Forsyth (2012): online interest in buying mephedrone peaked when the news reported deaths.","следов мефедрона у обоих погибших. Запрет (16 апреля 2010) опередил результат (конец мая). Форсайт (2012): интерес к покупке мефедрона в сети достигал пика, когда новости сообщали о смертях."],
+  counter:["Mephedrone was not harmless: an inquest confirmed that John Sterling Smith, 46, died of mephedrone poisoning in February 2010, and the advisory council did judge the drug harmful enough to control. The dispute was not whether it is dangerous but whether to decide from newspaper reports ahead of the data.","Мефедрон не был безобиден: дознание подтвердило смерть 46-летнего Джона Стерлинга Смита от отравления им в феврале 2010 года, и экспертный совет всё же признал вещество достаточно вредным для контроля. Спор шёл не о том, опасен ли мефедрон, а о том, можно ли решать по газетным сообщениям раньше данных."],
+  src:[["Science Media Centre (2010)","https://www.sciencemediacentre.org/?p=19471"],["The Register (2009)","https://www.theregister.com/2009/12/02/mephedrone_madness/"],["Forsyth, Int J Drug Policy 2012","https://dx.doi.org/10.1016/j.drugpo.2011.12.003"]] },
+
+{ g:"inf", years:"2021", name:["The “8%” vaccine","«8 %» в Handelsblatt"],
+  title:["Handelsblatt: “efficacy of *8%*” in the elderly","Handelsblatt: «эффективность *8 %*» у пожилых"],
+  lede:["A German business daily reported that the AstraZeneca vaccine was only 8% effective in people over 65.","Немецкая деловая газета сообщила, что вакцина AstraZeneca эффективна у людей старше 65 лет всего на 8 %."],
+  s0:["The trial: 660 participants over 65 and one case of disease in each arm. Point estimate 6.3%, confidence interval from −1405% to 94%.","Испытание: 660 участников старше 65 лет и по одному случаю болезни в каждой группе. Точечная оценка 6,3 %, доверительный интервал от −1405 % до 94 %."],
+  blind:["With two cases in all, efficacy in the over-65s is simply unknown.","При двух случаях на всех эффективность у людей старше 65 просто неизвестна."],
+  s1:["“Coalition circles”: the government expects 8% efficacy among the over-65s. The health ministry: two things seem to have been confused; about 8% of trial participants were aged 56–69.","«Круги коалиции»: правительство ожидает эффективности 8 % среди людей старше 65. Минздрав: по-видимому, перепутаны две вещи — около 8 % участников испытания были в возрасте 56–69 лет."],
+  s2:["Handelsblatt, 25 January 2021: efficacy of 8%. Bild: “under 10%”. The paper does not retract; it publishes a second story about the “dispute” over the vaccine.","Handelsblatt, 25 января 2021 года: эффективность 8 %. Bild: «меньше 10 %». Газета материал не отзывает и выпускает второй — о «споре» вокруг вакцины."],
+  s3:["Germany’s vaccination committee recommends the vaccine for ages 18–64 only, for lack of data. By 1 March Germany has used 514,426 of 1,452,000 delivered doses.","Комиссия по вакцинации (STIKO) рекомендует вакцину только людям 18–64 лет — из-за нехватки данных. К 1 марта в Германии использовано 514 426 из 1 452 000 поставленных доз."],
+  tr:[[["“not enough data”","«данных недостаточно»"],["a number","цифра"]],
+      [["what the 8% was a share of","от чего считались 8 %"],["“the vaccine barely works”","«вакцина почти не работает»"]],
+      [["“no data” is not “no effect”","«нет данных» — не «нет эффекта»"],["unused doses","неиспользованные дозы"]]],
+  brk:2, where:"newsroom",
+  fill:["a number from a different column","цифра из другой графы"],
+  move:["A swapped indicator","Подмена показателя"],
+  moveText:["The share of an age group in the sample became “efficacy”. And one kind of knowledge was swapped for another: “the data are insufficient” became “the vaccine does not work”.","Доля возрастной группы в выборке превратилась в эффективность. И один тип знания подменили другим: «данных недостаточно» стало «вакцина не работает»."],
+  hero:["≈ 1/3","≈ 1/3"],
+  heroText:["of the delivered doses had been used in Germany by 1 March 2021. Among the reasons the BMJ named misleading reports of very low efficacy in the elderly.","поставленных доз использовали в Германии к 1 марта 2021 года. Среди причин BMJ называл и вводящие в заблуждение сообщения о крайне низкой эффективности у пожилых."],
+  counter:["The question itself was legitimate: data on older people really were thin, which is why the vaccination committee limited its recommendation. The reporter insisted this was political reporting from sources: he relayed what the coalition expected. The error was that a figure from a political source was not checked against the trial.","По существу вопрос был законным: данных по пожилым действительно не хватало, и комиссия по вакцинации ограничила рекомендацию именно поэтому. Автор настаивал, что это политический репортаж с источниками: он передал то, чего ждали в коалиции. Ошибка в том, что цифру из политического источника не сверили с данными испытания."],
+  src:[["Full Fact","https://fullfact.org/health/german-astrazeneca-8-percent-handelsblatt/"],["New Statesman (2021)","https://www.newstatesman.com/world/2021/01/why-german-press-misreported-astrazenecas-covid-19-vaccine"],["Boytchev, BMJ 2021","https://www.bmj.com/content/bmj/372/bmj.n619.full.pdf"]] },
+
+{ g:"med", years:"1990–1992", name:["Silicone implants","Силиконовые импланты"],
+  title:["Silicone implants: patients’ stories as *evidence*","Силиконовые импланты: рассказы пациенток как *доказательство*"],
+  lede:["A CBS programme presented the stories of a few women as proof that implants cause autoimmune disease.","Телепередача CBS представила истории нескольких женщин как свидетельство того, что импланты вызывают аутоиммунные болезни."],
+  s0:["About a million American women had implants. Among so many, autoimmune disease is bound to appear with no connection to them at all.","Импланты были примерно у миллиона американок. При таком числе аутоиммунные заболевания неизбежно возникают у многих и без всякой связи с имплантами."],
+  blind:["No good studies yet, for a link or against one.","Хороших исследований ещё нет — ни за связь, ни против неё."],
+  s1:["Women describe illnesses that they attribute to their implants.","Женщины рассказывают о болезнях, которые связывают с имплантами."],
+  s2:["“Face to Face with Connie Chung”, December 1990: implants as dangerous devices pressed on unsuspecting women. January 1992: the FDA announces a voluntary moratorium.","«Face to Face with Connie Chung», декабрь 1990 года: импланты как опасные изделия, навязанные ничего не подозревавшим женщинам. Январь 1992-го: FDA объявляет добровольный мораторий."],
+  s3:["Individual lawsuits against Dow Corning rise from 137 (December 1991) to 19,092 (December 1994). In May 1995 the company files for bankruptcy.","Число индивидуальных исков к Dow Corning растёт со 137 (декабрь 1991) до 19 092 (декабрь 1994). В мае 1995 года компания подаёт на банкротство."],
+  tr:[[["how often this happens without implants","как часто это бывает без имплантов"],["a cause","причина"]],
+      [["“no data either way”","«данных нет ни за, ни против»"],["evidence of harm","данные о вреде"]],
+      [["“more often than in other women?”","«чаще ли, чем у остальных?»"],["a verdict","приговор"]]],
+  brk:2, where:"newsroom",
+  fill:["the stories of a few women","истории нескольких женщин"],
+  move:["Stories without a denominator","Истории без знаменателя"],
+  moveText:["No denominator and no comparison group. The question “more often than in other women?” was never put on air, and the absence of safety data was presented as the presence of data on harm.","Нет знаменателя и нет группы сравнения. Вопрос «чаще ли, чем у остальных?» в эфире не ставился, а отсутствие данных о безопасности подали как наличие данных о вреде."],
+  hero:["137 → 19,092","137 → 19 092"],
+  heroText:["lawsuits in three years. The Mayo Clinic study (1994), the Nurses’ Health Study (1995) and the Institute of Medicine (1999) found no link with systemic disease.","исков за три года. Исследование клиники Мейо (1994), Nurses’ Health Study (1995) и Институт медицины США (1999) связи с системными болезнями не нашли."],
+  counter:["Manufacturers sold implants for almost 30 years without safety data: the FDA demanded it only in 1988. Local complications such as rupture, contracture and pain are real and not rare. A moratorium can be defended as a response to missing data; the distortion was not the question but the ready answer drawn from a few stories.","Производители почти 30 лет продавали импланты без данных о безопасности: FDA затребовало их только в 1988 году. Местные осложнения — разрывы, контрактура, боль — реальны и нередки. Мораторий можно защищать как реакцию на отсутствие данных; искажением был не вопрос, а готовый ответ, выданный по нескольким историям."],
+  src:[["Angell, “Science on Trial” (1996)","https://manhattan.institute/article/science-on-trial-medical-evidence-and-the-law-in-the-breast-implant-case"],["PBS Frontline: chronology","https://www.pbs.org/wgbh/pages/frontline/implants/chron.html"],["Institute of Medicine (1999)","https://www.ncbi.nlm.nih.gov/books/NBK44778/"]] },
+
+{ g:"med", years:"1995", name:["The pill scare","Pill scare"],
+  title:["The pill scare: “twice the risk” with no *baseline*","Pill scare: «риск вдвое выше» без *исходного уровня*"],
+  lede:["The warning that new contraceptive pills doubled the risk of thrombosis was formally true, and misleading.","Сообщение о том, что новые контрацептивы удваивают риск тромбоза, было формально верным — и вводило в заблуждение."],
+  s0:["Studies: third-generation pills roughly double the risk of venous thromboembolism. In absolute numbers, from 1 to 2 cases per 7,000 women.","Исследования: таблетки третьего поколения примерно вдвое повышают риск венозной тромбоэмболии. В абсолютных числах — с 1 до 2 случаев на 7 000 женщин."],
+  blind:["Outside the frame: pregnancy and abortion raise the risk of thrombosis more than these pills do.","За рамкой сравнения: беременность и аборт повышают риск тромбоза сильнее, чем эти таблетки."],
+  s1:["October 1995: the UK Committee on Safety of Medicines writes to 190,000 doctors, pharmacists and health-service managers and issues an urgent press statement: the risk doubles, up 100%.","Октябрь 1995 года: британский Комитет по безопасности лекарств рассылает письма 190 000 врачей, фармацевтов и руководителей служб здравоохранения и делает экстренное заявление для прессы: риск вдвое выше, на 100 %."],
+  s2:["The press passes on the official wording. About 1.5 million women were taking these pills, half of all users of oral contraceptives.","Пресса передаёт официальную формулировку. Эти таблетки принимали около 1,5 млн женщин — половина всех, кто пользовался оральными контрацептивами."],
+  s3:["The share of third-generation pills falls from 53% to 14%. In the first quarter of 1996 there are 6,198 more abortions than in the quarter before (+16%).","Доля таблеток третьего поколения падает с 53 % до 14 %. В первом квартале 1996 года абортов на 6 198 больше, чем в предыдущем (+16 %)."],
+  tr:[[["“1 → 2 per 7,000”","«с 1 до 2 на 7 000»"],["“100%”","«на 100 %»"]],
+      [["nothing (the wording was passed on)","ничего (формулировку передали как есть)"],["reach","охват"]],
+      [["the risk of the alternative","риск альтернативы"],["a rush to stop","массовый отказ"]]],
+  brk:1, where:"before",
+  fill:["fear of the pill","страх перед таблеткой"],
+  move:["Relative risk without absolute risk","Относительный риск без абсолютного"],
+  moveText:["A relative risk with no baseline. “Twice” on a starting risk of 1 in 7,000 means one extra thromboembolism per 7,000 women. Nor was there any comparison with the alternative.","Относительный риск без базового уровня. «Вдвое» при исходном риске 1 на 7 000 означает одну дополнительную тромбоэмболию на 7 000 женщин. Не было и сравнения с альтернативой."],
+  hero:["≈ 13,000","≈ 13 000"],
+  heroText:["additional abortions in England and Wales over the following year, and as many additional births, including about 800 conceptions in girls under 16.","дополнительных абортов в Англии и Уэльсе за следующий год и столько же дополнительных родов, включая примерно 800 зачатий у девочек младше 16 лет."],
+  counter:["The distortion did not start with reporters: the press passed on an official warning, and a week later Nature blamed the committee itself for haste. The doubling was not invented, though the data disagreed; in 1999 the regulator lowered its estimate to 1.7 and lifted the restriction. The problem was the format of the message, not the fact.","Искажение началось не с репортёров: пресса передала формулировку официального предупреждения, и Nature через неделю упрекал в спешке именно комитет. Удвоение не было выдумкой, хотя данные расходились; в 1999 году регулятор снизил оценку до 1,7 и снял ограничение. Проблема была в формате сообщения, а не в самом факте."],
+  src:[["Gigerenzer et al. (2007)","https://www.stat.berkeley.edu/~aldous/157/Papers/health_stats.pdf"],["Nature, “Whipping up panic about the Pill” (1995)","https://www.nature.com/articles/377663a0.pdf"],["BMJ 2001: abortions in early 1996","https://pmc.ncbi.nlm.nih.gov/articles/PMC1120766"]] },
+
+{ g:"med", years:"1998", name:["“Cure for cancer”","«Лекарство от рака»"],
+  title:["New York Times: a cure for cancer “in two *years*”","New York Times: лекарство от рака «через *два года*»"],
+  lede:["The Sunday front page presented results in mice as an imminent breakthrough for people. It was not even news.","Первая полоса воскресного номера подала результаты на мышах как близкий прорыв в лечении людей. Новостью это не было."],
+  s0:["Two drugs from Judah Folkman’s laboratory, angiostatin and endostatin, eradicate tumours in mice.","Два препарата из лаборатории Джуды Фолкмана, ангиостатин и эндостатин, уничтожают опухоли у мышей."],
+  blind:["Mice. Not a single result in people.","Мыши. Ни одного результата у людей."],
+  s1:["A paper in Nature, November 1997. The same newspaper had already reported it at the time.","Статья в Nature, ноябрь 1997 года. Та же газета о ней тогда уже писала."],
+  s2:["Front page, 3 May 1998, by Gina Kolata. Nobel laureate James Watson is quoted: “Judah is going to cure cancer in two years.” Watson says he never said it; the paper stands by the quote.","Первая полоса, 3 мая 1998 года, автор Джина Колата. Цитата нобелевского лауреата Джеймса Уотсона: «Judah is going to cure cancer in two years». Уотсон заявляет, что такого не говорил; газета настаивает на точности цитаты."],
+  s3:["On Monday the shares of EntreMed, which holds the licence, open at $85 against $12.06 on Friday and close near $52. Patients jam their doctors’ phones asking for the drugs.","В понедельник акции EntreMed, владеющей лицензией, открываются на 85 долларах против 12,06 в пятницу и закрываются около 52. Пациенты обрывают телефоны врачей, прося доступ к препаратам."],
+  tr:[[["nothing (the paper says “in mice”)","ничего (в статье сказано «у мышей»)"],["nothing (nobody lied at S1)","ничего (на S1 никто не солгал)"]],
+      [["the date of the finding","дата открытия"],["a deadline for a cure","срок излечения"]],
+      [["the caveats in the text","оговорки в тексте"],["a share price","цена акций"]]],
+  brk:2, where:"newsroom",
+  fill:["“two years”","«два года»"],
+  move:["Mice → people; old news as a breakthrough","Мыши → люди; старая новость как прорыв"],
+  moveText:["Not the facts but the placement and the frame were distorted: a preclinical result as the lead story, a forecast for people resting on a celebrity quote, old news presented as an event.","Исказили не факты, а место и рамку: доклинический результат стал главной новостью, прогноз для людей держался на цитате знаменитости, а старую новость подали как событие."],
+  hero:["$12 → $85","12 → 85 $"],
+  heroText:["EntreMed’s share price over one weekend. Huberman and Regev, Journal of Finance: the price was moved not by new information but by public attention.","цена акций EntreMed за одни выходные. Хуберман и Регев, Journal of Finance: цену сдвинула не новая информация, а внимание публики."],
+  counter:["The article carried caveats, and its headline spoke of caution and of mice. The science behind it was real: in 2004 the FDA approved the first anti-angiogenic drug, bevacizumab. What failed was not the data but the timescale and the size of the promise: early endostatin trials disappointed, and EntreMed dropped the drug in 2004.","В статье были оговорки, а в заголовке стояли слова об осторожности и о мышах. Наука за ним была настоящей: в 2004 году FDA одобрило первый антиангиогенный препарат, бевацизумаб. Ошибкой оказались не данные, а сроки и масштаб обещания: ранние испытания эндостатина разочаровали, и в 2004 году EntreMed от него отказалась."],
+  src:[["Huberman & Regev, Journal of Finance 2001","https://econpapers.repec.org/RePEc:bla:jfinan:v:56:y:2001:i:1:p:387-396"],["Time, “The Hope & The Hype” (1998)","https://time.com/archive/6732776/the-hope-the-hype"],["NASW ScienceWriters (1998)","https://www.nasw.org/sites/default/files/sciencewriters/html/sprsu98tex/kolata.htm"]] },
+
+{ g:"med", years:"2013–2014", name:["Statins on air","Статины в эфире"],
+  title:["Statins: the broadcast after which 60,000 people *stopped*","Статины: передача, после которой 60 тысяч человек *бросили* лекарство"],
+  lede:["A two-part science programme on Australia’s ABC questioned both the link between cholesterol and heart disease and the benefit of statins.","Двухсерийный выпуск научной программы ABC поставил под сомнение и связь холестерина с болезнями сердца, и пользу статинов."],
+  s0:["An uncontrolled observational study of side effects. And a legitimate dispute: do people at low risk need statins?","Неконтролируемое наблюдательное исследование побочных эффектов. И законный спор: нужны ли статины людям с низким риском?"],
+  blind:["Without a control group, complaints cannot be assigned to the drug.","Без контрольной группы жалобы нельзя отнести на счёт препарата."],
+  s1:["October 2013: two BMJ articles state that side effects occur in 18–20% of people. On 15 May 2014 the journal and the authors withdraw the figure as wrong.","Октябрь 2013 года: две статьи в BMJ утверждают, что побочные эффекты возникают у 18–20 % людей. 15 мая 2014 года журнал и авторы отзывают эту цифру как неверную."],
+  s2:["Australia: ABC’s Catalyst, “Heart of the Matter” (October 2013), airs doubt about low-risk prescribing together with doubt about cholesterol itself. Britain: the press argues about statins until March 2014.","Австралия: Catalyst на ABC, «Heart of the Matter» (октябрь 2013), показывает спор о людях с низким риском вместе с сомнением в самом холестерине. Великобритания: пресса спорит о статинах до марта 2014 года."],
+  s3:["Australia: dispensing falls by 2.6%, with 504,180 fewer dispensings in eight months. Britain: an estimated 200,000-plus people stop treatment.","Австралия: отпуск статинов снижается на 2,6 %, за восемь месяцев недосчитались 504 180 выдач препарата. Великобритания: лечение бросили, по оценке, более 200 000 человек."],
+  tr:[[["“uncontrolled, observational”","«неконтролируемое, наблюдательное»"],["a round figure","круглая цифра"]],
+      [["“for people at low risk”","«для людей с низким риском»"],["doubt for everyone","сомнение для всех"]],
+      [["one’s own level of risk","собственный уровень риска"],["a stopped prescription","брошенный рецепт"]]],
+  brk:1, where:"before",
+  fill:["doubt for every viewer","сомнение для каждого зрителя"],
+  move:["One-sided framing, a wrong figure","Односторонняя подача, неверная цифра"],
+  moveText:["Two different questions were blended: a legitimate dispute about low-risk people was aired with doubt about cholesterol and heart disease, and a high-risk viewer could not tell them apart. The 18–20% came from an uncontrolled observational study and was misreported.","Смешение двух разных вопросов: законный спор о людях с низким риском прозвучал вместе с сомнением в связи холестерина и болезней сердца, и зритель из группы высокого риска не мог их разделить. Цифру 18–20 % взяли из неконтролируемого наблюдательного исследования и пересказали неверно."],
+  hero:["60,897","60 897"],
+  heroText:["people affected in Australia. If they do not return to treatment, the authors expect 1,522 to 2,900 preventable heart attacks and strokes over five years.","человек затронуто в Австралии. Если они не вернутся к лечению, авторы ожидают от 1 522 до 2 900 предотвратимых инфарктов и инсультов за пять лет."],
+  counter:["Both studies are observational and the event counts are model projections; the British authors themselves say causation is not proven and the effect was temporary. ABC maintained that over-prescribing is a legitimate topic. The case is not that drugs must not be criticised; it is that inaccurate criticism has a measurable price.","Оба исследования наблюдательные, число событий — модельная проекция; британские авторы сами оговаривают, что причинность не доказана, а эффект был временным. ABC настаивала, что избыточное назначение статинов — законная тема. Кейс не о том, что критиковать лекарства нельзя, а о том, что у неточной критики есть измеримая цена."],
+  src:[["Schaffer et al., Med J Aust 2015","https://www.mja.com.au/journal/2015/202/11/crux-matter-did-abcs-catalyst-program-change-statin-use-australia"],["Matthews et al., BMJ 2016","https://pmc.ncbi.nlm.nih.gov/articles/PMC4925917"],["Godlee, BMJ 2014","https://www.bmj.com/content/348/bmj.g3306"]] },
+
+{ g:"med", years:"2015", name:["Chocolate diet","«Шоколадная диета»"],
+  title:["“Chocolate helps you lose weight”: an experiment on *journalists*","«Шоколад помогает худеть»: эксперимент над *журналистами*"],
+  lede:["Science journalist John Bohannon ran a real but deliberately worthless trial and sent out a press release.","Научный журналист Джон Боханнон провёл настоящее, но заведомо негодное испытание и разослал пресс-релиз."],
+  s0:["16 volunteers in three groups for three weeks; 15 finish. Eighteen things are measured in each of them.","16 добровольцев, три группы, три недели; до конца доходят 15. У каждого измеряют 18 показателей."],
+  blind:["Eighteen measures in 15 people: something will come out “significant” by chance alone.","18 показателей у 15 человек: что-нибудь окажется «значимым» по чистой случайности."],
+  s1:["A paper by “Johannes Bohannon, Institute of Diet and Health” in a pay-to-publish journal with no peer review: weight loss “10% faster” with chocolate.","Статья «Йоханнеса Боханнона из Института диеты и здоровья» в платном журнале без рецензирования: с шоколадом вес уходит «на 10 % быстрее»."],
+  s2:["Reporters rewrite the press release without asking the sample size, checking the journal or calling a single independent expert. Front page of Bild.","Журналисты переписывают пресс-релиз, не спросив размер выборки, не проверив журнал и не обратившись ни к одному независимому эксперту. Первая полоса Bild."],
+  s3:["The “discovery” travels from India to Australia. On 27 May 2015 Bohannon reveals the hoax, and many outlets correct their stories.","«Открытие» расходится по изданиям от Индии до Австралии. 27 мая 2015 года Боханнон раскрывает мистификацию, и многие издания правят свои тексты."],
+  tr:[[["the other 17 measures","остальные 17 показателей"],["the word “significant”","слово «значимо»"]],
+      [["n = 15 and the journal’s name","n = 15 и название журнала"],["a headline","заголовок"]],
+      [["every check on the way","все проверки по пути"],["diet advice","совет по диете"]]],
+  brk:1, where:"source",
+  fill:["whatever came out “significant”","то, что вышло «значимым»"],
+  move:["p-hacking and a rewritten press release","p-hacking и пересказ пресс-релиза"],
+  moveText:["Planned p-hacking, in the author’s own words a recipe for false positives. And the delivery chain worked: between the press release and the headline nobody checked anything.","Запланированный p-hacking — по словам самого автора, рецепт ложноположительных результатов. Сработала и цепочка доставки: между пресс-релизом и заголовком никто ничего не проверил."],
+  hero:["18 × 15","18 × 15"],
+  heroText:["measures × people: all the evidence behind a front page.","показателей × человек: все доказательства за первой полосой."],
+  counter:["“Fooled millions” is an exaggeration too. The US Association of Health Care Journalists noted that most major American newsrooms ignored the study, and Gary Schwitzer thought few were directly deceived. The second objection is ethical: the participants did not know the real aim, and a false conclusion was deliberately released into public.","«Обманул миллионы» — тоже преувеличение. Ассоциация медицинских журналистов США отмечала, что большинство крупных американских редакций исследование проигнорировали, а Гэри Швитцер считал, что напрямую обманутых было немного. Второй упрёк этический: участники не знали истинной цели, а в публичное поле сознательно выпустили ложный вывод."],
+  src:[["Bohannon, io9 (2015)","https://gizmodo.com/i-fooled-millions-into-thinking-chocolate-helps-weight-1707251800"],["Association of Health Care Journalists","https://healthjournalism.org/blog/2015/06/what-can-reporters-learn-from-the-chocolate-diet-study-hoax/"],["NPR The Salt","https://www.npr.org/sections/thesalt/2015/05/28/410313446/why-a-journalist-scammed-the-media-into-spreading-bad-chocolate-science"]] },
+
+{ g:"med", years:"2015", name:["Bacon = cigarettes","«Бекон как сигареты»"],
+  title:["“Bacon like cigarettes”: *hazard* against risk","«Бекон как сигареты»: *опасность* против риска"],
+  lede:["IARC placed processed meat in the same group of carcinogens as tobacco and asbestos. The group states the strength of the evidence, not the size of the risk.","МАИР отнёс переработанное мясо к той же группе канцерогенов, что табак и асбест. Группа означает силу доказательств, а не величину риска."],
+  s0:["IARC’s classification: how firmly it is established that something can cause cancer at all. 22 experts from 10 countries, more than 800 studies.","Классификация МАИР: насколько надёжно установлено, что фактор вообще может вызывать рак. 22 эксперта из 10 стран, более 800 исследований."],
+  blind:["The scale has no place for how large the risk is.","На этой шкале нет места для величины риска."],
+  s1:["26 October 2015: processed meat in Group 1; “+18% for every 50 g a day”. The same press release says the individual risk remains small.","26 октября 2015 года: переработанное мясо — группа 1; «+18 % на каждые 50 г в день». В том же пресс-релизе сказано, что индивидуальный риск остаётся небольшим."],
+  s2:["Daily Mail, 22 October: bacon and sausages to be declared as great a cancer threat as cigarettes. The Guardian puts meat in a row with cigarettes, asbestos and arsenic.","Daily Mail, 22 октября: бекон и сосиски признают такой же раковой угрозой, как сигареты. Guardian ставит мясо в один ряд с сигаретами, асбестом и мышьяком."],
+  s3:["“+18%” reads easily as “18% will get cancer”. The WHO is flooded with queries and three days later issues a clarification.","«+18 %» легко прочитать как «заболеют 18 %». ВОЗ получает поток запросов и через три дня выпускает разъяснение."],
+  tr:[[["the size of the risk","величина риска"],["a group shared with tobacco","общая группа с табаком"]],
+      [["“the individual risk remains small”","«индивидуальный риск невелик»"],["“as dangerous as”","«так же опасно, как»"]],
+      [["“per 1,000 people”","«на 1 000 человек»"],["18% as a fate","18 % как судьба"]]],
+  brk:1, where:"before",
+  fill:["the size of tobacco’s risk","масштаб риска от табака"],
+  move:["Hazard read as risk","Опасность вместо риска"],
+  moveText:["Hazard swapped for risk, and a relative risk with no absolute one. Smoking raises a man’s risk of lung cancer about 20-fold; “+18% per 50 g a day” is a different order of magnitude.","Подмена «опасности» «риском» и относительный риск без абсолютного. Курение повышает риск рака лёгкого у мужчин примерно в 20 раз; «+18 % на каждые 50 г в день» — величина другого порядка."],
+  hero:["56 vs 66","56 и 66"],
+  heroText:["of 1,000 Britons develop bowel cancer in a lifetime: among those who eat the least processed meat and the most (61 overall; Cancer Research UK).","из 1 000 британцев заболеют раком кишечника за жизнь: среди тех, кто ест меньше всего переработанного мяса, и тех, кто ест больше всего (в среднем 61; Cancer Research UK)."],
+  counter:["Reporters invented neither Group 1 nor the 18%: both came from IARC, and risk-communication specialists criticised the agency’s own format. The link between processed meat and colorectal cancer is real. But the caveat that individual risk remains small was in the same press release, and it did not reach the headlines.","Журналисты не выдумали ни группу 1, ни 18 %: обе формулировки пришли от МАИР, и специалисты по коммуникации риска критиковали сам формат агентства. Связь переработанного мяса с колоректальным раком реальна. Но оговорка о небольшом индивидуальном риске стояла в том же пресс-релизе — и в заголовки не попала."],
+  src:[["Cancer Research UK (2015)","https://news.cancerresearchuk.org/2015/10/26/processed-meat-and-cancer-what-you-need-to-know/"],["Full Fact","https://fullfact.org/health/processed-meat-isnt-big-cause-cancer-smoking"],["WHO statement, 29 October 2015","https://www.who.int/news/item/29-10-2015-links-between-processed-meat-and-colorectal-cancer"]] }
+];
+
+/* ===== state ===== */
+let LANG = "en";
+try{ const s = localStorage.getItem("mw-lang"); if(s === "ru" || s === "en") LANG = s; }catch(e){}
+let VIEW = "console", CUR = 0, FILTER = "all", STEPMODE = false, STEP = 5, lastRouted = null, uid = 0;
+const MAXSTEP = 5, VISITED = new Set();
+window.__S = () => ({LANG, VIEW, CUR, FILTER, STEPMODE, STEP});
+
+/* ===== helpers ===== */
+const $ = (s, r) => (r || document).querySelector(s);
+const pad = n => String(n).padStart(2, "0");
+const t = x => Array.isArray(x) ? x[LANG === "ru" ? 1 : 0] : x;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt = s => esc(s).replace(/\*(.+?)\*/g, '<span class="acc">$1</span>');
+function h(tag, attrs, ...kids){
+  const el = document.createElement(tag);
+  if(attrs) for(const k in attrs){
+    const v = attrs[k];
+    if(v == null || v === false) continue;
+    if(k === "class") el.className = v;
+    else if(k === "html") el.innerHTML = v;
+    else if(k.slice(0,2) === "on") el.addEventListener(k.slice(2), v);
+    else if(v === true) el.setAttribute(k, "");
+    else el.setAttribute(k, v);
+  }
+  for(const kid of kids.flat()){
+    if(kid == null || kid === false) continue;
+    el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  }
+  return el;
+}
+const ARROW = '<svg viewBox="0 0 44 20" aria-hidden="true"><path d="M3 10h35m-8-7 8 7-8 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function placeholderSVG(id, big){
+  const n = ++uid, a = (id * 53) % 360, r = 22 + (id * 5) % 9, cx = 80, cy = 45;
+  let stars = "";
+  for(let i = 0; i < 10; i++){
+    const x = (id * 37 + i * 61) % 150 + 5, y = (id * 23 + i * 41) % 78 + 6;
+    if(Math.hypot(x - cx, y - cy) > r + 8 && !(x > 92 && y > 70)) stars += `<circle cx="${x}" cy="${y}" r="${i % 3 ? 0.9 : 1.5}" fill="#C08A3E"/>`;
+  }
+  return `<svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+<defs><pattern id="ph${n}" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="5" fill="#B9A98F"/></pattern>
+<clipPath id="pc${n}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath></defs>
+<rect width="160" height="90" fill="#083C41"/>${stars}
+<circle cx="${cx}" cy="${cy}" r="${r}" fill="#F5E7C8"/>
+<g clip-path="url(#pc${n})"><rect x="${cx}" y="${cy - r - 2}" width="${r + 2}" height="${2 * r + 4}" fill="url(#ph${n})" transform="rotate(${a} ${cx} ${cy})"/></g>
+<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#C08A3E" stroke-width="1.3"/>
+${big ? "" : `<text x="${cx}" y="${cy + 4.6}" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="13" font-weight="800" fill="#0B5359" stroke="#F5E7C8" stroke-width="2.4" paint-order="stroke">${pad(id)}</text>`}</svg>`;
+}
+function keySVG(){
+  const n = ++uid;
+  return `<svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+<defs><pattern id="kh${n}" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="5" fill="#B9A98F"/></pattern></defs>
+<rect width="160" height="90" fill="#F5E7C8"/>
+<g fill="#FBF8F1" stroke="#0B5359" stroke-width="1.6"><rect x="10" y="32" width="26" height="30" rx="3"/><rect x="48" y="32" width="26" height="30" rx="3"/><rect x="86" y="32" width="26" height="30" rx="3"/><rect x="124" y="32" width="26" height="30" rx="3"/></g>
+<rect x="11" y="48" width="24" height="13" fill="url(#kh${n})"/>
+<g stroke="#B4573A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M38.5 47h7m-3-3 3 3-3 3"/><path d="M76.5 47h7m-3-3 3 3-3 3"/><path d="M114.5 47h7m-3-3 3 3-3 3"/></g>
+<g font-family="Inter,system-ui,sans-serif" font-size="7.5" font-weight="800" fill="#0B5359" text-anchor="middle"><text x="23" y="27">S0</text><text x="61" y="27">S1</text><text x="99" y="27">S2</text><text x="137" y="27">S3</text></g></svg>`;
+}
+function screenNode(id, bare, big){
+  const box = h("span", {class: "scr" + (id === 0 ? " keyscr" : ""), html: id === 0 ? keySVG() : placeholderSVG(id, bare)});
+  const src = imgSrc(id, false);
+  if(src){
+    const im = h("img", {src, alt: "", decoding: "async"});
+    im.addEventListener("error", () => im.remove());
+    box.append(im);
+    if(big){   // a sharper copy fades in over the small one once it has loaded
+      const hi = h("img", {class: "hi", src: imgSrc(id, true), alt: "", decoding: "async"});
+      hi.addEventListener("load", () => hi.classList.add("on"));
+      hi.addEventListener("error", () => hi.remove());
+      box.append(hi);
+    }
+  } else if(!bare && id !== 0){
+    box.append(h("span", {class: "slot"}, t(UI.slot)));
+  }
+  return box;
+}
+function langToggle(){
+  const mk = (code, label) => h("button", {type: "button", "aria-pressed": String(LANG === code), onclick: () => setLang(code)}, label);
+  return h("span", {class: "seg", role: "group", "aria-label": "Language / Язык"}, mk("en", "EN"), mk("ru", "RU"));
+}
+function setLang(code){
+  if(code === LANG) return;
+  LANG = code;
+  try{ localStorage.setItem("mw-lang", LANG); }catch(e){}
+  render();
+}
+
+/* ===== console ===== */
+function tileNode(id){
+  const isKey = id === 0, w = isKey ? null : W[id - 1];
+  const name = isKey ? t(UI.keyTitle) : t(w.name);
+  const meta = isKey ? `00 · ${t(UI.keyName)}` : `${pad(id)} · ${w.years}`;
+  const g = isKey ? "key" : w.g;
+  const dim = FILTER !== "all" && !isKey && w.g !== FILTER;
+  const say = isKey ? t(UI.statusKey) : `${pad(id)} · ${w.years} · ${t(w.name)} — ${t(UI.moveIs)}: ${t(w.move)}`;
+  const tile = h("button", {class: "tile" + (dim ? " dim" : ""), type: "button", "data-id": id, "aria-label": `${meta}. ${name}`,
+      onclick: e => enterWorld(id, e.currentTarget),
+      onmouseenter: () => setReadout(say), onfocus: () => setReadout(say),
+      onmouseleave: () => setReadout(), onblur: () => setReadout()},
+    screenNode(id),
+    h("span", {class: "plate"},
+      h("span", {class: "meta"}, h("i", {class: "dot g-" + g}), meta,
+        isKey ? null : h("i", {class: "lamp" + (VISITED.has(id) ? " on" : ""), title: VISITED.has(id) ? t(UI.visited) : null})),
+      h("span", {class: "nm"}, name)));
+  return tile;
+}
+function setReadout(text){ const r = $("#readout"); if(r) r.textContent = text || t(UI.status0); }
+function renderConsole(){
+  const v = $("#console"); v.innerHTML = "";
+  const chip = (code, label, g, full) => h("button", {class: "chip", type: "button", "aria-pressed": String(FILTER === code), title: full || null, "aria-label": full || null,
+      onclick: () => { FILTER = code; renderConsole(); }}, g ? h("i", {class: "dot g-" + g}) : null, label);
+  const grid = h("div", {class: "grid"});
+  for(let id = 0; id <= W.length; id++) grid.append(tileNode(id));
+  v.append(
+    h("header", {class: "chead"},
+      h("div", {class: "eyebrow"}, t(UI.eyebrow)),
+      langToggle(),
+      h("h1", {html: fmt(t(UI.h1))}),
+      h("p", {class: "lede"}, t(UI.lede)),
+      h("div", {class: "chips"},
+        chip("all", t(UI.all)), chip("inf", t(UI.inf), "inf"), chip("pas", t(UI.pasChip), "pas", t(UI.pas)), chip("med", t(UI.med), "med"))),
+    grid,
+    h("footer", {class: "status"},
+      h("div", {class: "readout", id: "readout", "aria-live": "polite"}, t(UI.status0)),
+      h("div", {class: "sright"},
+        h("span", {class: "hint"}, t(UI.hint)))));
+}
+
+/* ===== world ===== */
+function chainNode(boxes, notes, breakAt, breakWhere, blindText){
+  const chain = h("section", {class: "chain"});
+  boxes.forEach((txt, i) => {
+    if(i > 0){
+      const [lost, added, plain] = notes[i - 1], isBrk = breakAt === i;
+      chain.append(h("div", {class: "tr tr" + i},
+        h("div", {class: "arrow rv" + (isBrk ? " brk" : ""), "data-step": i, html: ARROW}),
+        h("div", {class: "tnote rv" + (isBrk ? " brk" : ""), "data-step": i},
+          h("div", {class: "tl"}, `${t(UI.tr)} ${i}`, isBrk ? h("span", {class: "flag"}, " · " + t(UI["brk_" + breakWhere])) : null),
+          lost ? h("div", null, h("b", null, "− " + t(UI.lost) + ": "), t(lost)) : null,
+          added ? h("div", null, h("b", null, "+ " + t(UI.added) + ": "), t(added)) : null,
+          plain ? h("div", null, t(plain)) : null)));
+    }
+    const box = h("article", {class: `sbox s${i} rv`, "data-step": i},
+      h("h3", null, h("b", null, "S" + i), h("span", null, t(UI["s" + i]))),
+      h("p", null, t(txt)));
+    if(i === 0) box.append(h("div", {class: "blind"}, h("span", {class: "lbl"}, h("i", null, t(UI.blind))), h("span", {class: "tx"}, t(blindText))));
+    chain.append(box);
+  });
+  return chain;
+}
+function nextLabel(){
+  if(VIEW === "world" && STEPMODE && STEP < MAXSTEP) return t(UI.reveal) + " ›";
+  if(VIEW === "key") return "01 ›";
+  return CUR < W.length ? pad(CUR + 1) + " ›" : t(UI.back) + " ›";
+}
+function barNode(count){
+  return h("div", {class: "bar"},
+    h("button", {class: "btn", type: "button", id: "btnBack", onclick: () => go("console")}, "← " + t(UI.back)),
+    h("span", {class: "count"}, count),
+    h("span", {class: "spacer"}),
+    VIEW === "world" ? h("button", {class: "btn", type: "button", id: "btnStep", "aria-pressed": String(STEPMODE), onclick: toggleStep}, t(UI.step)) : null,
+    h("button", {class: "btn", type: "button", id: "btnPrev", "aria-label": t(UI.prev), onclick: backward}, "‹"),
+    h("button", {class: "btn solid", type: "button", id: "btnNext", "aria-label": t(UI.next), onclick: forward}, nextLabel()),
+    langToggle());
+}
+function renderWorld(){
+  const w = W[CUR - 1], v = $("#world"); v.innerHTML = "";
+  v.append(
+    barNode(`${t(UI.world)} ${pad(CUR)} / ${W.length}`),
+    h("header", {class: "whead"},
+      h("div", {class: "vp"}, screenNode(CUR, false, bigVp())),
+      h("div", {class: "wtext"},
+        h("div", {class: "eyebrow"}, `${t(UI.world)} ${pad(CUR)} · ${w.years} · ${t(UI[w.g])}`),
+        h("h1", {tabindex: "-1", html: fmt(t(w.title))}),
+        h("p", {class: "lede"}, t(w.lede)))),
+    chainNode([w.s0, w.s1, w.s2, w.s3], w.tr, w.brk, w.where, w.blind),
+    h("p", {class: "fill rv", "data-step": 4}, t(UI.fill) + " ", h("b", null, t(w.fill))),
+    h("section", {class: "cards"},
+      h("article", {class: "card move rv", "data-step": 4}, h("h3", null, t(UI.move)), h("span", {class: "nm"}, t(w.move)), h("p", null, t(w.moveText))),
+      h("article", {class: "card meas rv", "data-step": 4}, h("h3", null, t(UI.measured)), h("span", {class: "hero"}, t(w.hero)), h("p", null, t(w.heroText))),
+      h("article", {class: "card ctr rv", "data-step": 5}, h("h3", null, t(UI.counter)), h("p", null, t(w.counter)))),
+    h("footer", {class: "src"}, t(UI.sources) + ": ",
+      w.src.flatMap((s, i) => [i ? " · " : null, h("a", {href: s[1], target: "_blank", rel: "noopener"}, s[0])])));
+  applySteps();
+}
+function applySteps(){
+  document.querySelectorAll("#world .rv").forEach(el => el.classList.toggle("pending", STEPMODE && +el.dataset.step > STEP));
+  const nb = $("#btnNext"); if(nb) nb.textContent = nextLabel();
+}
+function toggleStep(){
+  STEPMODE = !STEPMODE; STEP = STEPMODE ? 0 : MAXSTEP;
+  const b = $("#btnStep"); if(b) b.setAttribute("aria-pressed", String(STEPMODE));
+  applySteps();
+}
+function forward(){
+  if(VIEW === "console") return;
+  if(VIEW === "key"){ go("world-01"); return; }
+  if(STEPMODE && STEP < MAXSTEP){ STEP++; applySteps(); return; }
+  go(CUR < W.length ? "world-" + pad(CUR + 1) : "console");
+}
+function backward(){
+  if(VIEW === "console") return;
+  if(VIEW === "key"){ go("console"); return; }
+  if(STEPMODE && STEP > 0){ STEP--; applySteps(); return; }
+  go(CUR > 1 ? "world-" + pad(CUR - 1) : "key");
+}
+
+/* ===== key ===== */
+function renderKey(){
+  const v = $("#key"); v.innerHTML = "";
+  v.append(
+    barNode(`00 · ${t(UI.keyName)}`),
+    h("header", {class: "whead"},
+      h("div", {class: "vp"}, screenNode(0, false, bigVp())),
+      h("div", {class: "wtext"},
+        h("div", {class: "eyebrow"}, t(UI.eyebrow)),
+        h("h1", {tabindex: "-1", html: fmt(t(KEY.title))}),
+        h("p", {class: "lede"}, t(KEY.lede)))),
+    chainNode([KEY.s0, KEY.s1, KEY.s2, KEY.s3], KEY.notes.map(n => [null, null, n]), 0, "", KEY.blind),
+    h("p", {class: "fill"}, t(KEY.fill)),
+    h("section", {class: "cards"},
+      h("article", {class: "card move"}, h("h3", null, t(KEY.exT)), h("p", null, t(KEY.ex))),
+      h("article", {class: "card meas"}, h("h3", null, t(KEY.lookT)), h("ul", null, t(KEY.look).map(x => h("li", null, x)))),
+      h("article", {class: "card ctr"}, h("h3", null, t(KEY.defT)), h("p", null, t(KEY.def)), h("p", {style: "margin-top:6px"}, t(KEY.across)))));
+}
+
+/* ===== routing ===== */
+function parseHash(){
+  const m = (location.hash || "").replace(/^#/, "");
+  if(m === "key") return {view: "key", id: 0};
+  const w = /^world-(\d{2})$/.exec(m);
+  if(w){ const id = +w[1]; if(id >= 1 && id <= W.length) return {view: "world", id}; }
+  return {view: "console", id: 0};
+}
+function render(){
+  document.documentElement.lang = LANG;
+  document.body.dataset.view = VIEW;
+  for(const name of ["console", "world", "key"]) $("#" + name).hidden = name !== VIEW;
+  if(VIEW === "console") renderConsole(); else if(VIEW === "world") renderWorld(); else renderKey();
+}
+function route(force){
+  const key = location.hash || "#console";
+  if(!force && key === lastRouted) return;
+  lastRouted = key;
+  const prev = CUR, r = parseHash();
+  VIEW = r.view; CUR = r.id;
+  if(VIEW === "world"){ VISITED.add(CUR); STEP = STEPMODE ? 0 : MAXSTEP; }
+  render();
+  window.scrollTo(0, 0);
+  if(VIEW === "console"){ const back = $(`.tile[data-id="${prev}"]`); if(back && force !== "init") back.focus({preventScroll: true}); }
+  else { const h1 = $(`#${VIEW} h1`); if(h1) h1.focus({preventScroll: true}); }
+}
+function go(name){
+  const target = "#" + name;
+  if(location.hash === target || (name === "console" && !location.hash)){ route(true); return; }
+  location.hash = name;
+  route();
+}
+window.addEventListener("hashchange", () => route());
+
+/* ===== entering a world ===== */
+function stageRect(){
+  if(document.documentElement.dataset.mode === "stage") return $("#stage").getBoundingClientRect();
+  return {left: 0, top: 0, width: window.innerWidth, height: window.innerHeight};
+}
+let entering = false;
+function enterWorld(id, tile){
+  const name = id === 0 ? "key" : "world-" + pad(id);
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(reduce || !tile || entering){ go(name); return; }
+  entering = true;
+  const r = tile.querySelector(".scr").getBoundingClientRect(), p = $("#portal"), R = stageRect();
+  p.innerHTML = ""; p.className = "";
+  p.append(screenNode(id, true, true), h("div", {class: "rings"}),
+    h("div", {class: "cap"}, id === 0 ? t(UI.keyTitle) : `${t(UI.enter)} ${pad(id)}`));
+  Object.assign(p.style, {left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px", borderRadius: "12px"});
+  p.hidden = false;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    Object.assign(p.style, {left: R.left + "px", top: R.top + "px", width: R.width + "px", height: R.height + "px", borderRadius: "0px"});
+  }));
+  setTimeout(() => { go(name); p.classList.add("out"); }, 640);
+  setTimeout(() => { p.hidden = true; p.className = ""; p.innerHTML = ""; entering = false; }, 1000);
+}
+
+/* ===== keyboard ===== */
+document.addEventListener("keydown", e => {
+  if(e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+  const tag = (e.target.tagName || "").toLowerCase();
+  if(tag === "input" || tag === "textarea" || tag === "select") return;
+  const k = e.key;
+  if(k === "l" || k === "L" || k === "д" || k === "Д"){ setLang(LANG === "en" ? "ru" : "en"); return; }
+  if(VIEW === "console"){
+    const tiles = Array.from(document.querySelectorAll(".tile")), i = tiles.indexOf(document.activeElement);
+    if(i < 0) return;
+    const cols = Math.max(1, Math.round($(".grid").clientWidth / tiles[0].offsetWidth));
+    const d = k === "ArrowRight" ? 1 : k === "ArrowLeft" ? -1 : k === "ArrowDown" ? cols : k === "ArrowUp" ? -cols : 0;
+    if(d && tiles[i + d]){ e.preventDefault(); tiles[i + d].focus(); }
+    return;
+  }
+  if(k === "Escape"){ go("console"); }
+  else if(k === "ArrowRight" || k === "PageDown" || (k === " " && tag !== "button")){ e.preventDefault(); forward(); }
+  else if(k === "ArrowLeft" || k === "PageUp"){ e.preventDefault(); backward(); }
+  else if(VIEW === "world" && (k === "s" || k === "S" || k === "ы" || k === "Ы")){ toggleStep(); }
+});
+
+/* ===== fit the stage ===== */
+function fit(){
+  const d = document.documentElement, w = window.innerWidth, hh = window.innerHeight;
+  const stage = w >= 1000 && hh > 0 && w / hh >= 1.2;
+  d.dataset.mode = stage ? "stage" : "flow";
+  if(stage) d.style.setProperty("--k", Math.min(w / 1280, hh / 720).toFixed(4));
+}
+window.addEventListener("resize", fit);
+fit();
+route("init");
+</script>
+</body>
+</html>
